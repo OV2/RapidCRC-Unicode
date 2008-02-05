@@ -69,7 +69,7 @@ BOOL InitInstance(CONST INT iCmdShow)
 {
 	HWND hWnd;
 
-	hWnd = CreateWindow(TEXT("RapidCrcMainWindow"), TEXT("RapidCRC 0.6.1"), WS_OVERLAPPEDWINDOW,
+	hWnd = CreateWindow(TEXT("RapidCrcMainWindow"), TEXT("RapidCRC Unicode 0.1.0"), WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, (HMENU)ID_MAIN_WND, g_hInstance, NULL);
 
 	if (hWnd == NULL)
@@ -217,6 +217,11 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	return;
 }
 
+/*****************************************************************************
+void CreateListViewPopupMenu(HMENU *menu)
+	arrHwnd			: (OUT) HMENU for the listview containing the clipboard functions
+
+*****************************************************************************/
 void CreateListViewPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K_LINK,TEXT("Copy ED2K Link to Clipboard"));
@@ -226,6 +231,17 @@ void CreateListViewPopupMenu(HMENU *menu) {
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC,TEXT("Copy CRC to Clipboard"));
 }
 
+/*****************************************************************************
+void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y)
+	pHwnd	: (IN) HWND of the window where the popup occurs
+	popup	: (IN) HMENU of the popup
+	x		: (IN) x coordinate (client)
+	y		: (IN) y coordinate (client)
+
+Notes:
+	This function handles the listview popup and generates the data to place
+	in the clipboard
+*****************************************************************************/
 void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y) {
 #define MAX_ED2K_LINK_ENCODED_SIZE (MAX_PATH * 3 + 20 + 49 + 1)
 #define MAX_FILE_ENCODED_SIZE (MAX_PATH * 3)
@@ -250,13 +266,15 @@ void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y) {
 	EnableMenuItem(popup,IDM_COPY_MD5,MF_BYCOMMAND | (g_program_status.bMd5Calculated ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_ED2K,MF_BYCOMMAND | (g_program_status.bEd2kCalculated ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_ED2K_LINK,MF_BYCOMMAND | (g_program_status.bEd2kCalculated ? MF_ENABLED : MF_GRAYED));
+
+    if(uiItemCount == 0) return;
 	if(!OpenClipboard(pHwnd)) return;
-	if(!EmptyClipboard()) return;
-	ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,pHwnd,NULL);
-	if(uiItemCount == 0) {
-		CloseClipboard();
-		return;
-	}
+    if(!EmptyClipboard()) {
+        CloseClipboard();
+        return;
+    }
+	
+    ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,pHwnd,NULL);
 	switch(ret) {
 		case IDM_COPY_CRC:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((CRC_AS_STRING_LENGHT + 1) * (uiSelected ? uiSelected : uiItemCount) + 1) * sizeof(TCHAR));
 									break;

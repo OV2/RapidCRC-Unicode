@@ -57,6 +57,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	FILEINFO * pFileinfo;
 	MD5_CTX context;
 
+    // class for ed2k calculations
 	CEd2kHash ed2khash;
 
 	// Static CRC table; we have a table lookup algorithm
@@ -162,7 +163,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 		dwCrc32 = 0xFFFFFFFF;
 		MD5_Init(&context);
 
-		if ( (pFileinfo->dwError == NO_ERROR) && (pFileinfo->qwFilesize != 0) && (bCalculateCrc || bCalculateMd5))
+        if ( (pFileinfo->dwError == NO_ERROR) && (pFileinfo->qwFilesize != 0) && (bCalculateCrc || bCalculateMd5 || bCalculateEd2k))
 		{
 
 			SetWindowText(arrHwnd[ID_EDIT_STATUS], pFileinfo->szFilename);
@@ -316,7 +317,7 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	#define argc __argc
 	#define argv __argv
 #endif
-
+    
 	// is there anything to do? (< 2, because 1st element is the path to the executable itself)
 	if(argc < 2){
 		g_fileinfo_list_first_item = NULL;
@@ -326,12 +327,12 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	// use pipe input?
 	if( lstrcmpi(argv[1], TEXT("-UsePipeCommunication")) == 0)
 	{
+		// pipe switches used by the shell extension
 		if(argc > 2)
 		{
 			if(lstrcmpi(argv[2], TEXT("-CreateSFV")) == 0)
 			{
 				gCMDOpts = CMD_SFV;
-				//EnableWindow(arrHwnd[ID_MAIN_WND],FALSE);
 			}
 			else if(lstrcmpi(argv[2], TEXT("-CreateMD5")) == 0)
 			{
@@ -381,7 +382,7 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 		bCalculateCrc32 = FALSE;
 		bCalculateMd5 = TRUE;
 	}
-	else
+	else if(gCMDOpts==CMD_SFV)
 	{
 		bCalculateCrc32 = TRUE;
 		bCalculateMd5 = FALSE;

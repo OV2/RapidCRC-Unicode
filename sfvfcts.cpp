@@ -79,6 +79,8 @@ BOOL EnterSfvMode(CONST HWND hListView)
 
 	pFileinfo = g_fileinfo_list_first_item;
 	pFileinfo_prev = NULL;
+
+    // check for the BOM and read accordingly
 	fileIsUnicode = IsUnicodeFile(hFile);
 	GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUnicode);
 
@@ -93,6 +95,7 @@ BOOL EnterSfvMode(CONST HWND hListView)
 		if(uiStringLength > 8){
 
 #ifdef UNICODE
+            // if we already read unicode characters we don't need the conversion here
 			if(!fileIsUnicode) {
 				AnsiFromUnicode(szLineAnsi,MAX_LINE_LENGTH,szLine);
 				MultiByteToWideChar(CP_ACP,					// ANSI Codepage
@@ -222,6 +225,7 @@ DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST D
 		ReplaceChar(szFilenameTemp, MAX_PATH, TEXT('\\'), TEXT('/'));
 
 #ifdef UNICODE
+    // we only need the conversion if we don't write unicode data
 	if(!g_program_options.bCreateUnicodeFiles) {
 		if(!WideCharToMultiByte(CP_ACP, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_PATH, NULL, NULL) )
 			return GetLastError();
@@ -272,6 +276,7 @@ DWORD WriteSingleLineSfvFile(CONST FILEINFO * pFileinfo)
 	hFile = CreateFile(szFileSfvOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 
 #ifdef UNICODE
+    // we need a BOM if we are writing unicode
 	if(g_program_options.bCreateUnicodeFiles) {
 		WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL);
 	}
@@ -319,6 +324,7 @@ DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST B
 		ReplaceChar(szFilenameTemp, MAX_PATH, TEXT('\\'), TEXT('/'));
 
 #ifdef UNICODE
+    // we only need the conversion if we don't write unicode data
 	if(!g_program_options.bCreateUnicodeFiles) {
 		if(!WideCharToMultiByte(CP_ACP, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_PATH, NULL, NULL) )
 			return GetLastError();
@@ -380,6 +386,7 @@ DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo)
 
 	hFile = CreateFile(szFileSfvOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 #ifdef UNICODE
+    // we need a BOM if we are writing unicode
 	if(g_program_options.bCreateUnicodeFiles) {
 		WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL);
 	}
@@ -453,6 +460,8 @@ BOOL EnterMd5Mode(CONST HWND hListView)
 
 	pFileinfo = g_fileinfo_list_first_item;
 	pFileinfo_prev = NULL;
+
+    // check for the BOM and read accordingly
 	fileIsUnicode = IsUnicodeFile(hFile);
 	GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUnicode);
 
@@ -467,6 +476,7 @@ BOOL EnterMd5Mode(CONST HWND hListView)
 		if(uiStringLength > 34){ // a valid line has 32 hex values for the md5 value and then either "  " or " *"
 
 #ifdef UNICODE
+            // if we already read unicode characters we don't need the conversion here
 			if(!fileIsUnicode) {
 				AnsiFromUnicode(szLineAnsi,MAX_LINE_LENGTH,szLine);
 				MultiByteToWideChar(CP_ACP,	// ANSI Codepage

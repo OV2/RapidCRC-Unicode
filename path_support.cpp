@@ -276,6 +276,17 @@ BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH], CONST TCHAR szExtension[
 		return FALSE;
 }
 
+/*****************************************************************************
+BOOL GetCrcFromStream(TCHAR szFilename[MAX_PATH], DWORD * pdwFoundCrc)
+	szFilename		: (IN) string; assumed to be the szFilename member of the
+						   FILEINFO struct
+	pdwFoundCrc		: (OUT) return value is TRUE this parameter is set to the found
+							CRC32 as a DWORD
+
+Return Value:
+	returns TRUE if a CRC was found in the :CRC32 stream. Otherwise FALSE
+
+*****************************************************************************/
 BOOL GetCrcFromStream(TCHAR *szFileName, DWORD * pdwFoundCrc)
 {
 	BOOL bFound;
@@ -294,6 +305,7 @@ BOOL GetCrcFromStream(TCHAR *szFileName, DWORD * pdwFoundCrc)
 		CloseHandle(hFile);
 		return FALSE;
 	}
+    // since we read individual bytes, we have to transfer them into a TCHAR array (for HexToDword)
 	UnicodeFromAnsi(szCrcUnicode,9,szCrc);
 	CloseHandle(hFile);
 	(*pdwFoundCrc) = HexToDword(szCrcUnicode, 8);
@@ -460,7 +472,8 @@ VOID ProcessDirectories()
 	}
 	g_fileinfo_list_first_item = Fileinfo.nextListItem;
 
-	while(CheckExcludeStringMatch(g_fileinfo_list_first_item->szFilename)) {
+    // remove all files at the start of the list whose extension matches the exclude string
+	while((g_fileinfo_list_first_item != NULL) && CheckExcludeStringMatch(g_fileinfo_list_first_item->szFilename)) {
 		pFileinfo = g_fileinfo_list_first_item;
 		g_fileinfo_list_first_item = g_fileinfo_list_first_item->nextListItem;
 		free(pFileinfo);
@@ -474,6 +487,8 @@ VOID ProcessDirectories()
 			if(IsThisADirectory(pFileinfo->szFilename))
 				pFileinfo = ExpandDirectory(pFileinfo_prev);
 			else{
+                // check to see if the current file-extension matches our exclude string
+                // if so, we remove it from the list
 				if(CheckExcludeStringMatch(pFileinfo->szFilename)) {
 					pFileinfo_prev->nextListItem = pFileinfo->nextListItem;
 					free(pFileinfo);

@@ -78,7 +78,15 @@ DWORD HexToDword(CONST TCHAR * szHex, UINT uiStringSize)
 }
 
 
+/*****************************************************************************
+BOOL IsUnicodeFile(CONST HANDLE hFile)
+	hFile	: (IN) handle of the file to check - expects it to point to the
+				   beginning of the file
 
+Return Value:
+	returns TRUE if hFile points to a file containing an UTF-16LE BOM,
+	FALSE otherwise
+*****************************************************************************/
 BOOL IsUnicodeFile(CONST HANDLE hFile) {
 	WORD wBOM;
 	BOOL unicode;
@@ -90,10 +98,21 @@ BOOL IsUnicodeFile(CONST HANDLE hFile) {
 		return unicode;
 	}
 	unicode = (wBOM == 0xFEFF);
-	SetFilePointer(hFile, -(LONG)sizeof(wBOM), NULL, FILE_CURRENT);
+	// return the filepointer to the beginning
+	SetFilePointer(hFile, -dwBytesRead, NULL, FILE_CURRENT);
 	return unicode;
 }
 
+/*****************************************************************************
+VOID AnsiFromUnicode(CHAR *szAnsiString,CONST int max_line,TCHAR *szUnicodeString)
+	szAnsiString	: (OUT) pointer to ansi string receiving the converted text
+    max_line		: (IN)	max lenght of szAnsiString
+	szUnicodeString	: (IN)	pointer to the unicode string to convert
+
+Notes:
+	the function simply copies the lower byte of every WCHAR to the destination
+	CHARs - it does no conversion whatsoever
+*****************************************************************************/
 VOID AnsiFromUnicode(CHAR *szAnsiString,CONST int max_line,TCHAR *szUnicodeString) {
 	for(int i=0;i<max_line;i++) {
 		*szAnsiString = *szUnicodeString;
@@ -103,6 +122,16 @@ VOID AnsiFromUnicode(CHAR *szAnsiString,CONST int max_line,TCHAR *szUnicodeStrin
 	}
 }
 
+/*****************************************************************************
+VOID UnicodeFromAnsi(TCHAR *szUnicodeString,CONST int max_line,CHAR *szAnsiString)
+	szUnicodeString	: (OUT) pointer to unicode string receiving the converted text
+    max_line		: (IN)	max lenght of szUnicodeString
+	szAnsiString	: (IN)	pointer to the ansi string to convert
+
+Notes:
+	the function simply copies every CHAR to the lower byte of the destination
+	WCHARs - it does no conversion whatsoever
+*****************************************************************************/
 VOID UnicodeFromAnsi(TCHAR *szUnicodeString,CONST int max_line,CHAR *szAnsiString) {
 	for(int i=0;i<max_line;i++) {
 		*szUnicodeString = *szAnsiString;
@@ -112,6 +141,15 @@ VOID UnicodeFromAnsi(TCHAR *szUnicodeString,CONST int max_line,CHAR *szAnsiStrin
 	}
 }
 
+/*****************************************************************************
+BOOL CheckExcludeStringMatch(CONST TCHAR *szFilename)
+	szFilename	: (IN) pointer to filename to check
+
+
+Return Value:
+	returns TRUE if szFilename has any of the extensions specified in
+	g_program_options.szExcludeString, FALSE otherwise
+*****************************************************************************/
 BOOL CheckExcludeStringMatch(CONST TCHAR *szFilename) {
 	TCHAR *szExString = g_program_options.szExcludeString;
 	TCHAR szCurExt[MAX_PATH];
@@ -143,6 +181,8 @@ VOID GetNextLine(CONST HANDLE hFile, CHAR * szLineAnsi, CONST UINT uiLengthLine,
 	puiStringLength	: (OUT) length of string in szLineAnsi after reading the line
 	pbErrorOccured	: (OUT) signales if an error occurred
 	pbEndOfFile		: (OUT) signales if the end of the file has been reached
+    bFileIsUnicode  : (IN) determines if the file should be treated as UTF16LE or
+                       ansi
 
 Return Value:
 	returns nothing
@@ -164,6 +204,7 @@ VOID GetNextLine(CONST HANDLE hFile, TCHAR * szLine, CONST UINT uiLengthLine,
 		(*pbErrorOccured) = TRUE;
 		return;
 	}
+    // if we are reading ansi, each byte is a character, otherwise every two bytes
 	charSize = bFileIsUnicode ? sizeof(myChar) : sizeof(char);
 
 	ZeroMemory(szLine, uiLengthLine);
@@ -211,6 +252,7 @@ VOID GetNextLine(CONST HANDLE hFile, TCHAR * szLine, CONST UINT uiLengthLine,
 			(*pbEndOfFile) = FALSE;
 			return;
 		}
+		//skip BOM if encountered (will never match if myChar is only one byte)
 		else if (myChar == 0xFEFF){ }
 		else{
 			szLine[uiCount] = myChar;

@@ -94,6 +94,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				ProcessClickInList(arrHwnd, (NMITEMACTIVATE *) lParam, & showresult_params);
 				return 0;
 			case NM_RCLICK:
+                // we need screen coordintes for the popup window
 				ClientToScreen(arrHwnd[ID_LISTVIEW],&(((NMITEMACTIVATE *)lParam)->ptAction));
 				ListViewPopup(arrHwnd[ID_LISTVIEW],popupMenu,((NMITEMACTIVATE *)lParam)->ptAction.x,((NMITEMACTIVATE *)lParam)->ptAction.y);
 				return 0;
@@ -167,6 +168,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 		DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 
+        // check if we are getting invoked by the shell extension, if so we have to
+        // do the indicated action and quit afterwards
 		if(gCMDOpts==CMD_SFV)
 		{
 			CreateChecksumFiles(arrHwnd, MODE_SFV);
@@ -684,7 +687,7 @@ __inline VOID ProcessTextQuery(NMLVDISPINFO * pnmlvdispinfo)
 			if(g_program_options.bDisplayMd5InListView && g_program_options.bDisplayCrcInListView){
 				pnmlvdispinfo->item.pszText = pFileinfo->szMd5Result;
 			}
-			else if(g_program_options.bDisplayEd2kInListView && g_program_options.bDisplayCrcInListView){
+			else if(g_program_options.bDisplayEd2kInListView && (g_program_options.bDisplayCrcInListView || g_program_options.bDisplayMd5InListView)){
 				pnmlvdispinfo->item.pszText = pFileinfo->szEd2kResult;
 			}
 			else
@@ -731,7 +734,7 @@ __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLIS
 		SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
 			(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortFilename );
 		break;
-	case 1: // this can be the CRC, MD5 or Info Column (depending on the options in g_program_options)
+	case 1: // this can be the CRC, MD5, ED2K or Info Column (depending on the options in g_program_options)
 
 		if(g_program_options.bDisplayCrcInListView){
 			if(g_program_status.bCrcCalculated){
@@ -753,6 +756,16 @@ __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLIS
 					(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortMd5 );
 			}
 		}
+        else if(g_program_options.bDisplayEd2kInListView){
+            if(g_program_status.bEd2kCalculated){
+				if( ((*pdwSortStatus) & SORT_FLAG_ED2K ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
+					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_DESCENDING;
+				else
+					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_ASCENDING;
+				SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
+					(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortEd2k );
+			}
+		}
 		else{
 			if( ((*pdwSortStatus) & SORT_FLAG_INFO ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
 				(*pdwSortStatus) = SORT_FLAG_INFO | SORT_FLAG_DESCENDING;
@@ -763,7 +776,7 @@ __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLIS
 				(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortInfo );
 		}					
 		break;
-	case 2: // this can be the MD5 or Info Column
+	case 2: // this can be the MD5, ED2K or Info Column
 		if(g_program_options.bDisplayMd5InListView  && g_program_options.bDisplayCrcInListView){
 			if(g_program_status.bMd5Calculated){
 				if( ((*pdwSortStatus) & SORT_FLAG_MD5 ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
@@ -773,6 +786,16 @@ __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLIS
 				SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
 					(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortMd5 );
 				}
+		}
+        else if(g_program_options.bDisplayEd2kInListView && (g_program_options.bDisplayMd5InListView || g_program_options.bDisplayCrcInListView) ){
+            if(g_program_status.bEd2kCalculated){
+				if( ((*pdwSortStatus) & SORT_FLAG_ED2K ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
+					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_DESCENDING;
+				else
+					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_ASCENDING;
+				SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
+					(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortEd2k );
+			}
 		}
 		else{
 			if( ((*pdwSortStatus) & SORT_FLAG_INFO ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
@@ -784,7 +807,26 @@ __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLIS
 				(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortInfo );
 		}			
 		break;
-	case 3: // this can only be the info column
+    case 3: // this can be the ED2K or info column
+        if(g_program_options.bDisplayEd2kInListView && g_program_options.bDisplayMd5InListView && g_program_options.bDisplayCrcInListView ){
+            if(g_program_status.bEd2kCalculated){
+				if( ((*pdwSortStatus) & SORT_FLAG_ED2K ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
+					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_DESCENDING;
+				else
+					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_ASCENDING;
+				SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
+					(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortEd2k );
+			}
+		}
+		else if( ((*pdwSortStatus) & SORT_FLAG_INFO ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
+			(*pdwSortStatus) = SORT_FLAG_INFO | SORT_FLAG_DESCENDING;
+		else
+			(*pdwSortStatus) = SORT_FLAG_INFO | SORT_FLAG_ASCENDING;
+
+		SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS ,
+			(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortInfo );
+		break;
+	case 4: // this can only be the info column
 		if( ((*pdwSortStatus) & SORT_FLAG_INFO ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
 			(*pdwSortStatus) = SORT_FLAG_INFO | SORT_FLAG_DESCENDING;
 		else

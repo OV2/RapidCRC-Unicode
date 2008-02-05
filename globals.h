@@ -67,6 +67,7 @@
 #define SORT_FLAG_INFO			0x0008
 #define SORT_FLAG_CRC			0x0010
 #define SORT_FLAG_MD5			0x0020
+#define SORT_FLAG_ED2K			0x0030
 
 // these correlate to the indexes in the priority combo box
 #define PRIORITY_IDLE	0
@@ -343,6 +344,7 @@ int CALLBACK SortFilename(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortInfo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortCrc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortMd5(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+int CALLBACK SortEd2k(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 INT InfoToIntValue(CONST FILEINFO * pFileinfo);
 VOID QuickSortList();
 INT QuickCompFunction(const void * pFileinfo1, const void * pFileinfo2);

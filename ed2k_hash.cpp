@@ -1,4 +1,6 @@
-#include "Ed2k_hash.h"
+/* implementations for ed2k_hash.h */
+
+#include "ed2k_hash.h"
 
 CEd2kHash::CEd2kHash() {
 	MD4_Init(&context);

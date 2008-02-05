@@ -25,6 +25,17 @@ static DWORD CreateChecksumFiles_OnePerFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], 
 static DWORD CreateChecksumFiles_OnePerDir(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, CONST UINT uiNumSelected, CONST TCHAR szChkSumFilename[MAX_PATH]);
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, CONST UINT uiNumSelected);
 
+/*****************************************************************************
+VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+	arrHwnd : (IN) window handle array
+
+Return Value:
+	returns nothing
+
+Notes:
+	- Adds the CRC value to the file as a secondary NTFS stream (:CRC32)
+	- Action depends on if files are selected or not
+*****************************************************************************/
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 {
 	TCHAR szFilenameTemp[MAX_PATH];
@@ -128,6 +139,17 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 	return;
 }
 
+/*****************************************************************************
+VOID SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult)
+	szFileName : (IN) target file to write crcResult into
+    crcResult  : (IN) the CRC value to write
+
+Return Value:
+	returns true if the operation succeded, false otherwise
+
+Notes:
+	helper function for ActionCrcIntoStream - this is the actual writing logic
+*****************************************************************************/
 BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult) {
 	TCHAR szFileOut[MAX_PATH]=TEXT("");
 	CHAR szCrcInHex[9];
@@ -562,6 +584,7 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST HWND arrHwnd[ID_NUM_WINDOWS], C
 					StringCchPrintf(szCurChecksumFilename, MAX_PATH, TEXT("%s\\%s"), szCurrentDir, szChkSumFilename);
 					hFile = CreateFile(szCurChecksumFilename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 #ifdef UNICODE
+                    //write the BOM if we are creating a unicode file
 					if(g_program_options.bCreateUnicodeFiles) {
 						WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL);
 					}
@@ -650,6 +673,7 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 
 	hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 #ifdef UNICODE
+    //write the BOM if we are creating a unicode file
 	if(g_program_options.bCreateUnicodeFiles) {
 		WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL);
 	}
