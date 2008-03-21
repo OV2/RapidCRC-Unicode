@@ -162,6 +162,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 		pthread_params_calc->qwBytesReadCurFile = 0;
 		dwCrc32 = 0xFFFFFFFF;
 		MD5_Init(&context);
+        ed2khash.restart_calc();
 
         if ( (pFileinfo->dwError == NO_ERROR) && (pFileinfo->qwFilesize != 0) && (bCalculateCrc || bCalculateMd5 || bCalculateEd2k))
 		{

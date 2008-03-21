@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <math.h>
 #include <limits.h>
 #include <commctrl.h>
+#include <uxtheme.h>
 
 /*****************************************************************************
 ATOM RegisterMainWindowClass()
@@ -69,7 +70,7 @@ BOOL InitInstance(CONST INT iCmdShow)
 {
 	HWND hWnd;
 
-	hWnd = CreateWindow(TEXT("RapidCrcMainWindow"), TEXT("RapidCRC Unicode 0.1.0"), WS_OVERLAPPEDWINDOW,
+	hWnd = CreateWindow(TEXT("RapidCrcMainWindow"), TEXT("RapidCRC Unicode 0.1.1"), WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, (HMENU)ID_MAIN_WND, g_hInstance, NULL);
 
 	if (hWnd == NULL)
@@ -390,8 +391,10 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	LVCOLUMN lvcolumn;
 
 	//full row select
-	ListView_SetExtendedListViewStyle(hWndListView, LVS_EX_FULLROWSELECT);
+	ListView_SetExtendedListViewStyle(hWndListView, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
+    //explorer-style listview
+    SetWindowTheme(hWndListView, L"Explorer", NULL);
 
 	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvcolumn.fmt = LVCFMT_LEFT;
@@ -448,6 +451,7 @@ BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo)
 {
 	INT iImageIndex;
 	LVITEM lvI;
+    LVTILEINFO tileInfo;
 
 	// ATTENTION: the same logic is implemented in InsertItemIntoList, InfoToIntValue, DisplayStatusOverview.
 	// Any changes here have to be transfered there
@@ -509,9 +513,16 @@ BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo)
 	lvI.iImage = iImageIndex; // Value of iImageIndex is chosen above
 	lvI.iSubItem = 0;
 	lvI.lParam = (LPARAM) pFileinfo;
-	lvI.pszText = LPSTR_TEXTCALLBACK; 
-	if(SendMessage(hListView, LVM_INSERTITEM, 0, (LPARAM) &lvI) == -1)
+	lvI.pszText = LPSTR_TEXTCALLBACK;
+	if((tileInfo.iItem = SendMessage(hListView, LVM_INSERTITEM, 0, (LPARAM) &lvI)) == -1)
 		return FALSE;
+    /*UINT cols[4] = { 2, 3, 4, 4 };
+    tileInfo.cbSize = sizeof(LVTILEINFO);
+    tileInfo.cColumns = 3;
+    int fmts[4] = {LVCFMT_NO_TITLE,LVCFMT_NO_TITLE,LVCFMT_NO_TITLE,LVCFMT_NO_TITLE};
+    tileInfo.piColFmt = fmts;
+    tileInfo.puColumns = cols;
+    SendMessage(hListView,LVM_SETTILEINFO,0,(LPARAM) &tileInfo);*/
 	return TRUE;
 }
 
