@@ -12,7 +12,7 @@ CEd2kHash::~CEd2kHash(){
 }
 
 void CEd2kHash::restart_calc(){
-	md4_hashes.empty();
+    md4_hashes.clear();
 	MD4_Init(&context);
 	part_count = 0;
 	current_bytes = 0;
