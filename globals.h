@@ -144,6 +144,10 @@
 #define IDM_COPY_ED2K				42
 #define IDM_COPY_ED2K_LINK			43
 
+#define IDM_CRC_COLUMN              50
+#define IDM_MD5_COLUMN              51
+#define IDM_ED2K_COLUMN             52
+
 //****** custom datatypes *******
 
 typedef unsigned __int64 QWORD, *LPQWORD;
@@ -282,6 +286,10 @@ VOID DisplayStatusOverview(CONST HWND hEditStatus);
 DWORD ShowErrorMsg ( CONST HWND hWndMain, CONST DWORD dwError );
 VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST PROGRAM_OPTIONS * pProgram_options);
 VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStatus);
+void CreateListViewPopupMenu(HMENU *menu);
+void ListViewPopup(HWND pHwnd,HMENU pupup,int x,int y);
+void CreateListViewHeaderPopupMenu(HMENU *menu);
+BOOL ListViewHeaderPopup(HWND pHwnd,HMENU pupup,int x,int y);
 
 //helper functions (helpfcts.cpp)
 BOOL IsLegalHexSymbol(CONST TCHAR tcChar);
@@ -306,8 +314,6 @@ VOID GetInfoColumnText(TCHAR * szString, CONST size_t stStringSize, CONST INT iI
 BOOL IsWin2000orHigher();
 FILEINFO ** GenArrayFromFileinfoList(UINT * puiNumElements);
 VOID ReplaceChar(TCHAR * szString, CONST size_t stBufferLength, CONST TCHAR tcIn, CONST TCHAR tcOut);
-void CreateListViewPopupMenu(HMENU *menu);
-void ListViewPopup(HWND pHwnd,HMENU pupup,int x,int y);
 #ifdef USE_TIME_MEASUREMENT
 	VOID StartTimeMeasure(CONST BOOL bStart);
 #endif

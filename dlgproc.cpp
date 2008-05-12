@@ -60,7 +60,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static UINT uiThreadID;
 	static DWORD dwSortStatus;
 	static SHOWRESULT_PARAMS showresult_params = {NULL, FALSE, FALSE};
-	static HMENU popupMenu;
+	static HMENU popupMenu,headerPopupMenu;
 
 	switch (message)
 	{
@@ -69,6 +69,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		SetPriorityClass(GetCurrentProcess(), MyPriorityToPriorityClass(g_program_options.uiPriority));
 		CreateAndInitChildWindows(arrHwnd, arrOldWndProcs, & lAveCharWidth, & lAveCharHeight, hWnd);
 		CreateListViewPopupMenu(&popupMenu);
+        CreateListViewHeaderPopupMenu(&headerPopupMenu);
 		RegisterDropWindow(arrHwnd, & pDropTarget, & bThreadDone, & qwFilesizeSum, & showresult_params);
 
 		thread_params_fileinfo.arrHwnd				= arrHwnd;
@@ -81,6 +82,19 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	case WM_NOTIFY:
 		switch(wParam)
 		{
+        case 0:
+            switch (((LPNMHDR) lParam)->code)
+            {
+                case NM_RCLICK:
+                    // we need screen coordintes for the popup window
+                    DWORD dwPos;
+                    dwPos = GetMessagePos();
+				    //ClientToScreen(arrHwnd[ID_LISTVIEW],&(((NMITEMACTIVATE *)lParam)->ptAction));
+				    if(ListViewHeaderPopup(arrHwnd[ID_LISTVIEW],headerPopupMenu,LOWORD (dwPos),HIWORD (dwPos)))
+                        UpdateListViewColumns(arrHwnd, lAveCharWidth);
+                    return 0;
+            }
+            break;
 		case ID_LISTVIEW:
 			switch (((LPNMHDR) lParam)->code) 
 			{
@@ -288,6 +302,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			break;
 		}
 		break;
+    case WM_ENDSESSION:
 	case WM_CLOSE:
 		WriteOptions(hWnd, lAveCharWidth, lAveCharHeight);
 		UnregisterDropWindow(arrHwnd[ID_LISTVIEW], pDropTarget);
@@ -964,23 +979,23 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	iCurrentWidthUsed = 0;
 	iCurrentSubItem = 1;
 	if(g_program_options.bDisplayCrcInListView){
-		ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 13);
-		iCurrentWidthUsed += lACW * 13;
+		ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 14);
+		iCurrentWidthUsed += lACW * 14;
 		iCurrentSubItem++;
 	}
 	if(g_program_options.bDisplayMd5InListView){
-		ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 41);
-		iCurrentWidthUsed += lACW * 41;
+		ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 42);
+		iCurrentWidthUsed += lACW * 42;
 		iCurrentSubItem++;
 	}
 	if(g_program_options.bDisplayEd2kInListView){
-		ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 41);
-		iCurrentWidthUsed += lACW * 41;
+		ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 42);
+		iCurrentWidthUsed += lACW * 42;
 		iCurrentSubItem++;
 	}
 	// Info text column:
-	ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 16);
-	iCurrentWidthUsed += lACW * 16;
+	ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 17);
+	iCurrentWidthUsed += lACW * 17;
 
 	//ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], 0, wWidth - iCurrentWidthUsed - lACW * 8);
 	ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], 0, wWidth - iCurrentWidthUsed - GetSystemMetrics(SM_CXVSCROLL) - lACW * 4);

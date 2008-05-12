@@ -220,7 +220,7 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 
 /*****************************************************************************
 void CreateListViewPopupMenu(HMENU *menu)
-	arrHwnd			: (OUT) HMENU for the listview containing the clipboard functions
+	arrHwnd			: (IN/OUT) HMENU for the listview containing the clipboard functions
 
 *****************************************************************************/
 void CreateListViewPopupMenu(HMENU *menu) {
@@ -366,6 +366,57 @@ void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y) {
 	GlobalUnlock(gAlloc);
 	SetClipboardData(CF_UNICODETEXT,gAlloc);
 	CloseClipboard();
+}
+
+/*****************************************************************************
+void CreateListViewHeaderPopupMenu(HMENU *menu)
+	arrHwnd			: (IN/OUT) HMENU for the listview headers containing the
+                               available headers
+
+*****************************************************************************/
+void CreateListViewHeaderPopupMenu(HMENU *menu) {
+	*menu = CreatePopupMenu();
+    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_CHECKED,IDM_ED2K_COLUMN,TEXT("ED2K"));
+    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_CHECKED,IDM_MD5_COLUMN,TEXT("MD5"));
+    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_CHECKED,IDM_CRC_COLUMN,TEXT("CRC32"));
+}
+
+/*****************************************************************************
+BOOL ListViewHeaderPopup(HWND pHwnd,HMENU popup,int x,int y)
+	pHwnd	: (IN) HWND of the window where the popup occurs
+	popup	: (IN) HMENU of the popup
+	x		: (IN) x coordinate (client)
+	y		: (IN) y coordinate (client)
+
+Return Value:
+returns FALSE if nothing was selected. Otherwise TRUE
+
+Notes:
+	This function handles the listview header popup and enables/disables the
+    columns
+*****************************************************************************/
+BOOL ListViewHeaderPopup(HWND pHwnd,HMENU popup,int x,int y) {
+	int ret;
+	
+    CheckMenuItem(popup,IDM_CRC_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayCrcInListView ? MF_CHECKED : MF_UNCHECKED));
+	CheckMenuItem(popup,IDM_MD5_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayMd5InListView ? MF_CHECKED : MF_UNCHECKED));
+	CheckMenuItem(popup,IDM_ED2K_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayEd2kInListView ? MF_CHECKED : MF_UNCHECKED));
+	
+    ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,pHwnd,NULL);
+	switch(ret) {
+		case IDM_CRC_COLUMN:
+            g_program_options.bDisplayCrcInListView = !g_program_options.bDisplayCrcInListView;
+			return TRUE;
+		case IDM_MD5_COLUMN:
+            g_program_options.bDisplayMd5InListView = !g_program_options.bDisplayMd5InListView;
+    		return TRUE;
+		case IDM_ED2K_COLUMN:
+            g_program_options.bDisplayEd2kInListView = !g_program_options.bDisplayEd2kInListView;
+			return TRUE;
+		default:
+            break;
+	}
+    return FALSE;
 }
 
 
@@ -589,7 +640,7 @@ BOOL SetSubItemColumns(CONST HWND hWndListView, CONST LONG lACW)
 		lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 		lvcolumn.fmt = LVCFMT_LEFT;
 		lvcolumn.cx = 0; // is resized later in WM_SIZE
-		lvcolumn.pszText = TEXT("CRC");
+		lvcolumn.pszText = TEXT("CRC32");
 		lvcolumn.iSubItem = iCurrentSubItem;
 
 		if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
