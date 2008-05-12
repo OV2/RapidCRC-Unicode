@@ -54,7 +54,7 @@ BEGIN
     CONTROL         "Create WinSFV-compatible SFV files",IDC_CHECK_WINSFV_COMP,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,121,129,10
     CONTROL         "Create Unix style SFV/MD5 files",IDC_CHECK_CREATE_UNIX_STYLE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,133,117,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,131,117,10
     GROUPBOX        "How to put the CRC into the filename",IDC_STATIC,3,202,216,69
     EDITTEXT        IDC_EDIT_FILENAME_PATTERN,8,227,203,14,ES_AUTOHSCROLL
     LTEXT           "Available variables: %FILENAME, %FILEEXT, %CRC",IDC_STATIC,8,214,169,8
@@ -63,7 +63,7 @@ BEGIN
     LTEXT           "",IDC_STATIC_FILENAME_EXAMPLE,67,256,147,8
     PUSHBUTTON      "Default",IDC_BTN_DEFAULT,7,273,50,14
     CONTROL         "Create Unicode Files",IDC_CHECK_CREATE_UNICODE_FILES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,144,173,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,142,106,8
     CONTROL         "Auto-Scroll ListView",IDC_CHECK_AUTO_SCROLL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,95,78,10
     GROUPBOX        "Exclude the following Extensions",IDC_STATIC,4,158,215,39
     EDITTEXT        IDC_EDIT_EXCLUDE_LIST,8,179,203,14,ES_AUTOHSCROLL
@@ -71,6 +71,7 @@ BEGIN
     CONTROL         "ED2K",IDC_CHECK_ED2K_DEFAULT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,81,24,33,10
     CONTROL         "Display calculated ED2K in ListView",IDC_CHECK_DISPLAY_ED2K_IN_LIST,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,73,126,10
+    COMBOBOX        IDC_UNICODE_TYPE,128,141,81,54,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_DLG_FILE_CREATION DIALOGEX 0, 0, 251, 121
@@ -137,8 +138,8 @@ IDI_ICON_ERROR          ICON                    "icons\\Result Icons Error.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,1,1,0
- PRODUCTVERSION 0,1,1,0
+ FILEVERSION 0,1,2,1
+ PRODUCTVERSION 0,1,2,1
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -154,12 +155,12 @@ BEGIN
         BLOCK "040704b0"
         BEGIN
             VALUE "FileDescription", "RapidCRC Unicode"
-            VALUE "FileVersion", "0, 1, 1, 0"
+            VALUE "FileVersion", "0, 1, 2, 1"
             VALUE "InternalName", "RapidCRC"
             VALUE "LegalCopyright", "Copyright (C) 2004 Sebastian Ewert"
             VALUE "OriginalFilename", "RapidCRC.exe"
             VALUE "ProductName", "RapidCRC Unicode"
-            VALUE "ProductVersion", "0, 1, 1, 0"
+            VALUE "ProductVersion", "0, 1, 2, 1"
         END
     END
     BLOCK "VarFileInfo"

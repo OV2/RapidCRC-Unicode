@@ -457,6 +457,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	StringCchCopy(pprogram_options->szFilenameSfv, MAX_PATH, TEXT("checksum.sfv"));
 	pprogram_options->bCreateUnixStyle = FALSE;
 	pprogram_options->bCreateUnicodeFiles = TRUE;
+    pprogram_options->iUnicodeSaveType = UTF_16LE;
 
 	return;
 }
@@ -586,6 +587,7 @@ VOID CopyJustProgramOptions(CONST PROGRAM_OPTIONS * pprogram_options_src, PROGRA
 	pprogram_options_dst->bCalcCrcPerDefault = pprogram_options_src->bCalcCrcPerDefault;
 	pprogram_options_dst->bCalcMd5PerDefault = pprogram_options_src->bCalcMd5PerDefault;
 	pprogram_options_dst->bCalcEd2kPerDefault = pprogram_options_src->bCalcEd2kPerDefault;
+    pprogram_options_dst->iUnicodeSaveType = pprogram_options_src->iUnicodeSaveType;
 
 	return;
 }

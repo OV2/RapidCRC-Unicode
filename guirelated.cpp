@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <limits.h>
 #include <commctrl.h>
 #include <uxtheme.h>
+#include <windowsx.h>
 
 /*****************************************************************************
 ATOM RegisterMainWindowClass()
@@ -70,7 +71,7 @@ BOOL InitInstance(CONST INT iCmdShow)
 {
 	HWND hWnd;
 
-	hWnd = CreateWindow(TEXT("RapidCrcMainWindow"), TEXT("RapidCRC Unicode 0.1.1"), WS_OVERLAPPEDWINDOW,
+	hWnd = CreateWindow(TEXT("RapidCrcMainWindow"), TEXT("RapidCRC Unicode 0.1.2"), WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, (HMENU)ID_MAIN_WND, g_hInstance, NULL);
 
 	if (hWnd == NULL)
@@ -990,6 +991,8 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 	CheckDlgButton(hDlg, IDC_CHECK_CREATE_UNIX_STYLE, pprogram_options->bCreateUnixStyle ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_CREATE_UNICODE_FILES, pprogram_options->bCreateUnicodeFiles ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_MD5_IN_LIST, pprogram_options->bDisplayMd5InListView ? BST_CHECKED : BST_UNCHECKED);
+
+    ComboBox_SetCurSel(GetDlgItem(hDlg,IDC_UNICODE_TYPE),pprogram_options->iUnicodeSaveType);
 	
 	GenerateNewFilename(szGenFilename, TEXT("C:\\MyFile.txt"), 0xAB01FB5D, pprogram_options->szFilenamePattern);
 	SetWindowText(GetDlgItem(hDlg, IDC_STATIC_FILENAME_EXAMPLE), szGenFilename);

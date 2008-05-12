@@ -21,6 +21,7 @@
 #include "resource.h"
 #include <process.h>
 #include <commctrl.h>
+#include <windowsx.h>
 
 /*****************************************************************************
 *                     INLINE FUNCTIONS for this file                         *
@@ -343,6 +344,9 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 	{
 	case WM_INITDIALOG :
 		// copy current options to local copy
+        ComboBox_AddString(GetDlgItem(hDlg,IDC_UNICODE_TYPE),TEXT("UTF16-LE"));
+        ComboBox_AddString(GetDlgItem(hDlg,IDC_UNICODE_TYPE),TEXT("UTF-8"));
+
 		CopyJustProgramOptions(& g_program_options, & program_options_temp);
 
 		UpdateOptionsDialogControls(hDlg, TRUE, & program_options_temp);
@@ -468,6 +472,11 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 			break;
+        case IDC_UNICODE_TYPE:
+            if(HIWORD(wParam) == CBN_SELCHANGE){
+                program_options_temp.iUnicodeSaveType = (UNICODE_TYPE)ComboBox_GetCurSel(GetDlgItem(hDlg, IDC_UNICODE_TYPE));
+                return TRUE;
+            }
 		}
 		break;
 	}

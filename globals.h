@@ -151,6 +151,7 @@
 //****** custom datatypes *******
 
 typedef unsigned __int64 QWORD, *LPQWORD;
+enum UNICODE_TYPE {UTF_16LE, UTF_8};
 
 //****** some macros *******
 #define MAKEQWORD(a, b)	\
@@ -228,6 +229,7 @@ typedef struct{
 	BOOL			bCreateUnicodeFiles;
 	BOOL			bAutoScrollListView;
 	TCHAR			szExcludeString[MAX_PATH];
+    UNICODE_TYPE    iUnicodeSaveType;
 	// version after 6
 }PROGRAM_OPTIONS;
 

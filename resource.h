@@ -35,14 +35,16 @@
 #define IDC_STATIC_INTRO_TEXT           1038
 #define IDC_EDIT_FILENAME_CHECKSUM      1040
 #define IDC_CHECK_CREATE_UNICODE_FILES  1042
+#define IDC_COMBO1                      1043
+#define IDC_UNICODE_TYPE                1043
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        115
+#define _APS_NEXT_RESOURCE_VALUE        116
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1043
+#define _APS_NEXT_CONTROL_VALUE         1044
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

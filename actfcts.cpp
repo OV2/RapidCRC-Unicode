@@ -583,16 +583,20 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST HWND arrHwnd[ID_NUM_WINDOWS], C
 					StringCchCopy(szPreviousDir, MAX_PATH, szCurrentDir);
 					StringCchPrintf(szCurChecksumFilename, MAX_PATH, TEXT("%s\\%s"), szCurrentDir, szChkSumFilename);
 					hFile = CreateFile(szCurChecksumFilename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
-#ifdef UNICODE
-                    //write the BOM if we are creating a unicode file
-					if(g_program_options.bCreateUnicodeFiles) {
-						WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL);
-					}
-#endif
 					if(hFile == INVALID_HANDLE_VALUE){
 						free(arrFileinfo);
 						return GetLastError();
 					}
+#ifdef UNICODE
+                    //write the BOM if we are creating a unicode file
+					if(g_program_options.bCreateUnicodeFiles && g_program_options.iUnicodeSaveType == UTF_16LE) {
+                        if(!WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL)) {
+                            free(arrFileinfo);
+							CloseHandle(hFile);
+							return GetLastError();
+                        }
+					}
+#endif
 					if( (uiMode == MODE_SFV) && g_program_options.bWinsfvComp){
 						dwResult = WriteSfvHeader(hFile);
 						if(dwResult != NOERROR){
@@ -672,14 +676,19 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	SetCurrentDirectory(szCurrentPath);
 
 	hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
-#ifdef UNICODE
-    //write the BOM if we are creating a unicode file
-	if(g_program_options.bCreateUnicodeFiles) {
-		WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL);
-	}
-#endif
+
 	if(hFile == INVALID_HANDLE_VALUE)
 		return GetLastError();
+
+#ifdef UNICODE
+    //write the BOM if we are creating a unicode file
+    if(g_program_options.bCreateUnicodeFiles && g_program_options.iUnicodeSaveType == UTF_16LE) {
+        if(!WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL)) {
+            CloseHandle(hFile);
+            return GetLastError();
+        }
+	}
+#endif
 
 	if( (uiMode == MODE_SFV) && g_program_options.bWinsfvComp){
 		dwResult = WriteSfvHeader(hFile);
