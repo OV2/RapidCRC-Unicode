@@ -21,6 +21,9 @@
 #include "globals.h"
 #include "shlwapi.h"
 #include <shlobj.h>
+#include <mlang.h>
+
+#define TESTBUFFER_SIZE 4096
 
 /*****************************************************************************
 BOOL IsLegalHexSymbol(CONST TCHAR tcChar)
@@ -99,8 +102,44 @@ BOOL IsUnicodeFile(CONST HANDLE hFile) {
 	}
 	unicode = (wBOM == 0xFEFF);
 	// return the filepointer to the beginning
-	SetFilePointer(hFile, -dwBytesRead, NULL, FILE_CURRENT);
+	SetFilePointer(hFile, -1 * dwBytesRead, NULL, FILE_CURRENT);
 	return unicode;
+}
+
+/*****************************************************************************
+UINT DetermineFileCP(CONST HANDLE hFile)
+	hFile	: (IN) handle of the file to check - expects it to point to the
+				   beginning of the file
+
+Return Value:
+	returns the detected codepage used in the file. Uses TESTBUFFER_SIZE
+    characters to run the tests on (if available).
+*****************************************************************************/
+UINT DetermineFileCP(CONST HANDLE hFile) {
+    IMultiLanguage2 *ml2;
+    char testbuffer[TESTBUFFER_SIZE];
+    DWORD dwBytesRead;
+    DetectEncodingInfo deInfo;
+    int scores=1;
+    int bufferFillSize;
+
+	ReadFile(hFile, testbuffer, TESTBUFFER_SIZE, &dwBytesRead, NULL);
+	if(dwBytesRead == 0){
+        // nothing in the file, so use current codepage
+        return CP_ACP;
+	}
+	// return the filepointer to the beginning
+	SetFilePointer(hFile, -1 * dwBytesRead, NULL, FILE_CURRENT);
+    bufferFillSize = dwBytesRead;
+
+    // init COM and use the IMultiLanguage2 interface
+    CoInitialize(NULL);
+    CoCreateInstance(__uuidof(CMultiLanguage), NULL, CLSCTX_INPROC_SERVER, __uuidof(IMultiLanguage2), (LPVOID *)&ml2);
+    ml2->DetectInputCodepage(MLDETECTCP_8BIT,0,testbuffer,&bufferFillSize,&deInfo,&scores);
+    ml2->Release();
+    CoUninitialize();
+
+    return deInfo.nCodePage;
 }
 
 /*****************************************************************************

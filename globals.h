@@ -295,6 +295,7 @@ BOOL ListViewHeaderPopup(HWND pHwnd,HMENU pupup,int x,int y);
 BOOL IsLegalHexSymbol(CONST TCHAR tcChar);
 DWORD HexToDword(CONST TCHAR * szHex, UINT uiStringSize);
 BOOL IsUnicodeFile(CONST HANDLE hFile);
+UINT DetermineFileCP(CONST HANDLE hFile);
 BOOL CheckExcludeStringMatch(CONST TCHAR *szFilename);
 VOID AnsiFromUnicode(CHAR *szAnsiString,CONST int max_line,TCHAR *szUnicodeString);
 VOID UnicodeFromAnsi(TCHAR *szUnicodeString,CONST int max_line,CHAR *szAnsiString);

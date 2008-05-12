@@ -48,6 +48,7 @@ BOOL EnterSfvMode(CONST HWND hListView)
 	FILEINFO * pFileinfo;
 	FILEINFO * pFileinfo_prev;
 	BOOL	fileIsUnicode;
+    UINT    codePage;
 
 	// save SFV filename and path
 	// => g_szBasePath in SFV-mode is the path part of the complete filename of the .sfv file
@@ -82,6 +83,7 @@ BOOL EnterSfvMode(CONST HWND hListView)
 
     // check for the BOM and read accordingly
 	fileIsUnicode = IsUnicodeFile(hFile);
+    codePage = DetermineFileCP(hFile);
 	GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUnicode);
 
 	if(bErrorOccured){
@@ -98,12 +100,13 @@ BOOL EnterSfvMode(CONST HWND hListView)
             // if we already read unicode characters we don't need the conversion here
 			if(!fileIsUnicode) {
 				AnsiFromUnicode(szLineAnsi,MAX_LINE_LENGTH,szLine);
-				MultiByteToWideChar(CP_ACP,					// ANSI Codepage
+				MultiByteToWideChar(codePage,				// ANSI Codepage
 									0,						// we use no flags; ANSI isn't a 'real' MBCC
 									szLineAnsi,				// the ANSI String
 									-1,						// ANSI String is 0 terminated
 									szLine,					// the UNICODE destination string
 									MAX_LINE_LENGTH );		// size of the UNICODE String in chars
+                uiStringLength = lstrlen(szLine);
 			}
 #endif
 
@@ -429,6 +432,7 @@ BOOL EnterMd5Mode(CONST HWND hListView)
 	FILEINFO * pFileinfo;
 	FILEINFO * pFileinfo_prev;
 	BOOL	fileIsUnicode;
+    UINT    codePage;
 
 	// save MD5 filename and path
 	// => g_szBasePath in MD5-mode is the path part of the complete filename of the .md5 file
@@ -463,6 +467,7 @@ BOOL EnterMd5Mode(CONST HWND hListView)
 
     // check for the BOM and read accordingly
 	fileIsUnicode = IsUnicodeFile(hFile);
+    codePage = DetermineFileCP(hFile);
 	GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUnicode);
 
 	if(bErrorOccured){
@@ -479,12 +484,13 @@ BOOL EnterMd5Mode(CONST HWND hListView)
             // if we already read unicode characters we don't need the conversion here
 			if(!fileIsUnicode) {
 				AnsiFromUnicode(szLineAnsi,MAX_LINE_LENGTH,szLine);
-				MultiByteToWideChar(CP_ACP,	// ANSI Codepage
-					0,						// we use no flags; ANSI isn't a 'real' MBCC
-					szLineAnsi,				// the ANSI String
-					-1,						// ANSI String is 0 terminated
-					szLine,					// the UNICODE destination string
-					MAX_LINE_LENGTH );		// size of the UNICODE String in chars
+				MultiByteToWideChar(codePage,	// ANSI Codepage
+					0,						    // we use no flags; ANSI isn't a 'real' MBCC
+					szLineAnsi,			    	// the ANSI String
+					-1,						    // ANSI String is 0 terminated
+					szLine,					    // the UNICODE destination string
+					MAX_LINE_LENGTH );		    // size of the UNICODE String in chars
+                uiStringLength = lstrlen(szLine);
 			}
 #endif
 
