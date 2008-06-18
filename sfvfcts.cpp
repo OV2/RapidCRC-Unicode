@@ -82,8 +82,9 @@ BOOL EnterSfvMode(CONST HWND hListView)
 	pFileinfo_prev = NULL;
 
     // check for the BOM and read accordingly
-	fileIsUnicode = IsUnicodeFile(hFile);
-    codePage = DetermineFileCP(hFile);
+	if(!(fileIsUnicode = IsUnicodeFile(hFile)))
+        codePage = DetermineFileCP(hFile);
+
 	GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUnicode);
 
 	if(bErrorOccured){
@@ -490,8 +491,9 @@ BOOL EnterMd5Mode(CONST HWND hListView)
 	pFileinfo_prev = NULL;
 
     // check for the BOM and read accordingly
-	fileIsUnicode = IsUnicodeFile(hFile);
-    codePage = DetermineFileCP(hFile);
+	if(!(fileIsUnicode = IsUnicodeFile(hFile)))
+        codePage = DetermineFileCP(hFile);
+
 	GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUnicode);
 
 	if(bErrorOccured){
