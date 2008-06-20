@@ -45,6 +45,7 @@
 
 // some sizes for variables
 #define MAX_BUFFER_SIZE_CALC	0x10000
+//#define MAX_BUFFER_SIZE_CALC	5242880
 #define MAX_BUFFER_SIZE_OFN 0xFFFFF // Win9x has a problem with values where just the first bit is set like 0x20000 for OFN buffer:
 #define MAX_LINE_LENGTH 1000
 #define MAX_RESULT_LINE 200
@@ -206,6 +207,15 @@ typedef struct{
 }THREAD_PARAMS_CALC;
 
 typedef struct{
+	BYTE **buffer;
+	DWORD **dwBytesRead;
+	VOID *result;
+	HANDLE hHandleReady;
+	HANDLE hHandleGo;
+	BOOL *bFileDone;
+}THREAD_PARAMS_HASHCALC;
+
+typedef struct{
 	DWORD			dwVersion;
 	TCHAR			szFilenamePattern[MAX_PATH];
 	BOOL			bDisplayCrcInListView;
@@ -361,6 +371,9 @@ INT QuickCompFunction(const void * pFileinfo1, const void * pFileinfo2);
 //Thread procedures (threadprocs.cpp)
 UINT __stdcall ThreadProc_Calc(VOID * pParam);
 UINT __stdcall ThreadProc_FileInfo(VOID * pParam);
+DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam);
+DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam);
 
 #if defined(USE_MD5_REF)
 #  include "md5_ref.h"
