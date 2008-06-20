@@ -211,7 +211,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		return 0;
 	case WM_TIMER:
-		if(!bThreadDone){
+		if(!bThreadDone && thread_params_calc.pFileinfo_cur != NULL){
 			if(thread_params_calc.pFileinfo_cur->qwFilesize != 0){
 				INT iNewPos = (INT)((thread_params_calc.qwBytesReadCurFile * 100 ) /
 					thread_params_calc.pFileinfo_cur->qwFilesize);
