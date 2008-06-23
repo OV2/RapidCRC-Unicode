@@ -75,6 +75,10 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	HANDLE hEvtThreadEd2kReady;
 	HANDLE hEvtThreadCrcReady;
 
+	HANDLE hEvtReadDone;
+	OVERLAPPED olp;
+	ZeroMemory(&olp,sizeof(olp));
+
 	HANDLE hThreadMd5=NULL;
 	HANDLE hThreadEd2k=NULL;
 	HANDLE hThreadCrc=NULL;
@@ -134,6 +138,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 		ed2kCalcParams.dwBytesRead = &dwBytesReadCb;
 	}
 
+	hEvtReadDone = CreateEvent(NULL,FALSE,FALSE,NULL);
+
 	QueryPerformanceFrequency((LARGE_INTEGER*)&wqFreq);
 
 	pFileinfo = g_fileinfo_list_first_item;
@@ -141,6 +147,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	{
 		pthread_params_calc->pFileinfo_cur = pFileinfo;
 		pthread_params_calc->qwBytesReadCurFile = 0;
+
+		olp.hEvent = hEvtReadDone;
 		
 
         if ( (pFileinfo->dwError == NO_ERROR) && (pFileinfo->qwFilesize != 0) && (bCalculateCrc || bCalculateMd5 || bCalculateEd2k))
@@ -150,7 +158,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 			QueryPerformanceCounter((LARGE_INTEGER*) &qwStart);
 			hFile = CreateFile(pFileinfo->szFilename,
-					GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
+					GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN , 0);
 			if(hFile == INVALID_HANDLE_VALUE){
 				pFileinfo->dwError = GetLastError();
 				continue;
@@ -170,9 +178,13 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				ed2kCalcParams.result = &pFileinfo->abEd2kResult;
 				hThreadCrc = CreateThread(NULL,0,ThreadProc_Ed2kCalc,&ed2kCalcParams,0,NULL);
 			}
-			
+
+			olp.Offset = pthread_params_calc->qwBytesReadCurFile & 0xffff;
+			olp.OffsetHigh = (pthread_params_calc->qwBytesReadCurFile >> 32) & 0xffff;
+			ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, NULL, &olp);
+
 			do {
-				bSuccess = ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, dwBytesReadRb, NULL);
+				bSuccess = GetOverlappedResult(hFile,&olp,dwBytesReadRb,TRUE);
 				if(!bSuccess) {
 					pFileinfo->dwError = GetLastError();
 					if(hThreadMd5)
@@ -185,9 +197,14 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				}
 				pthread_params_calc->qwBytesReadCurFile  += *dwBytesReadRb; //for progress bar
 				pthread_params_calc->qwBytesReadAllFiles += *dwBytesReadRb;
+
+				olp.Offset = pthread_params_calc->qwBytesReadCurFile & 0xffffffff;
+				olp.OffsetHigh = (pthread_params_calc->qwBytesReadCurFile >> 32) & 0xffffffff;
 				
 				WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
 				SWAPBUFFERS();
+				ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, NULL, &olp);
+
 				if(*dwBytesReadCb<MAX_BUFFER_SIZE_CALC)
 					bFileDone=TRUE;
 
