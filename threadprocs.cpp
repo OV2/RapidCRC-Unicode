@@ -60,8 +60,9 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	BYTE *readBuffer = (BYTE *)malloc(MAX_BUFFER_SIZE_CALC);
 	BYTE *calcBuffer = (BYTE *)malloc(MAX_BUFFER_SIZE_CALC);
 	BYTE *tempBuffer;
-	DWORD *dwBytesReadRb=(DWORD *)malloc(sizeof(DWORD));
-	DWORD *dwBytesReadCb=(DWORD *)malloc(sizeof(DWORD));
+	DWORD readWords[2];
+	DWORD *dwBytesReadRb = &readWords[0];
+	DWORD *dwBytesReadCb = &readWords[1];
 	DWORD *dwBytesReadTb;
 	BOOL bSuccess;
 	BOOL bFileDone;
@@ -262,6 +263,9 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 	PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_CALC_DONE, 0, 0);
 	
+	free(readBuffer);
+	free(calcBuffer);
+
 	_endthreadex( 0 );
 	return 0;
 }

@@ -45,9 +45,7 @@
 
 // some sizes for variables
 //#define MAX_BUFFER_SIZE_CALC	0x10000
-#define MAX_BUFFER_SIZE_CALC	1048576
-//#define MAX_BUFFER_SIZE_CALC	5242880
-//#define MAX_BUFFER_SIZE_CALC	10485760
+#define MAX_BUFFER_SIZE_CALC	0x100000
 #define MAX_BUFFER_SIZE_OFN 0xFFFFF // Win9x has a problem with values where just the first bit is set like 0x20000 for OFN buffer:
 #define MAX_LINE_LENGTH 1000
 #define MAX_RESULT_LINE 200

@@ -167,6 +167,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		bThreadDone = FALSE;
 		hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc_Calc, &thread_params_calc, 0, &uiThreadID);
 
+		SendMessage(arrHwnd[ID_PROGRESS_FILE], PBM_SETPOS , (WPARAM) 0, 0);
+		SendMessage(arrHwnd[ID_PROGRESS_GLOBAL], PBM_SETPOS , (WPARAM) 0, 0);
 		SetTimer(hWnd, WM_TIMER_PROGRESS_500, 500, NULL);
 
 		return 0;
