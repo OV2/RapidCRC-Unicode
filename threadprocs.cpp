@@ -23,6 +23,7 @@
 #include <commctrl.h>
 #include "ed2k_hash.h"
 
+// used in UINT __stdcall ThreadProc_Calc(VOID * pParam)
 #define SWAPBUFFERS() \
 	tempBuffer=readBuffer;\
 	dwBytesReadTb=dwBytesReadRb;\
@@ -40,9 +41,13 @@ Return Value:
 
 Notes:
 - walks trough the Fileinfo list and calculates CRCs
+- spawns up to three additional threads, one for each hash value
+- performs asynchronous I/O with two buffers -> one buffer is filled while the hash-threads
+  work on the other buffer
 - if an error occured, GetLastError() is saved in the current pFileinfo->dwError
-- what is has be calculated is sent to ThreadProc_Crc via pthread_params_crc->bCalculateCrc and
-  pthread_params_crc->bCalculateMd5. The calling function has to implement the above logic
+- what is has be calculated is sent to ThreadProc_Crc via pthread_params_crc->bCalculateCrc,
+  pthread_params_crc->bCalculateMd5 and pthread_params_crc->bCalculateEd2k.
+  The calling function has to implement the above logic
 *****************************************************************************/
 UINT __stdcall ThreadProc_Calc(VOID * pParam)
 {
@@ -90,6 +95,11 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	THREAD_PARAMS_HASHCALC md5CalcParams;
 	THREAD_PARAMS_HASHCALC ed2kCalcParams;
 	THREAD_PARAMS_HASHCALC crcCalcParams;
+
+	if(readBuffer == NULL || calcBuffer == NULL) {
+		ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+		ExitProcess(1);
+	}
 	
 
 	// set some UI stuff:
@@ -104,6 +114,10 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 		g_program_status.bCrcCalculated = TRUE;
 		hEvtThreadCrcGo = CreateEvent(NULL,FALSE,FALSE,NULL);
 		hEvtThreadCrcReady = CreateEvent(NULL,FALSE,FALSE,NULL);
+		if(hEvtThreadCrcGo == NULL || hEvtThreadCrcReady == NULL) {
+			ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+			ExitProcess(1);
+		}
 		hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadCrcReady;
 		cEvtReadyHandles++;
 		crcCalcParams.bFileDone = &bFileDone;
@@ -117,6 +131,10 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 		g_program_status.bMd5Calculated = TRUE;
 		hEvtThreadMd5Go = CreateEvent(NULL,FALSE,FALSE,NULL);
 		hEvtThreadMd5Ready = CreateEvent(NULL,FALSE,FALSE,NULL);
+		if(hEvtThreadMd5Go == NULL || hEvtThreadMd5Ready == NULL) {
+			ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+			ExitProcess(1);
+		}
 		hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadMd5Ready;
 		cEvtReadyHandles++;
 		md5CalcParams.bFileDone = &bFileDone;
@@ -130,6 +148,10 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 		g_program_status.bEd2kCalculated = TRUE;
 		hEvtThreadEd2kGo = CreateEvent(NULL,FALSE,FALSE,NULL);
 		hEvtThreadEd2kReady = CreateEvent(NULL,FALSE,FALSE,NULL);
+		if(hEvtThreadEd2kGo == NULL || hEvtThreadEd2kReady == NULL) {
+			ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+			ExitProcess(1);
+		}
 		hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadEd2kReady;
 		cEvtReadyHandles++;
 		ed2kCalcParams.bFileDone = &bFileDone;
@@ -140,6 +162,10 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	}
 
 	hEvtReadDone = CreateEvent(NULL,FALSE,FALSE,NULL);
+	if(hEvtReadDone == NULL) {
+		ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+		ExitProcess(1);
+	}
 
 	QueryPerformanceFrequency((LARGE_INTEGER*)&wqFreq);
 
@@ -170,14 +196,26 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			if(bCalculateCrc) {
 				crcCalcParams.result = &pFileinfo->dwCrc32Result;
 				hThreadCrc = CreateThread(NULL,0,ThreadProc_CrcCalc,&crcCalcParams,0,NULL);
+				if(hThreadCrc == NULL) {
+					ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+					ExitProcess(1);
+				}
 			}
 			if(bCalculateMd5) {
 				md5CalcParams.result = &pFileinfo->abMd5Result;
 				hThreadMd5 = CreateThread(NULL,0,ThreadProc_Md5Calc,&md5CalcParams,0,NULL);
+				if(hThreadMd5 == NULL) {
+					ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+					ExitProcess(1);
+				}
 			}
 			if(bCalculateEd2k) {
 				ed2kCalcParams.result = &pFileinfo->abEd2kResult;
-				hThreadCrc = CreateThread(NULL,0,ThreadProc_Ed2kCalc,&ed2kCalcParams,0,NULL);
+				hThreadEd2k = CreateThread(NULL,0,ThreadProc_Ed2kCalc,&ed2kCalcParams,0,NULL);
+				if(hThreadEd2k == NULL) {
+					ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+					ExitProcess(1);
+				}
 			}
 
 			olp.Offset = pthread_params_calc->qwBytesReadCurFile & 0xffff;
@@ -385,7 +423,18 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 }
 
 
+/*****************************************************************************
+DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam)
+	pParam	: (IN/OUT) THREAD_PARAMS_HASHCALC struct pointer special for this thread
 
+Return Value:
+	returns 0
+
+Notes:
+- initializes the md5 hash calculation and loops through the calculation until
+  ThreadProc_Calc signalizes the end of the file
+- buffer synchronization is done through hEvtThreadReady and hEvtThreadGo
+*****************************************************************************/
 DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam)
 {
 	BYTE ** CONST buffer=((THREAD_PARAMS_HASHCALC *)pParam)->buffer;
@@ -406,6 +455,18 @@ DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam)
 	return 0;
 }
 
+/*****************************************************************************
+DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam)
+	pParam	: (IN/OUT) THREAD_PARAMS_HASHCALC struct pointer special for this thread
+
+Return Value:
+	returns 0
+
+Notes:
+- initializes the ed2k hash calculation and loops through the calculation until
+  ThreadProc_Calc signalizes the end of the file
+- buffer synchronization is done through hEvtThreadReady and hEvtThreadGo
+*****************************************************************************/
 DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam)
 {
 	BYTE ** CONST buffer=((THREAD_PARAMS_HASHCALC *)pParam)->buffer;
@@ -427,6 +488,18 @@ DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam)
 	return 0;
 }
 
+/*****************************************************************************
+DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam)
+	pParam	: (IN/OUT) THREAD_PARAMS_HASHCALC struct pointer special for this thread
+
+Return Value:
+	returns 0
+
+Notes:
+- initializes the crc hash calculation and loops through the calculation until
+  ThreadProc_Calc signalizes the end of the file
+- buffer synchronization is done through hEvtThreadReady and hEvtThreadGo
+*****************************************************************************/
 DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam)
 {
 	BYTE ** CONST buffer=((THREAD_PARAMS_HASHCALC *)pParam)->buffer;

@@ -23,6 +23,7 @@
 #include <shlobj.h>
 #include <mlang.h>
 
+// used in UINT DetermineFileCP(CONST HANDLE hFile)
 #define TESTBUFFER_SIZE 4096
 
 /*****************************************************************************
@@ -78,6 +79,44 @@ DWORD HexToDword(CONST TCHAR * szHex, UINT uiStringSize)
 	}
 
 	return dwResult;
+}
+
+/*****************************************************************************
+BOOL GetVersionString(TCHAR *buffer,CONST int buflen)
+	buffer	: (IN) pointer to buffer to be filled with the version string
+	buflen  : (IN) length of the buffer pointed to by buffer
+
+Return Value:
+	returns TRUE if the operation succeeds,	FALSE otherwise
+*****************************************************************************/
+BOOL GetVersionString(TCHAR *buffer,CONST int buflen)
+{
+	void *verInfo;
+	void *verString;
+	DWORD infoSize;
+	UINT verLen;
+
+	if(!GetModuleFileName(0,buffer,buflen))
+		return FALSE;
+
+	if(!(infoSize = GetFileVersionInfoSize(buffer,&infoSize)))
+		return FALSE;
+
+	if(!(verInfo = malloc(infoSize)))
+		return FALSE;
+
+	if(!GetFileVersionInfo(buffer,0,infoSize,verInfo)) {
+		free(verInfo);
+		return FALSE;
+	}
+
+	if(!VerQueryValue(verInfo,TEXT("\\StringFileInfo\\040704b0\\FileVersion"),&verString,&verLen)) {
+		free(verInfo);
+		return FALSE;
+	}
+	StringCchPrintf(buffer,buflen,TEXT("RapidCRC Unicode %s"),(TCHAR *)verString);
+	free(verInfo);
+	return TRUE;
 }
 
 

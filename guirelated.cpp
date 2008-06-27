@@ -71,20 +71,9 @@ BOOL InitInstance(CONST INT iCmdShow)
 {
 	HWND hWnd;
 	TCHAR buffer[MAX_PATH];
-	void *verInfo;
-	void *verString;
-	DWORD infoSize;
-	UINT verLen;
-
-	GetModuleFileName(0,buffer,MAX_PATH);
-	infoSize = GetFileVersionInfoSize(buffer,&infoSize);
-	verInfo = malloc(infoSize);
-	GetFileVersionInfo(buffer,0,infoSize,verInfo);
-
-	VerQueryValue(verInfo,TEXT("\\StringFileInfo\\040704b0\\FileVersion"),&verString,&verLen);	
-	StringCchPrintf(buffer,MAX_PATH,TEXT("RapidCRC Unicode %s"),(TCHAR *)verString);
-	free(verInfo);
-
+	
+	if(!GetVersionString(buffer,MAX_PATH))
+		StringCchCopy(buffer,MAX_PATH,TEXT("RapidCRC Unicode"));
 	hWnd = CreateWindow(TEXT("RapidCrcMainWindow"), buffer, WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, (HMENU)ID_MAIN_WND, g_hInstance, NULL);
 

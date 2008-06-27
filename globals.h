@@ -306,6 +306,7 @@ BOOL ListViewHeaderPopup(HWND pHwnd,HMENU pupup,int x,int y);
 //helper functions (helpfcts.cpp)
 BOOL IsLegalHexSymbol(CONST TCHAR tcChar);
 DWORD HexToDword(CONST TCHAR * szHex, UINT uiStringSize);
+BOOL GetVersionString(TCHAR *buffer,CONST int buflen);
 BOOL IsUnicodeFile(CONST HANDLE hFile);
 UINT DetermineFileCP(CONST HANDLE hFile);
 BOOL CheckExcludeStringMatch(CONST TCHAR *szFilename);
