@@ -174,8 +174,6 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	{
 		pthread_params_calc->pFileinfo_cur = pFileinfo;
 		pthread_params_calc->qwBytesReadCurFile = 0;
-
-		olp.hEvent = hEvtReadDone;
 		
 
         if ( (pFileinfo->dwError == NO_ERROR) && (pFileinfo->qwFilesize != 0) && (bCalculateCrc || bCalculateMd5 || bCalculateEd2k))
@@ -194,6 +192,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			bFileDone = FALSE;
 
 			if(bCalculateCrc) {
+				ResetEvent(hEvtThreadCrcGo);
+				ResetEvent(hEvtThreadCrcReady);
 				crcCalcParams.result = &pFileinfo->dwCrc32Result;
 				hThreadCrc = CreateThread(NULL,0,ThreadProc_CrcCalc,&crcCalcParams,0,NULL);
 				if(hThreadCrc == NULL) {
@@ -202,6 +202,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				}
 			}
 			if(bCalculateMd5) {
+				ResetEvent(hEvtThreadMd5Go);
+				ResetEvent(hEvtThreadMd5Ready);
 				md5CalcParams.result = &pFileinfo->abMd5Result;
 				hThreadMd5 = CreateThread(NULL,0,ThreadProc_Md5Calc,&md5CalcParams,0,NULL);
 				if(hThreadMd5 == NULL) {
@@ -210,6 +212,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				}
 			}
 			if(bCalculateEd2k) {
+				ResetEvent(hEvtThreadEd2kGo);
+				ResetEvent(hEvtThreadEd2kReady);
 				ed2kCalcParams.result = &pFileinfo->abEd2kResult;
 				hThreadEd2k = CreateThread(NULL,0,ThreadProc_Ed2kCalc,&ed2kCalcParams,0,NULL);
 				if(hThreadEd2k == NULL) {
@@ -218,20 +222,23 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				}
 			}
 
-			olp.Offset = pthread_params_calc->qwBytesReadCurFile & 0xffff;
-			olp.OffsetHigh = (pthread_params_calc->qwBytesReadCurFile >> 32) & 0xffff;
+			ZeroMemory(&olp,sizeof(olp));
+			olp.hEvent = hEvtReadDone;
+			olp.Offset = 0;
+			olp.OffsetHigh = 0;
 			ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, NULL, &olp);
 
 			do {
 				bSuccess = GetOverlappedResult(hFile,&olp,dwBytesReadRb,TRUE);
-				if(!bSuccess) {
+				if(!bSuccess && GetLastError() != ERROR_HANDLE_EOF) {
 					pFileinfo->dwError = GetLastError();
-					if(hThreadMd5)
-						TerminateThread(hThreadMd5,1);
-					if(hThreadEd2k)
-						TerminateThread(hThreadMd5,1);
-					if(hThreadCrc)
-						TerminateThread(hThreadMd5,1);
+					bFileDone = TRUE;
+					if(bCalculateCrc)
+						SetEvent(hEvtThreadCrcGo);
+					if(bCalculateMd5)
+						SetEvent(hEvtThreadMd5Go);
+					if(bCalculateEd2k)
+						SetEvent(hEvtThreadEd2kGo);
 					break;
 				}
 				pthread_params_calc->qwBytesReadCurFile  += *dwBytesReadRb; //for progress bar
@@ -596,6 +603,8 @@ DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam)
 		
 		bufferAsm = *buffer;
 		dwBytesReadAsm = **dwBytesRead;
+
+		if(dwBytesReadAsm==0) continue;
 
 		// Register use:
 		//		eax - CRC32 value
