@@ -1,117 +1,63 @@
-/***************************************************************************
-                          md4.h  -  description
-                             -------------------
-    begin                : Tue Sep 3 2002
-    copyright            : (C) 2002 by Tim-Philipp Müller
-    email                : t.i.m@orange.net
- ***************************************************************************/
+//
+// MD4.h
+//
+// Copyright (c) Shareaza Development Team, 2002-2004.
+// This file is part of SHAREAZA (www.shareaza.com)
+//
+// Shareaza is free software; you can redistribute it
+// and/or modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2 of
+// the License, or (at your option) any later version.
+//
+// Shareaza is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Shareaza; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+#pragma once
 
-/***************************************************************************
- *                                                                         *
- *   This program is free software; you can redistribute it and/or modify  *
- *   it under the terms of the GNU General Public License as published by  *
- *   the Free Software Foundation; either version 2 of the License, or     *
- *   (at your option) any later version.                                   *
- *                                                                         *
- ***************************************************************************/
-
-#ifndef _ed2k_hash_md4_h_included_
-#define _ed2k_hash_md4_h_included_
-
-/* we could use the openssl md4 hashing routines instead of our own.
-   Anyone care to add the configure skript check for openssl and the MD4 routines?
-*/
-#ifdef HAVE_OPENSSL
-# include <openssl/md4.h>
-#else
-
-/* MD4.H - header file for MD4C.C
- */
-
-/* Copyright (C) 1991-2, RSA Data Security, Inc. Created 1991. All
-   rights reserved.
-
-   License to copy and use this software is granted provided that it
-   is identified as the "RSA Data Security, Inc. MD4 Message-Digest
-   Algorithm" in all material mentioning or referencing this software
-   or this function.
-
-   License is also granted to make and use derivative works provided
-   that such works are identified as "derived from the RSA Data
-   Security, Inc. MD4 Message-Digest Algorithm" in all material
-   mentioning or referencing the derived work.
-
-   RSA Data Security, Inc. makes no representations concerning either
-   the merchantability of this software or the suitability of this
-   software for any particular purpose. It is provided "as is"
-   without express or implied warranty of any kind.
-
-   These notices must be retained in any copies of any part of this
-   documentation and/or software.
- */
-
-/* PROTOTYPES should be set to one if and only if the compiler supports
-     function argument prototyping.
-   The following makes PROTOTYPES default to 0 if it has not already
-     been defined with C compiler flags.
- */
-#ifndef PROTOTYPES
-#define PROTOTYPES 1
-#endif
-
-/* POINTER defines a generic pointer type */
-typedef unsigned char *POINTER;
-
-/* UINT2 defines a two byte word */
-typedef unsigned short int UINT2;
-
-/* UINT4 defines a four byte word */
-typedef unsigned long int UINT4;
-
-/* PROTO_LIST is defined depending on how PROTOTYPES is defined above.
-   If using PROTOTYPES, then PROTO_LIST returns the list, otherwise it
-     returns an empty list.
- */
-
-#if PROTOTYPES
-#define PROTO_LIST(list) list
-#else
-#define PROTO_LIST(list) ()
-#endif
-
-
-/* MD4 context. */
-
-#define MD4_Init	MD4Init
-#define MD4_Update	MD4Update
-#define MD4_Final	MD4Final
-
-typedef struct
+typedef union
 {
-  UINT4 state[4];                                   /* state (ABCD) */
-  UINT4 count[2];        /* number of bits, modulo 2^64 (lsb first) */
-  unsigned char buffer[64];                         /* input buffer */
-} MD4_CTX;
+	BYTE	n[16];
+	BYTE	b[16];
+	DWORD	w[4];
+} MD4, MD5;
 
-#ifdef __cplusplus
-extern "C" {
-#endif 
+class CMD4
+{
+// Construction
+public:
+	CMD4();
+	virtual ~CMD4();
 
-void MD4Init PROTO_LIST ((MD4_CTX *));
-void MD4Update PROTO_LIST
-  ((MD4_CTX *, unsigned char *, unsigned int));
-void MD4Final PROTO_LIST ((unsigned char [16], MD4_CTX *));
+	static bool VerifyImplementation();
 
-#ifdef __cplusplus
+// Attributes
+protected:
+	// NOTE: if you change this, modify the offsets in MD4_ASM.ASM accordingly
+	DWORD	m_nState[4];
+	DWORD	m_nCount[2];
+	BYTE	m_nBuffer[64];
+
+// Operations
+public:
+	void	Reset();
+	void	Add(LPCVOID pData, DWORD nLength);
+	void	Finish();
+	void	GetHash(MD4* pHash);
+	const BYTE* GetHash() const { return (const BYTE*)m_nState; }
+};
+
+inline bool operator==(const MD4& md4a, const MD4& md4b)
+{
+    return memcmp( &md4a, &md4b, 16 ) == 0;
 }
-#endif
 
-
-/*unsigned char *MD4 (unsigned char *data, unsigned int len, unsigned char *md);*/
-
-
-#endif	/* ifdef HAVE_OPENSSL */
-
-#endif	/* ifndef _ed2k_hash_md4_h_included_ */
-
-
+inline bool operator!=(const MD4& md4a, const MD4& md4b)
+{
+    return memcmp( &md4a, &md4b, 16 ) != 0;
+}
