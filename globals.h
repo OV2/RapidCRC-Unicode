@@ -23,6 +23,15 @@
 #include <windows.h>
 #include <strsafe.h>
 
+#pragma comment(linker, \
+    "\"/manifestdependency:type='Win32' "\
+    "name='Microsoft.Windows.Common-Controls' "\
+    "version='6.0.0.0' "\
+    "processorArchitecture='*' "\
+    "publicKeyToken='6595b64144ccf1df' "\
+    "language='*'\"")
+# pragma comment(lib, "comctl32.lib")
+
 //****** some defines *******
 // conditional compilation
 //#define USE_MD5_REF			// use reference implementation from rfc
@@ -103,42 +112,38 @@
 // Window IDs (indexes for arrHwnd array)
 #define ID_MAIN_WND					0
 #define ID_GROUP_RESULT				1
-#define ID_GROUP_ACTION				2
-#define ID_STATIC_FILENAME			3
-#define ID_STATIC_CRC_VALUE			4
-#define ID_STATIC_MD5_VALUE			5
-#define ID_STATIC_INFO				6
-#define ID_STATIC_STATUS			7
-#define ID_STATIC_CRC_IN_SFV		8
-#define ID_STATIC_CRC_IN_FILENAME	9
-#define ID_STATIC_PRIORITY			10
-#define ID_PROGRESS_FILE			11
-#define ID_PROGRESS_GLOBAL			12
-#define ID_STATIC_MD5_IN_MD5		13
 
-#define ID_FIRST_TAB_CONTROL		14
-#define ID_BTN_EXIT					14
-#define ID_BTN_OPENFILES_PAUSE		15
-#define ID_BTN_OPTIONS				16
-#define ID_BTN_MD5_IN_MD5			17
-#define ID_BTN_CRC_IN_SFV			18
-#define ID_BTN_CRC_IN_FILENAME		19
-#define ID_COMBO_PRIORITY			20
-#define ID_LISTVIEW					21
-#define ID_EDIT_FILENAME			22
-#define ID_EDIT_CRC_VALUE			23
-#define ID_EDIT_MD5_VALUE			24
-#define ID_EDIT_INFO				25
-#define ID_EDIT_STATUS				26
-#define ID_BTN_ERROR_DESCR			27
+#define ID_STATIC_FILENAME			2
+#define ID_STATIC_CRC_VALUE			3
+#define ID_STATIC_MD5_VALUE			4
+#define ID_STATIC_INFO				5
+#define ID_STATIC_STATUS			6
 
-#define ID_BTN_CRC_IN_STREAM		28
+#define ID_STATIC_PRIORITY			7
+#define ID_PROGRESS_FILE			8
+#define ID_PROGRESS_GLOBAL			9
 
-#define ID_LAST_TAB_CONTROL			28
+#define ID_FIRST_TAB_CONTROL		10
+#define ID_BTN_EXIT					11
+#define ID_BTN_OPENFILES_PAUSE		12
+#define ID_BTN_OPTIONS				13
+#define ID_BTN_MD5_IN_MD5			14
+#define ID_BTN_CRC_IN_SFV			15
+#define ID_BTN_CRC_IN_FILENAME		16
+#define ID_COMBO_PRIORITY			17
+#define ID_LISTVIEW					18
+#define ID_EDIT_FILENAME			19
+#define ID_EDIT_CRC_VALUE			20
+#define ID_EDIT_MD5_VALUE			21
+#define ID_EDIT_INFO				22
+#define ID_EDIT_STATUS				23
+#define ID_BTN_ERROR_DESCR			24
 
-#define ID_STATIC_CRC_IN_STREAM		29
+#define ID_LAST_TAB_CONTROL			24
 
-#define ID_NUM_WINDOWS				30
+#define ID_BTN_CRC_IN_STREAM		25
+
+#define ID_NUM_WINDOWS				26
 
 #define IDM_COPY_CRC				40
 #define IDM_COPY_MD5				41
@@ -236,11 +241,13 @@ typedef struct{
 	TCHAR			szFilenameSfv[MAX_PATH];
 	TCHAR			szFilenameMd5[MAX_PATH];
 	BOOL			bCreateUnixStyle;
+	//RCR Unicode specific
 	BOOL			bCreateUnicodeFiles;
 	BOOL			bAutoScrollListView;
 	TCHAR			szExcludeString[MAX_PATH];
     UNICODE_TYPE    iUnicodeSaveType;
-	// version after 6
+	UINT			uiWndLeft;
+	UINT			uiWndTop;
 }PROGRAM_OPTIONS;
 
 typedef struct{
@@ -325,7 +332,7 @@ VOID CopyJustProgramOptions(CONST PROGRAM_OPTIONS * pProgram_options_src, PROGRA
 BOOL IsStringPrefix(CONST TCHAR szSearchPattern[MAX_PATH], CONST TCHAR szSearchString[MAX_PATH]);
 DWORD MyPriorityToPriorityClass(CONST UINT uiMyPriority);
 VOID GetInfoColumnText(TCHAR * szString, CONST size_t stStringSize, CONST INT iImageIndex, CONST DWORD dwError);
-BOOL IsWin2000orHigher();
+BOOL CheckOsVersion(DWORD version,DWORD minorVersion);
 FILEINFO ** GenArrayFromFileinfoList(UINT * puiNumElements);
 VOID ReplaceChar(TCHAR * szString, CONST size_t stBufferLength, CONST TCHAR tcIn, CONST TCHAR tcOut);
 #ifdef USE_TIME_MEASUREMENT

@@ -407,6 +407,8 @@ VOID WriteOptions(CONST HWND hMainWnd, CONST LONG lACW, CONST LONG lACH)
 	GetWindowPlacement(hMainWnd, & wp);
 	g_program_options.uiWndWidth	= (wp.rcNormalPosition.right - wp.rcNormalPosition.left) / lACW;
 	g_program_options.uiWndHeight	= (wp.rcNormalPosition.bottom - wp.rcNormalPosition.top) / lACH;
+	g_program_options.uiWndLeft		= wp.rcNormalPosition.left;
+	g_program_options.uiWndTop		= wp.rcNormalPosition.top;
 	g_program_options.iWndCmdShow	= wp.showCmd;
 
 	// Generate filename of the options file
@@ -714,19 +716,19 @@ VOID GetInfoColumnText(TCHAR * szString, CONST size_t stStringSize, CONST INT iI
 }
 
 /*****************************************************************************
-BOOL IsWin2000orHigher()
+BOOL CheckOsVersion(DWORD version,DWORD minorVersion)
 
 Return Value:
-returns TRUE if running system is Win2k or later
+returns TRUE if running system is specified version or later
 *****************************************************************************/
-BOOL IsWin2000orHigher() 
+BOOL CheckOsVersion(DWORD version,DWORD minorVersion)
 {
 	OSVERSIONINFO ovi;
 
 	ovi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx(& ovi);
 
-	return (ovi.dwMajorVersion >= 5);
+	return (ovi.dwMajorVersion > version || (ovi.dwMajorVersion == version && ovi.dwMinorVersion >= minorVersion));
 }
 
 /*****************************************************************************

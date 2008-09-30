@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <math.h>
 #include <limits.h>
 #include <commctrl.h>
-#include <uxtheme.h>
+//#include <uxtheme.h>
 #include <windowsx.h>
 
 /*****************************************************************************
@@ -114,7 +114,6 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	TEXTMETRIC tm;
 	HFONT hFont;
 	INITCOMMONCONTROLSEX iccex;
-	RECT rect;
 	INT i;
 	LOGFONT lf;
 
@@ -140,7 +139,9 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	lf.lfClipPrecision		= CLIP_DEFAULT_PRECIS; 
 	lf.lfQuality			= DEFAULT_QUALITY; 
 	lf.lfPitchAndFamily		= DEFAULT_PITCH  | FF_DONTCARE;
-	if(IsWin2000orHigher())
+	if(CheckOsVersion(6,0))			//Vista
+		StringCchCopy(lf.lfFaceName, LF_FACESIZE, TEXT("Segoe UI"));
+	else if(CheckOsVersion(5,0))		//2000 - Vista
 		StringCchCopy(lf.lfFaceName, LF_FACESIZE, TEXT("MS Shell Dlg 2"));
 	else
 		StringCchCopy(lf.lfFaceName, LF_FACESIZE, TEXT("MS Shell Dlg"));
@@ -157,7 +158,6 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 
 	arrHwnd[ID_MAIN_WND]				= hMainWnd;
 	arrHwnd[ID_GROUP_RESULT]			= CreateWindow(TEXT("BUTTON"), TEXT("Results"), BS_GROUPBOX | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_GROUP_RESULT, g_hInstance, NULL);
-	arrHwnd[ID_GROUP_ACTION]			= CreateWindow(TEXT("BUTTON"), TEXT("Action"), BS_GROUPBOX | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_GROUP_ACTION, g_hInstance, NULL);
 
 	arrHwnd[ID_STATIC_FILENAME]			= CreateWindow(TEXT("STATIC"), TEXT("File:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_FILENAME, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_FILENAME]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_FILENAME, g_hInstance, NULL);
@@ -172,25 +172,25 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	arrHwnd[ID_STATIC_STATUS]			= CreateWindow(TEXT("STATIC"), TEXT("Status:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_STATUS, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_STATUS]				= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_STATUS, g_hInstance, NULL);
 
-	arrHwnd[ID_STATIC_CRC_IN_FILENAME]	= CreateWindow(TEXT("STATIC"), TEXT("Put CRC into Filename"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_CRC_IN_FILENAME, g_hInstance, NULL);
-	arrHwnd[ID_BTN_CRC_IN_FILENAME]		= CreateWindow(TEXT("BUTTON"), TEXT("Go"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_FILENAME, g_hInstance, NULL);
-	arrHwnd[ID_STATIC_CRC_IN_SFV]		= CreateWindow(TEXT("STATIC"), TEXT("Create SFV file"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_CRC_IN_SFV, g_hInstance, NULL);
-	arrHwnd[ID_BTN_CRC_IN_SFV]			= CreateWindow(TEXT("BUTTON"), TEXT("Go"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_SFV, g_hInstance, NULL);
-	arrHwnd[ID_STATIC_MD5_IN_MD5]		= CreateWindow(TEXT("STATIC"), TEXT("Create MD5 file"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_MD5_IN_MD5, g_hInstance, NULL);
-	arrHwnd[ID_BTN_MD5_IN_MD5]			= CreateWindow(TEXT("BUTTON"), TEXT("Go"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_MD5_IN_MD5, g_hInstance, NULL);
+	arrHwnd[ID_BTN_CRC_IN_FILENAME]		= CreateWindow(TEXT("BUTTON"), TEXT("Put CRC into Filename"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_FILENAME, g_hInstance, NULL);
+	arrHwnd[ID_BTN_CRC_IN_SFV]			= CreateWindow(TEXT("BUTTON"), TEXT("Create SFV file"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_SFV, g_hInstance, NULL);
+	SendMessage(arrHwnd[ID_BTN_CRC_IN_SFV],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+	arrHwnd[ID_BTN_MD5_IN_MD5]			= CreateWindow(TEXT("BUTTON"), TEXT("Create MD5 file"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_MD5_IN_MD5, g_hInstance, NULL);
+	SendMessage(arrHwnd[ID_BTN_MD5_IN_MD5],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+	arrHwnd[ID_BTN_OPTIONS]				= CreateWindow(TEXT("BUTTON"), TEXT("Options"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_OPTIONS, g_hInstance, NULL);
 
 	arrHwnd[ID_STATIC_PRIORITY]			= CreateWindow(TEXT("STATIC"), TEXT("Priority"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_PRIORITY, g_hInstance, NULL);
-	arrHwnd[ID_COMBO_PRIORITY]			= CreateWindow(TEXT("COMBOBOX"), NULL, CBS_DROPDOWNLIST | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_COMBO_PRIORITY, g_hInstance, NULL);
-	arrHwnd[ID_BTN_OPTIONS]				= CreateWindow(TEXT("BUTTON"), TEXT("Options"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_OPTIONS, g_hInstance, NULL);
+	arrHwnd[ID_COMBO_PRIORITY]			= CreateWindow(TEXT("COMBOBOX"), NULL, CBS_DROPDOWNLIST | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_COMBO_PRIORITY, g_hInstance, NULL);	
 
 	arrHwnd[ID_PROGRESS_FILE]			= CreateWindow(PROGRESS_CLASS, NULL, WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_PROGRESS_FILE, g_hInstance, NULL);
 	arrHwnd[ID_PROGRESS_GLOBAL]			= CreateWindow(PROGRESS_CLASS, NULL, WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_PROGRESS_GLOBAL, g_hInstance, NULL);
 	arrHwnd[ID_BTN_OPENFILES_PAUSE]		= CreateWindow(TEXT("BUTTON"), TEXT("Open Files"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_OPENFILES_PAUSE, g_hInstance, NULL);
+	SendMessage(arrHwnd[ID_BTN_OPENFILES_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_OPEN),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+
 	arrHwnd[ID_BTN_EXIT]				= CreateWindow(TEXT("BUTTON"), TEXT("Exit"), BS_DEFPUSHBUTTON |WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_EXIT, g_hInstance, NULL);
 	arrHwnd[ID_LISTVIEW]				= CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, NULL, LVS_REPORT | LVS_SHOWSELALWAYS | WS_VISIBLE | WS_CHILD | WS_VSCROLL, 0, 0, 0, 0, hMainWnd, (HMENU)ID_LISTVIEW, g_hInstance, NULL);
 
-	arrHwnd[ID_STATIC_CRC_IN_STREAM]	= CreateWindow(TEXT("STATIC"), TEXT("Put CRC into NTFS Stream"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_CRC_IN_FILENAME, g_hInstance, NULL);
-	arrHwnd[ID_BTN_CRC_IN_STREAM]		= CreateWindow(TEXT("BUTTON"), TEXT("Go"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_STREAM, g_hInstance, NULL);
+	arrHwnd[ID_BTN_CRC_IN_STREAM]		= CreateWindow(TEXT("BUTTON"), TEXT("Put CRC into NTFS Stream"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_STREAM, g_hInstance, NULL);
 
 	// select everywhere the font that is usually used today in all applications
 	for(i=0; i < ID_NUM_WINDOWS; i++)
@@ -208,8 +208,7 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	SetFocus(arrHwnd[ID_FIRST_TAB_CONTROL]);
 
 	// resize main window to the desired size
-	GetWindowRect(arrHwnd[ID_MAIN_WND], & rect);
-	MoveWindow(arrHwnd[ID_MAIN_WND], rect.left, rect.top, (*plAveCharWidth) * g_program_options.uiWndWidth, (*plAveCharHeight) * g_program_options.uiWndHeight, FALSE);
+	MoveWindow(arrHwnd[ID_MAIN_WND], g_program_options.uiWndLeft, g_program_options.uiWndTop, (*plAveCharWidth) * g_program_options.uiWndWidth, (*plAveCharHeight) * g_program_options.uiWndHeight, FALSE);
 
 	InitListView(arrHwnd[ID_LISTVIEW], *plAveCharWidth);
 
@@ -423,7 +422,6 @@ BOOL ListViewHeaderPopup(HWND pHwnd,HMENU popup,int x,int y) {
     return FALSE;
 }
 
-
 /*****************************************************************************
 BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	hWndListView	: (IN) handle to a listview. Is assumed to be in report style
@@ -439,17 +437,30 @@ SetSubItemColumns())
 - creates an image list from icons and attaches it to the listview. So the
 icons get index numbers which can be used when item are inserted
 *****************************************************************************/
+typedef HRESULT (WINAPI *SWT)(HWND hwnd,LPCWSTR pszSubAppName,LPCWSTR pszSubIdList);
 BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 { 
 	HICON hiconItem;     // icon for list-view items 
 	HIMAGELIST hSmall;   // image list for other views 
 	LVCOLUMN lvcolumn;
+	SWT SetWindowTheme;
+	HMODULE uxTheme;
 
 	//full row select
 	ListView_SetExtendedListViewStyle(hWndListView, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
     //explorer-style listview
-    SetWindowTheme(hWndListView, L"Explorer", NULL);
+	if(CheckOsVersion(5,1)) {
+		uxTheme = LoadLibrary(TEXT("uxtheme.dll"));
+		if(uxTheme) {
+			SetWindowTheme = (SWT) GetProcAddress(uxTheme,"SetWindowTheme");
+			if(SetWindowTheme != NULL) {
+				(SetWindowTheme)(hWndListView, L"Explorer", NULL);
+				(SetWindowTheme)(ListView_GetHeader(hWndListView), L"Explorer", NULL);
+			}
+			FreeLibrary(uxTheme);
+		}
+	}
 
 	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvcolumn.fmt = LVCFMT_LEFT;
@@ -462,22 +473,22 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	SetSubItemColumns(hWndListView, lACW);
 
 	// Create the full-sized icon image lists. 
-	hSmall = ImageList_Create(16, 16, ILC_COLOR24, 4, 1);
+	hSmall = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 4, 1);
 
-	// Add the icons to image list.  
-	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_OK)); 
+	// Add the icons to image list.
+	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_MODERN_OK2)); 
 	ImageList_AddIcon(hSmall, hiconItem); 
 	DestroyIcon(hiconItem); 
 
-	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_NOT_OK)); 
+	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_MODERN_NOTOK)); 
 	ImageList_AddIcon(hSmall, hiconItem); 
 	DestroyIcon(hiconItem); 
 
-	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_NO_CRC)); 
+	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_MODERN_NOCRC)); 
 	ImageList_AddIcon(hSmall, hiconItem); 
 	DestroyIcon(hiconItem); 
 
-	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_ERROR)); 
+	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_MODERN_ERROR)); 
 	ImageList_AddIcon(hSmall, hiconItem); 
 	DestroyIcon(hiconItem); 
 
@@ -1026,10 +1037,13 @@ VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStat
 	EnableWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], bStatus);
 	EnableWindow(arrHwnd[ID_BTN_CRC_IN_SFV], bStatus);
 	EnableWindow(arrHwnd[ID_BTN_MD5_IN_MD5], bStatus);
-	if(bStatus)
+	if(bStatus) {
 		SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Open Files"));
-	else
+		SendMessage(arrHwnd[ID_BTN_OPENFILES_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_OPEN),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+	} else {
 		SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Pause"));
+		SendMessage(arrHwnd[ID_BTN_OPENFILES_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+	}
 	EnableWindow(arrHwnd[ID_BTN_OPTIONS], bStatus);
 
 	return;

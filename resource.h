@@ -2,7 +2,6 @@
 // Microsoft Visual C++ generated include file.
 // Used by RapidCRC.rc
 //
-#define IDR_MANIFEST                    1
 #define IDI_ICON_APP                    106
 #define IDI_ICON_OK                     107
 #define IDI_ICON_NOT_OK                 108
@@ -10,6 +9,16 @@
 #define IDI_ICON_ERROR                  110
 #define IDD_OPTIONS                     113
 #define IDD_DLG_FILE_CREATION           114
+#define IDI_ICON_OPEN                   118
+#define IDI_ICON_HASHFILE               119
+#define IDI_ICON_PLAY                   120
+#define IDI_ICON_PAUSE                  121
+#define IDI_ICON_MODERN_ERROR           122
+#define IDI_ICON_MODERN_NOCRC           123
+#define IDI_ICON_MODERN_NOTOK           124
+#define IDI_ICON_MODERN_OK              125
+#define IDI_ICON1                       128
+#define IDI_ICON_MODERN_OK2             128
 #define IDC_EDIT_FILENAME_PATTERN       1018
 #define IDC_BTN_DEFAULT                 1019
 #define IDC_STATIC_FILENAME_EXAMPLE     1020
@@ -42,7 +51,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        116
+#define _APS_NEXT_RESOURCE_VALUE        129
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1044
 #define _APS_NEXT_SYMED_VALUE           101

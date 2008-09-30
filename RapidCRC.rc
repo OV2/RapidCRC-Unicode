@@ -23,13 +23,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// RT_MANIFEST
-//
-
-IDR_MANIFEST            RT_MANIFEST             "RapidCRC.exe.manifest"
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Dialog
 //
 
@@ -131,6 +124,15 @@ IDI_ICON_OK             ICON                    "icons\\Result Icons OK.ico"
 IDI_ICON_NOT_OK         ICON                    "icons\\Result Icons NotOK.ico"
 IDI_ICON_NO_CRC         ICON                    "icons\\Result Icons NoCRC.ico"
 IDI_ICON_ERROR          ICON                    "icons\\Result Icons Error.ico"
+IDI_ICON_OPEN           ICON                    "icons\\folder_open.ico"
+IDI_ICON_HASHFILE       ICON                    "icons\\hash.ico"
+IDI_ICON_PLAY           ICON                    "icons\\play.ico"
+IDI_ICON_PAUSE          ICON                    "icons\\pause.ico"
+IDI_ICON_MODERN_ERROR   ICON                    "icons\\error.ico"
+IDI_ICON_MODERN_NOCRC   ICON                    "icons\\nocrc.ico"
+IDI_ICON_MODERN_NOTOK   ICON                    "icons\\notok.ico"
+IDI_ICON_MODERN_OK      ICON                    "icons\\ok.ico"
+IDI_ICON_MODERN_OK2     ICON                    "icons\\ok_green.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
