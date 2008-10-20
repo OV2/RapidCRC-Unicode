@@ -22,6 +22,10 @@
 
 #include <windows.h>
 #include <strsafe.h>
+#pragma warning(disable:4995)
+#include <list>
+#pragma warning(default:4995)
+using namespace std;
 
 #pragma comment(linker, \
     "\"/manifestdependency:type='Win32' "\
@@ -39,12 +43,12 @@
 //#define USE_TIME_MEASUREMENT
 
 // user defined window messages
-#define WM_THREAD_FILEINFO_DONE		(WM_USER + 1)
-#define WM_START_THREAD_CALC		(WM_USER + 2)
-#define WM_THREAD_CALC_DONE			(WM_USER + 3)
-#define WM_TIMER_PROGRESS_500		(WM_USER + 4)
-#define WM_INIT_WNDPROCTABINTERFACE	(WM_USER + 5)
-#define WM_SET_CTRLS_STATE			(WM_USER + 6)
+#define WM_THREAD_FILEINFO_DONE		(WM_USER + 2)
+#define WM_START_THREAD_CALC		(WM_USER + 3)
+#define WM_THREAD_CALC_DONE			(WM_USER + 4)
+#define WM_TIMER_PROGRESS_500		(WM_USER + 5)
+#define WM_INIT_WNDPROCTABINTERFACE	(WM_USER + 6)
+#define WM_SET_CTRLS_STATE			(WM_USER + 7)
 
 // indexes for the icons in the image list (that is inserted into the listview)
 #define ICON_OK		0
@@ -62,6 +66,7 @@
 #define MD5_AS_STRING_LENGHT 33
 #define ED2K_AS_STRING_LENGHT 33
 #define INFOTEXT_STRING_LENGHT 30
+
 
 // special error codes ("Bit 29 is reserved for application-defined error codes; no system
 // error code has this bit set. If you are defining an error code for your application, set
@@ -113,42 +118,47 @@
 #define ID_MAIN_WND					0
 #define ID_GROUP_RESULT				1
 
-#define ID_STATIC_FILENAME			2
-#define ID_STATIC_CRC_VALUE			3
-#define ID_STATIC_MD5_VALUE			4
-#define ID_STATIC_INFO				5
-#define ID_STATIC_STATUS			6
 
-#define ID_STATIC_PRIORITY			7
-#define ID_PROGRESS_FILE			8
-#define ID_PROGRESS_GLOBAL			9
 
-#define ID_FIRST_TAB_CONTROL		10
-#define ID_BTN_EXIT					11
-#define ID_BTN_OPENFILES_PAUSE		12
-#define ID_BTN_OPTIONS				13
-#define ID_BTN_MD5_IN_MD5			14
-#define ID_BTN_CRC_IN_SFV			15
-#define ID_BTN_CRC_IN_FILENAME		16
-#define ID_COMBO_PRIORITY			17
-#define ID_LISTVIEW					18
-#define ID_EDIT_FILENAME			19
-#define ID_EDIT_CRC_VALUE			20
-#define ID_EDIT_MD5_VALUE			21
-#define ID_EDIT_INFO				22
-#define ID_EDIT_STATUS				23
-#define ID_BTN_ERROR_DESCR			24
+#define ID_STATIC_FILENAME			3
+#define ID_STATIC_CRC_VALUE			4
+#define ID_STATIC_MD5_VALUE			5
+#define ID_STATIC_INFO				6
+#define ID_STATIC_STATUS			7
 
+#define ID_STATIC_PRIORITY			8
+#define ID_PROGRESS_FILE			9
+#define ID_PROGRESS_GLOBAL			10
+
+#define ID_FIRST_TAB_CONTROL		11
+#define ID_BTN_EXIT					2		// 2==IDCANCEL
+#define ID_LISTVIEW					11
+
+#define ID_BTN_CRC_IN_SFV			12
+#define ID_BTN_MD5_IN_MD5			13
+#define ID_BTN_CRC_IN_FILENAME		14
+#define ID_BTN_CRC_IN_STREAM		15
+#define ID_BTN_OPTIONS				16
+
+#define ID_EDIT_FILENAME			17
+#define ID_EDIT_CRC_VALUE			18
+#define ID_EDIT_MD5_VALUE			19
+#define ID_EDIT_INFO				20
+#define ID_EDIT_STATUS				21
+#define ID_BTN_ERROR_DESCR			22
+
+#define ID_COMBO_PRIORITY			23
+#define ID_BTN_OPENFILES_PAUSE		24
 #define ID_LAST_TAB_CONTROL			24
 
-#define ID_BTN_CRC_IN_STREAM		25
-
-#define ID_NUM_WINDOWS				26
+#define ID_NUM_WINDOWS				25
 
 #define IDM_COPY_CRC				40
 #define IDM_COPY_MD5				41
 #define IDM_COPY_ED2K				42
 #define IDM_COPY_ED2K_LINK			43
+#define IDM_REMOVE_ITEMS			44
+#define IDM_CLEAR_LIST				45
 
 #define IDM_CRC_COLUMN              50
 #define IDM_MD5_COLUMN              51
@@ -156,8 +166,8 @@
 
 //****** custom datatypes *******
 
-typedef unsigned __int64 QWORD, *LPQWORD;
 enum UNICODE_TYPE {UTF_16LE, UTF_8};
+typedef unsigned __int64 QWORD, *LPQWORD;
 
 //****** some macros *******
 #define MAKEQWORD(a, b)	\
@@ -165,6 +175,8 @@ enum UNICODE_TYPE {UTF_16LE, UTF_8};
 
 //****** structures ******* 
 // sort descending with sortorder typesize (TCHAR[5] < DWORD !)
+
+struct _lFILEINFO;
 
 typedef struct _FILEINFO{
 	QWORD	qwFilesize;
@@ -174,7 +186,7 @@ typedef struct _FILEINFO{
 	DWORD	dwError;
 	BOOL	bCrcFound;
 	BOOL	bMd5Found;
-	_FILEINFO * nextListItem;
+	_lFILEINFO * parentList;
 	TCHAR	szFilename[MAX_PATH];
 	TCHAR *	szFilenameShort;
 	TCHAR	szCrcResult[CRC_AS_STRING_LENGHT];
@@ -186,6 +198,23 @@ typedef struct _FILEINFO{
 	TCHAR	szEd2kResult[ED2K_AS_STRING_LENGHT];
 }FILEINFO;
 
+typedef struct _lFILEINFO {
+	list<FILEINFO> fInfos;
+	QWORD qwFilesizeSum;
+	bool bCrcCalculated;
+	bool bMd5Calculated;
+	bool bEd2kCalculated;
+	bool bCalculateCrc;
+	bool bCalculateMd5;
+	bool bCalculateEd2k;
+	UINT uiRapidCrcMode;
+	int iGroupId;
+	TCHAR g_szBasePath[MAX_PATH];
+	_lFILEINFO() {qwFilesizeSum=0;bCrcCalculated=false;bMd5Calculated=false;bEd2kCalculated=false;
+				  bCalculateCrc=false;bCalculateMd5=false;bCalculateEd2k=false;
+				  uiRapidCrcMode=MODE_NORMAL;iGroupId=0;g_szBasePath[0]=TEXT('\0');}
+}lFILEINFO;
+
 // main window has such a struct. A pointer it is always passed to calls
 // to ShowResult(). ShowResult() insert the values then into this struct
 typedef struct{
@@ -195,7 +224,7 @@ typedef struct{
 }SHOWRESULT_PARAMS;
 
 typedef struct{
-	QWORD *				pqwFilesizeSum;
+	//QWORD *				pqwFilesizeSum;
 	HWND *				arrHwnd;		// array
 	SHOWRESULT_PARAMS	* pshowresult_params;
 }THREAD_PARAMS_FILEINFO;
@@ -203,9 +232,10 @@ typedef struct{
 typedef struct{
 	QWORD				qwBytesReadCurFile;				// out
 	QWORD				qwBytesReadAllFiles;			// out
-	BOOL				bCalculateCrc;					// in
-	BOOL				bCalculateMd5;					// in
-	BOOL				bCalculateEd2k;
+	//QWORD				qwFilesizeSum;
+	//BOOL				bCalculateCrc;					// in
+	//BOOL				bCalculateMd5;					// in
+	//BOOL				bCalculateEd2k;
 	SHOWRESULT_PARAMS	* pshowresult_params;			// in / out
 	HWND				* arrHwnd;						// in
 	FILEINFO			* pFileinfo_cur;				// out
@@ -248,6 +278,7 @@ typedef struct{
     UNICODE_TYPE    iUnicodeSaveType;
 	UINT			uiWndLeft;
 	UINT			uiWndTop;
+	BOOL			bEnableQueue;
 }PROGRAM_OPTIONS;
 
 typedef struct{
@@ -270,8 +301,10 @@ extern HINSTANCE g_hInstance;
 extern FILEINFO * g_fileinfo_list_first_item;
 extern TCHAR g_szBasePath[MAX_PATH];
 extern PROGRAM_OPTIONS g_program_options;
-extern PROGRAM_STATUS g_program_status;
+//extern PROGRAM_STATUS g_program_status;
+extern lFILEINFO *compatFirstFileinfo;
 extern UINT gCMDOpts;
+extern BOOL gComCtrlv6;
 
 //****** function prototypes *******
 
@@ -279,8 +312,9 @@ extern UINT gCMDOpts;
 VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
 BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult);
-BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], QWORD * pqwFilesizeSum, SHOWRESULT_PARAMS * pshowresult_params);
+BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params);
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode);
+VOID FillFinalList(CONST HWND hListView, list<FILEINFO*> *finalList,CONST UINT uiNumSelected);
 
 //dialog and window procecures (dlgproc.cpp)
 LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -289,17 +323,20 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 LRESULT CALLBACK WndProcTabInterface(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 //drag and drop support (droptarget.cpp)
-VOID RegisterDropWindow(HWND arrHwnd[ID_NUM_WINDOWS], IDropTarget **ppDropTarget, BOOL * pbThreadDone, QWORD * pqwFilesizeSum, SHOWRESULT_PARAMS * pshowresult_params);
+VOID RegisterDropWindow(HWND arrHwnd[ID_NUM_WINDOWS], IDropTarget **ppDropTarget, SHOWRESULT_PARAMS * pshowresult_params);
 VOID UnregisterDropWindow(HWND hWndListview, IDropTarget *pDropTarget);
 
 //GUI related functions (guirelated.cpp)
 ATOM RegisterMainWindowClass();
-BOOL InitInstance(CONST INT iCmdShow);
+HWND InitInstance(CONST INT iCmdShow);
 VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndProcs[ID_LAST_TAB_CONTROL - ID_FIRST_TAB_CONTROL + 1], LONG * plAveCharWidth, LONG * plAveCharHeight, CONST HWND hMainWnd );
 BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW);
-BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo);
+VOID RemoveGroupItems(CONST HWND hListView, int iGroupId);
+BOOL InsertGroupIntoListView(CONST HWND hListView, lFILEINFO *fileList);
+BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo,lFILEINFO *fileList);
+VOID UpdateListViewStatusIcons(CONST HWND hListView);
 VOID UpdateListViewColumns(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LONG lACW);
-BOOL SetSubItemColumns(CONST HWND hWndListView, CONST LONG lACW);
+BOOL SetSubItemColumns(CONST HWND hWndListView);
 BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRESULT_PARAMS * pshowresult_params);
 VOID DisplayStatusOverview(CONST HWND hEditStatus);
 DWORD ShowErrorMsg ( CONST HWND hWndMain, CONST DWORD dwError );
@@ -309,6 +346,7 @@ void CreateListViewPopupMenu(HMENU *menu);
 void ListViewPopup(HWND pHwnd,HMENU pupup,int x,int y);
 void CreateListViewHeaderPopupMenu(HMENU *menu);
 BOOL ListViewHeaderPopup(HWND pHwnd,HMENU pupup,int x,int y);
+VOID ClearAllItems(CONST HWND hListView);
 
 //helper functions (helpfcts.cpp)
 BOOL IsLegalHexSymbol(CONST TCHAR tcChar);
@@ -324,16 +362,17 @@ VOID ReadOptions();
 VOID WriteOptions(CONST HWND hMainWnd, CONST LONG lACW, CONST LONG lACH);
 BOOL IsLegalFilename(CONST TCHAR szFilename[MAX_PATH]);
 VOID SetDefaultOptions(PROGRAM_OPTIONS * pProgram_options);
-FILEINFO * AllocateFileinfo();
-VOID AllocateMultipleFileinfo(CONST UINT uiCount);
-VOID DeallocateFileinfoMemory(CONST HWND hListView);
+//FILEINFO * AllocateFileinfo();
+//VOID AllocateMultipleFileinfo(CONST UINT uiCount);
+//VOID DeallocateFileinfoMemory(CONST HWND hListView);
 BOOL IsApplDefError(CONST DWORD dwError);
 VOID CopyJustProgramOptions(CONST PROGRAM_OPTIONS * pProgram_options_src, PROGRAM_OPTIONS * pProgram_options_dst);
 BOOL IsStringPrefix(CONST TCHAR szSearchPattern[MAX_PATH], CONST TCHAR szSearchString[MAX_PATH]);
 DWORD MyPriorityToPriorityClass(CONST UINT uiMyPriority);
-VOID GetInfoColumnText(TCHAR * szString, CONST size_t stStringSize, CONST INT iImageIndex, CONST DWORD dwError);
+VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList);
+VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList, CONST INT iImageIndex);
 BOOL CheckOsVersion(DWORD version,DWORD minorVersion);
-FILEINFO ** GenArrayFromFileinfoList(UINT * puiNumElements);
+//FILEINFO ** GenArrayFromFileinfoList(UINT * puiNumElements);
 VOID ReplaceChar(TCHAR * szString, CONST size_t stBufferLength, CONST TCHAR tcIn, CONST TCHAR tcOut);
 #ifdef USE_TIME_MEASUREMENT
 	VOID StartTimeMeasure(CONST BOOL bStart);
@@ -348,23 +387,25 @@ INT ReduceToPath(TCHAR szString[MAX_PATH]);
 CONST TCHAR * GetFilenameWithoutPathPointer(CONST TCHAR szFilenameLong[MAX_PATH]);
 BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH], CONST TCHAR * szExtension);
 BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH], DWORD * pdwFoundCrc);
-VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS], QWORD * pqwFilesizeSum, BOOL * pbCalculateCrc32, BOOL * pbCalculateMd5, SHOWRESULT_PARAMS * pshowresult_params);
-VOID ProcessDirectories();
-FILEINFO * ExpandDirectory(FILEINFO * pFileinfo_prev);
-VOID ProcessFileProperties(QWORD * pqwFilesizeSum);
-VOID MakesPathsAbsolute();
+VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params,lFILEINFO *fileList);
+VOID ProcessDirectories(lFILEINFO *fileList);
+//FILEINFO * ExpandDirectory(FILEINFO * pFileinfo_prev);
+list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it);
+VOID ProcessFileProperties(lFILEINFO *fileList);
+VOID MakesPathsAbsolute(lFILEINFO *fileList);
+UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList);
 
 //pipe communication (pipecomm.cpp)
-BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
+BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList);
 
 //SFV and MD5 functions (sfvfcts.cpp)
-BOOL EnterSfvMode(CONST HWND hListView);
+BOOL EnterSfvMode(lFILEINFO *fileList);
 DWORD WriteSfvHeader(CONST HANDLE hFile);
 DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST DWORD dwCrc);
 DWORD WriteSingleLineSfvFile(CONST FILEINFO * pFileinfo);
 DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abMd5Result[16]);
 DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo);
-BOOL EnterMd5Mode(CONST HWND hListView);
+BOOL EnterMd5Mode(lFILEINFO *fileList);
 
 //sort functions (sortfcts.cpp)
 int CALLBACK SortFilename(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
@@ -373,7 +414,10 @@ int CALLBACK SortCrc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortMd5(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortEd2k(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 INT InfoToIntValue(CONST FILEINFO * pFileinfo);
-VOID QuickSortList();
+bool ListCompFunction(const FILEINFO& pFileinfo1, const FILEINFO& pFileinfo2);
+bool ListPointerCompFunction(const FILEINFO *pFileinfo1, const FILEINFO *pFileinfo2);
+bool ListPointerUniqFunction(const FILEINFO *pFileinfo1, const FILEINFO *pFileinfo2);
+VOID QuickSortList(lFILEINFO *fileList);
 INT QuickCompFunction(const void * pFileinfo1, const void * pFileinfo2);
 
 //Thread procedures (threadprocs.cpp)

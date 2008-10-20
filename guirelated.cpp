@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <commctrl.h>
 //#include <uxtheme.h>
 #include <windowsx.h>
+#include "CSyncQueue.h"
 
 /*****************************************************************************
 ATOM RegisterMainWindowClass()
@@ -67,7 +68,7 @@ Notes:
 - iCmdShow controls if the saved value (read by ReadMyOptions) is used or if the
   user forced a special iCmdShow; in that case we use iCmdShow
 *****************************************************************************/
-BOOL InitInstance(CONST INT iCmdShow)
+HWND InitInstance(CONST INT iCmdShow)
 {
 	HWND hWnd;
 	TCHAR buffer[MAX_PATH];
@@ -78,7 +79,7 @@ BOOL InitInstance(CONST INT iCmdShow)
 		CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, (HMENU)ID_MAIN_WND, g_hInstance, NULL);
 
 	if (hWnd == NULL)
-		return FALSE;
+		return NULL;
 
 	if(iCmdShow != SW_NORMAL)
 		g_program_options.iWndCmdShow = iCmdShow;  // CreateWindow guarantees to call WM_CREATE first => ReadMyOptions is called
@@ -86,7 +87,7 @@ BOOL InitInstance(CONST INT iCmdShow)
 	ShowWindow(hWnd, g_program_options.iWndCmdShow);
 	UpdateWindow(hWnd);
 
-	return TRUE;
+	return hWnd;
 }
 
 /*****************************************************************************
@@ -160,52 +161,57 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	arrHwnd[ID_GROUP_RESULT]			= CreateWindow(TEXT("BUTTON"), TEXT("Results"), BS_GROUPBOX | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_GROUP_RESULT, g_hInstance, NULL);
 
 	arrHwnd[ID_STATIC_FILENAME]			= CreateWindow(TEXT("STATIC"), TEXT("File:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_FILENAME, g_hInstance, NULL);
-	arrHwnd[ID_EDIT_FILENAME]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_FILENAME, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_FILENAME]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_FILENAME, g_hInstance, NULL);
 	arrHwnd[ID_STATIC_CRC_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("CRC:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_CRC_VALUE, g_hInstance, NULL);
-	arrHwnd[ID_EDIT_CRC_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_CRC_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_CRC_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_CRC_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_STATIC_MD5_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("MD5:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_MD5_VALUE, g_hInstance, NULL);
-	arrHwnd[ID_EDIT_MD5_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_MD5_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_MD5_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_MD5_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_STATIC_INFO]				= CreateWindow(TEXT("STATIC"), TEXT("Info:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_INFO, g_hInstance, NULL);
-	arrHwnd[ID_EDIT_INFO]				= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_INFO, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_INFO]				= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_INFO, g_hInstance, NULL);
 	arrHwnd[ID_BTN_ERROR_DESCR]			= CreateWindow(TEXT("BUTTON"), TEXT("Descr."), BS_PUSHBUTTON | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_ERROR_DESCR, g_hInstance, NULL);
 
 	arrHwnd[ID_STATIC_STATUS]			= CreateWindow(TEXT("STATIC"), TEXT("Status:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_STATUS, g_hInstance, NULL);
-	arrHwnd[ID_EDIT_STATUS]				= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_STATUS, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_STATUS]				= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_STATUS, g_hInstance, NULL);
 
-	arrHwnd[ID_BTN_CRC_IN_FILENAME]		= CreateWindow(TEXT("BUTTON"), TEXT("Put CRC into Filename"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_FILENAME, g_hInstance, NULL);
-	arrHwnd[ID_BTN_CRC_IN_SFV]			= CreateWindow(TEXT("BUTTON"), TEXT("Create SFV file"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_SFV, g_hInstance, NULL);
+	arrHwnd[ID_BTN_CRC_IN_FILENAME]		= CreateWindow(TEXT("BUTTON"), TEXT("Put CRC into Filename"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_FILENAME, g_hInstance, NULL);
+	arrHwnd[ID_BTN_CRC_IN_SFV]			= CreateWindow(TEXT("BUTTON"), TEXT("Create SFV file"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_SFV, g_hInstance, NULL);
 	SendMessage(arrHwnd[ID_BTN_CRC_IN_SFV],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
-	arrHwnd[ID_BTN_MD5_IN_MD5]			= CreateWindow(TEXT("BUTTON"), TEXT("Create MD5 file"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_MD5_IN_MD5, g_hInstance, NULL);
+	arrHwnd[ID_BTN_MD5_IN_MD5]			= CreateWindow(TEXT("BUTTON"), TEXT("Create MD5 file"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_MD5_IN_MD5, g_hInstance, NULL);
 	SendMessage(arrHwnd[ID_BTN_MD5_IN_MD5],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
-	arrHwnd[ID_BTN_OPTIONS]				= CreateWindow(TEXT("BUTTON"), TEXT("Options"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_OPTIONS, g_hInstance, NULL);
+	arrHwnd[ID_BTN_OPTIONS]				= CreateWindow(TEXT("BUTTON"), TEXT("Options"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_OPTIONS, g_hInstance, NULL);
 
 	arrHwnd[ID_STATIC_PRIORITY]			= CreateWindow(TEXT("STATIC"), TEXT("Priority"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_PRIORITY, g_hInstance, NULL);
-	arrHwnd[ID_COMBO_PRIORITY]			= CreateWindow(TEXT("COMBOBOX"), NULL, CBS_DROPDOWNLIST | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_COMBO_PRIORITY, g_hInstance, NULL);	
+	arrHwnd[ID_COMBO_PRIORITY]			= CreateWindow(TEXT("COMBOBOX"), NULL, CBS_DROPDOWNLIST | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_COMBO_PRIORITY, g_hInstance, NULL);	
 
 	arrHwnd[ID_PROGRESS_FILE]			= CreateWindow(PROGRESS_CLASS, NULL, WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_PROGRESS_FILE, g_hInstance, NULL);
 	arrHwnd[ID_PROGRESS_GLOBAL]			= CreateWindow(PROGRESS_CLASS, NULL, WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_PROGRESS_GLOBAL, g_hInstance, NULL);
-	arrHwnd[ID_BTN_OPENFILES_PAUSE]		= CreateWindow(TEXT("BUTTON"), TEXT("Open Files"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_OPENFILES_PAUSE, g_hInstance, NULL);
+	arrHwnd[ID_BTN_OPENFILES_PAUSE]		= CreateWindow(TEXT("BUTTON"), TEXT("Open Files"), BS_DEFPUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_OPENFILES_PAUSE, g_hInstance, NULL);
 	SendMessage(arrHwnd[ID_BTN_OPENFILES_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_OPEN),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 
-	arrHwnd[ID_BTN_EXIT]				= CreateWindow(TEXT("BUTTON"), TEXT("Exit"), BS_DEFPUSHBUTTON |WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_EXIT, g_hInstance, NULL);
-	arrHwnd[ID_LISTVIEW]				= CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, NULL, LVS_REPORT | LVS_SHOWSELALWAYS | WS_VISIBLE | WS_CHILD | WS_VSCROLL, 0, 0, 0, 0, hMainWnd, (HMENU)ID_LISTVIEW, g_hInstance, NULL);
+	arrHwnd[ID_BTN_EXIT]				= CreateWindow(TEXT("BUTTON"), TEXT("Exit"), BS_PUSHBUTTON |WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_EXIT, g_hInstance, NULL);
+	arrHwnd[ID_LISTVIEW]				= CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, NULL, LVS_REPORT | LVS_SHOWSELALWAYS | WS_VISIBLE | WS_CHILD | WS_VSCROLL | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_LISTVIEW, g_hInstance, NULL);
 
-	arrHwnd[ID_BTN_CRC_IN_STREAM]		= CreateWindow(TEXT("BUTTON"), TEXT("Put CRC into NTFS Stream"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_STREAM, g_hInstance, NULL);
+	arrHwnd[ID_BTN_CRC_IN_STREAM]		= CreateWindow(TEXT("BUTTON"), TEXT("Put CRC into NTFS Stream"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_STREAM, g_hInstance, NULL);
 
 	// select everywhere the font that is usually used today in all applications
 	for(i=0; i < ID_NUM_WINDOWS; i++)
 		SendMessage(arrHwnd[i], WM_SETFONT, (WPARAM)hFont, MAKELPARAM(FALSE, 0));
 
-	#pragma warning(disable: 4244) // SetWindowLongPtr has a w64 warning bug here...
+	/*#pragma warning(disable: 4244) // SetWindowLongPtr has a w64 warning bug here...
 	#pragma warning(disable: 4312)
 	for(i=ID_FIRST_TAB_CONTROL; i < ID_LAST_TAB_CONTROL + 1; i++)
 		arrOldWndProcs[i - ID_FIRST_TAB_CONTROL] = (WNDPROC) SetWindowLongPtr(arrHwnd[i], GWLP_WNDPROC, (LONG_PTR)WndProcTabInterface);
 	#pragma warning(default: 4312)
-	#pragma warning(default: 4244)
+	#pragma warning(default: 4244)*/
 
-	CallWindowProc(WndProcTabInterface, NULL, WM_INIT_WNDPROCTABINTERFACE, (WPARAM)arrOldWndProcs, (LPARAM)arrHwnd);
+	SetWindowPos(arrHwnd[ID_BTN_EXIT],HWND_TOP,0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
+	SetWindowPos(arrHwnd[ID_FIRST_TAB_CONTROL],arrHwnd[ID_BTN_EXIT],0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
+	for(i=ID_FIRST_TAB_CONTROL + 1; i < ID_LAST_TAB_CONTROL + 1; i++)
+		SetWindowPos(arrHwnd[i],arrHwnd[i-1],0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
 
-	SetFocus(arrHwnd[ID_FIRST_TAB_CONTROL]);
+	//CallWindowProc(WndProcTabInterface, NULL, WM_INIT_WNDPROCTABINTERFACE, (WPARAM)arrOldWndProcs, (LPARAM)arrHwnd);
+
+	SetFocus(arrHwnd[ID_BTN_OPENFILES_PAUSE]);
 
 	// resize main window to the desired size
 	MoveWindow(arrHwnd[ID_MAIN_WND], g_program_options.uiWndLeft, g_program_options.uiWndTop, (*plAveCharWidth) * g_program_options.uiWndWidth, (*plAveCharHeight) * g_program_options.uiWndHeight, FALSE);
@@ -228,91 +234,65 @@ void CreateListViewPopupMenu(HMENU *menu)
 *****************************************************************************/
 void CreateListViewPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K_LINK,TEXT("Copy ED2K Link to Clipboard"));
+	HMENU hSubMenu = CreatePopupMenu();
+	InsertMenu(hSubMenu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K_LINK,TEXT("Copy ED2K Link to Clipboard"));
+	InsertMenu(hSubMenu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
+	InsertMenu(hSubMenu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K,TEXT("Copy ED2K to Clipboard"));
+	InsertMenu(hSubMenu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_MD5,TEXT("Copy MD5 to Clipboard"));
+	InsertMenu(hSubMenu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC,TEXT("Copy CRC to Clipboard"));
+
+	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_POPUP,(UINT_PTR)hSubMenu,TEXT("Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K,TEXT("Copy ED2K to Clipboard"));
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_MD5,TEXT("Copy MD5 to Clipboard"));
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC,TEXT("Copy CRC to Clipboard"));
+	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_CLEAR_LIST,TEXT("Clear List"));
+	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_REMOVE_ITEMS,TEXT("Remove Selected Items"));
 }
 
-/*****************************************************************************
-void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y)
-	pHwnd	: (IN) HWND of the window where the popup occurs
-	popup	: (IN) HMENU of the popup
-	x		: (IN) x coordinate (client)
-	y		: (IN) y coordinate (client)
-
-Notes:
-	This function handles the listview popup and generates the data to place
-	in the clipboard
-*****************************************************************************/
-void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y) {
+void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
+{
 #define MAX_ED2K_LINK_ENCODED_SIZE (MAX_PATH * 3 + 20 + 49 + 1)
 #define MAX_FILE_ENCODED_SIZE (MAX_PATH * 3)
-	int ret;
-	UINT uiSelected = 0, uiCurrItem = -1, uiItemCount = 0;
 	size_t ed2kStrSize,max_ed2k_str_size;
-	DWORD dwEncodedFileSize;
-	LVITEM lvitem;
-	FILEINFO * pFileinfo;
+	DWORD dwEncodedFileSize;;
 	TCHAR *clip, *curpos, *ed2k_links;
 	TCHAR curEd2kLink[MAX_ED2K_LINK_ENCODED_SIZE], curEncodedFileName[MAX_FILE_ENCODED_SIZE];
 	HGLOBAL gAlloc;
-	BOOL bLink = FALSE;	
+	bool bLink=false;
 
+	if(finalList->size() == 0) return;
 
-	lvitem.iSubItem = 0;
-	lvitem.mask = LVIF_PARAM;
-	uiItemCount = ListView_GetItemCount(pHwnd);
-	uiSelected = ListView_GetSelectedCount(pHwnd);
-	
-	EnableMenuItem(popup,IDM_COPY_CRC,MF_BYCOMMAND | (g_program_status.bCrcCalculated ? MF_ENABLED : MF_GRAYED));
-	EnableMenuItem(popup,IDM_COPY_MD5,MF_BYCOMMAND | (g_program_status.bMd5Calculated ? MF_ENABLED : MF_GRAYED));
-	EnableMenuItem(popup,IDM_COPY_ED2K,MF_BYCOMMAND | (g_program_status.bEd2kCalculated ? MF_ENABLED : MF_GRAYED));
-	EnableMenuItem(popup,IDM_COPY_ED2K_LINK,MF_BYCOMMAND | (g_program_status.bEd2kCalculated ? MF_ENABLED : MF_GRAYED));
-
-    if(uiItemCount == 0) return;
-	if(!OpenClipboard(pHwnd)) return;
+	switch(menuid) {
+		case IDM_COPY_CRC:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((CRC_AS_STRING_LENGHT + 1) * finalList->size() + 1) * sizeof(TCHAR));
+									break;
+		case IDM_COPY_MD5:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((MD5_AS_STRING_LENGHT + 1) * finalList->size() + 1) * sizeof(TCHAR));
+									break;
+		case IDM_COPY_ED2K:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((ED2K_AS_STRING_LENGHT + 1) * finalList->size() + 1) * sizeof(TCHAR));
+									break;
+		case IDM_COPY_ED2K_LINK:	bLink = true;
+									break;
+	}
+	if(!OpenClipboard(hListView)) return;
     if(!EmptyClipboard()) {
         CloseClipboard();
         return;
     }
-	
-    ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,pHwnd,NULL);
-	switch(ret) {
-		case IDM_COPY_CRC:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((CRC_AS_STRING_LENGHT + 1) * (uiSelected ? uiSelected : uiItemCount) + 1) * sizeof(TCHAR));
-									break;
-		case IDM_COPY_MD5:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((MD5_AS_STRING_LENGHT + 1) * (uiSelected ? uiSelected : uiItemCount) + 1) * sizeof(TCHAR));
-									break;
-		case IDM_COPY_ED2K:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((ED2K_AS_STRING_LENGHT + 1) * (uiSelected ? uiSelected : uiItemCount) + 1) * sizeof(TCHAR));
-									break;
-		case IDM_COPY_ED2K_LINK:	bLink = TRUE;
-									break;
-		default:					CloseClipboard();
-									return;
-	}
 	if(bLink) {
-		max_ed2k_str_size = (uiSelected ? uiSelected : uiItemCount) * MAX_ED2K_LINK_ENCODED_SIZE + 1;
+		max_ed2k_str_size = finalList->size() * MAX_ED2K_LINK_ENCODED_SIZE + 1;
 		ed2k_links = (TCHAR *)malloc(max_ed2k_str_size * sizeof(TCHAR));
 		if(ed2k_links == NULL) {
 			CloseClipboard();
 			return;
 		}
 		ed2k_links[0]=TEXT('\0');
-		uiCurrItem = ListView_GetNextItem(pHwnd,-1,(uiSelected ? LVNI_SELECTED : LVNI_ALL));
-		do {
-			lvitem.iItem = uiCurrItem;
-			ListView_GetItem(pHwnd,&lvitem);
-			pFileinfo = (FILEINFO *)lvitem.lParam;
+		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 			dwEncodedFileSize = MAX_FILE_ENCODED_SIZE;
-			if(!InternetCanonicalizeUrl(pFileinfo->szFilenameShort,curEncodedFileName,&dwEncodedFileSize,NULL)) {
+			if(!InternetCanonicalizeUrl(GetFilenameWithoutPathPointer((*it)->szFilenameShort),curEncodedFileName,&dwEncodedFileSize,NULL)) {
 				free(ed2k_links);
 				CloseClipboard();
 				return;
 			}
-			StringCchPrintf(curEd2kLink,MAX_ED2K_LINK_ENCODED_SIZE,TEXT("ed2k://|file|%s|%I64i|%s|/\r\n"),curEncodedFileName,pFileinfo->qwFilesize,pFileinfo->szEd2kResult);
+			StringCchPrintf(curEd2kLink,MAX_ED2K_LINK_ENCODED_SIZE,TEXT("ed2k://|file|%s|%I64i|%s|/\r\n"),curEncodedFileName,(*it)->qwFilesize,(*it)->szEd2kResult);
 			StringCchCat(ed2k_links,max_ed2k_str_size,curEd2kLink);
-		} while((uiCurrItem = ListView_GetNextItem(pHwnd,uiCurrItem,uiSelected ? LVNI_SELECTED : LVNI_ALL)) != -1);		
+		}
 		StringCchLength(ed2k_links,max_ed2k_str_size,&ed2kStrSize);
 		gAlloc = GlobalAlloc(GMEM_MOVEABLE,ed2kStrSize * sizeof(TCHAR));
 		if(gAlloc == NULL) {
@@ -340,35 +320,134 @@ void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y) {
 			return;
 		}
 	
-		uiCurrItem = ListView_GetNextItem(pHwnd,-1,(uiSelected ? LVNI_SELECTED : LVNI_ALL));
 		curpos = clip;
-		do {
-			lvitem.iItem = uiCurrItem;
-			ListView_GetItem(pHwnd,&lvitem);
-			pFileinfo = (FILEINFO *)lvitem.lParam;
-			switch(ret) {
-				case IDM_COPY_CRC:	memcpy(curpos,pFileinfo->szCrcResult,CRC_AS_STRING_LENGHT * sizeof(TCHAR));
+		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
+			switch(menuid) {
+				case IDM_COPY_CRC:	memcpy(curpos,(*it)->szCrcResult,CRC_AS_STRING_LENGHT * sizeof(TCHAR));
 									curpos[CRC_AS_STRING_LENGHT-1] = TEXT('\r');
 									curpos[CRC_AS_STRING_LENGHT] = TEXT('\n');
 									curpos += CRC_AS_STRING_LENGHT+1;
 									break;
-				case IDM_COPY_MD5:	memcpy(curpos,pFileinfo->szMd5Result,MD5_AS_STRING_LENGHT * sizeof(TCHAR));
+				case IDM_COPY_MD5:	memcpy(curpos,(*it)->szMd5Result,MD5_AS_STRING_LENGHT * sizeof(TCHAR));
 									curpos[MD5_AS_STRING_LENGHT-1] = TEXT('\r');
 									curpos[MD5_AS_STRING_LENGHT] = TEXT('\n');
 									curpos += MD5_AS_STRING_LENGHT+1;
 									break;
-				case IDM_COPY_ED2K: memcpy(curpos,pFileinfo->szEd2kResult,ED2K_AS_STRING_LENGHT * sizeof(TCHAR));
+				case IDM_COPY_ED2K: memcpy(curpos,(*it)->szEd2kResult,ED2K_AS_STRING_LENGHT * sizeof(TCHAR));
 									curpos[ED2K_AS_STRING_LENGHT-1] = TEXT('\r');
 									curpos[ED2K_AS_STRING_LENGHT] = TEXT('\n');
 									curpos += ED2K_AS_STRING_LENGHT+1;
 									break;
 			}
-		} while((uiCurrItem = ListView_GetNextItem(pHwnd,uiCurrItem,uiSelected ? LVNI_SELECTED : LVNI_ALL)) != -1);
+		}
 		*(curpos - 1) = TEXT('\0');
 	}
 	GlobalUnlock(gAlloc);
 	SetClipboardData(CF_UNICODETEXT,gAlloc);
 	CloseClipboard();
+}
+
+class ComparePtr
+{
+	FILEINFO *pCompare;
+public:
+	ComparePtr(FILEINFO* pCompare) {this->pCompare = pCompare;}
+	bool operator() (const FILEINFO& value) {return ((&value)==pCompare); }
+};
+
+
+void RemoveItems(CONST HWND hListView,list<FILEINFO*> *finalList)
+{
+	FILEINFO *pFileinfo;
+	lFILEINFO *pList;
+	list<lFILEINFO*> *doneList;
+	LVITEM lvitem={0};
+		
+	/*uiIndex = ListView_GetNextItem(hListView,ListView_GetItemCount(hListView),LVNI_SELECTED|LVNI_ABOVE);
+	do {
+		ListView_DeleteItem(hListView,uiIndex);
+	} while((uiIndex = ListView_GetNextItem(hListView,uiIndex,LVNI_SELECTED|LVNI_ABOVE))!=-1);*/
+	lvitem.mask = LVIF_STATE;
+	lvitem.stateMask = LVIS_SELECTED;
+	for(int i=ListView_GetItemCount(hListView)-1;i>=0;i--) {
+		lvitem.iItem = i;
+		ListView_GetItem(hListView,&lvitem);
+		if(lvitem.state & LVIS_SELECTED)
+			ListView_DeleteItem(hListView,i);
+	}
+
+	doneList = SyncQueue.getDoneList();
+	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
+		pFileinfo = (*it);
+		pList = pFileinfo->parentList;
+		pList->fInfos.remove_if(ComparePtr(pFileinfo));
+		if(pList->fInfos.empty()) {
+			doneList->remove(pList);
+			if(g_program_options.bEnableQueue && gComCtrlv6)
+				ListView_RemoveGroup(hListView,pList->iGroupId);
+			delete pList;
+		}
+	}
+	SyncQueue.releaseDoneList();
+}
+
+/*****************************************************************************
+void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y)
+	pHwnd	: (IN) HWND of the window where the popup occurs
+	popup	: (IN) HMENU of the popup
+	x		: (IN) x coordinate (client)
+	y		: (IN) y coordinate (client)
+
+Notes:
+	This function handles the listview popup and generates the data to place
+	in the clipboard
+*****************************************************************************/
+void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y)
+{
+	int ret;
+	UINT uiSelected = 0;	
+	list<FILEINFO*> finalList;
+	bool bCrc=true,bMd5=true,bEd2k=true;
+
+
+	//lvitem.iSubItem = 0;
+	//lvitem.mask = LVIF_PARAM;
+	//uiItemCount = ListView_GetItemCount(pHwnd);
+	uiSelected = ListView_GetSelectedCount(pHwnd);
+
+	FillFinalList(pHwnd,&finalList,uiSelected);
+
+	for(list<FILEINFO*>::iterator it=finalList.begin();it!=finalList.end();it++) {
+		if(!(*it)->parentList->bCrcCalculated) bCrc = false;
+		if(!(*it)->parentList->bMd5Calculated) bMd5 = false;
+		if(!(*it)->parentList->bEd2kCalculated) bEd2k = false;
+	}
+	if(finalList.empty()) {
+		bCrc = false;
+		bMd5 = false;
+		bEd2k = false;
+	}
+
+	EnableMenuItem(popup,IDM_REMOVE_ITEMS,MF_BYCOMMAND | ((uiSelected>0) ? MF_ENABLED : MF_GRAYED));
+	EnableMenuItem(popup,IDM_COPY_CRC,MF_BYCOMMAND | (bCrc ? MF_ENABLED : MF_GRAYED));
+	EnableMenuItem(popup,IDM_COPY_MD5,MF_BYCOMMAND | (bMd5 ? MF_ENABLED : MF_GRAYED));
+	EnableMenuItem(popup,IDM_COPY_ED2K,MF_BYCOMMAND | (bEd2k ? MF_ENABLED : MF_GRAYED));
+	EnableMenuItem(popup,IDM_COPY_ED2K_LINK,MF_BYCOMMAND | (bEd2k ? MF_ENABLED : MF_GRAYED));
+	
+    ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,pHwnd,NULL);
+	switch(ret) {
+		case IDM_COPY_CRC:			
+		case IDM_COPY_MD5:			
+		case IDM_COPY_ED2K:			
+		case IDM_COPY_ED2K_LINK:	HandleClipboard(pHwnd,ret,&finalList);
+									break;
+		case IDM_CLEAR_LIST:		ClearAllItems(pHwnd);
+									break;
+		case IDM_REMOVE_ITEMS:		RemoveItems(pHwnd,&finalList);
+									break;
+		default:					return;
+	}
+	
 }
 
 /*****************************************************************************
@@ -450,7 +529,7 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	ListView_SetExtendedListViewStyle(hWndListView, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
     //explorer-style listview
-	if(CheckOsVersion(5,1)) {
+	if(gComCtrlv6) {
 		uxTheme = LoadLibrary(TEXT("uxtheme.dll"));
 		if(uxTheme) {
 			SetWindowTheme = (SWT) GetProcAddress(uxTheme,"SetWindowTheme");
@@ -460,6 +539,8 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 			}
 			FreeLibrary(uxTheme);
 		}
+		if(g_program_options.bEnableQueue)
+			ListView_EnableGroupView(hWndListView,TRUE);
 	}
 
 	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
@@ -470,13 +551,13 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	if(ListView_InsertColumn(hWndListView, 0, & lvcolumn) == -1)
 		return FALSE;
 
-	SetSubItemColumns(hWndListView, lACW);
+	SetSubItemColumns(hWndListView);
 
 	// Create the full-sized icon image lists. 
 	hSmall = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 4, 1);
 
 	// Add the icons to image list.
-	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_MODERN_OK2)); 
+	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_MODERN_OK)); 
 	ImageList_AddIcon(hSmall, hiconItem); 
 	DestroyIcon(hiconItem); 
 
@@ -498,6 +579,36 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	return TRUE; 
 }
 
+VOID RemoveGroupItems(CONST HWND hListView, int iGroupId)
+{
+	LVITEM lvItem={0};
+	int itemCount = ListView_GetItemCount(hListView);
+	lvItem.mask = LVIF_GROUPID;
+	
+	for(lvItem.iItem = itemCount - 1;lvItem.iItem >=0;lvItem.iItem--) {
+		ListView_GetItem(hListView,&lvItem);
+		if(lvItem.iGroupId==iGroupId)
+			ListView_DeleteItem(hListView,lvItem.iItem);
+	}
+}
+
+BOOL InsertGroupIntoListView(CONST HWND hListView, lFILEINFO *fileList)
+{
+	static int currGroupId=0;
+	LVGROUP lvGroup={0};
+	TCHAR szGroupHeader[MAX_PATH + 9];
+
+	fileList->iGroupId=currGroupId++;//SendMessage(hListView,LVM_GETGROUPCOUNT,0,0) + 1;
+	lvGroup.mask = LVGF_HEADER|LVGF_GROUPID;
+	lvGroup.cbSize = sizeof(LVGROUP);
+	lvGroup.iGroupId=fileList->iGroupId;
+	StringCchPrintf(szGroupHeader,MAX_PATH + 6,TEXT("Job %02d - %s"),fileList->iGroupId,fileList->g_szBasePath);
+	lvGroup.pszHeader=szGroupHeader;//fileList->g_szBasePath;
+	if(ListView_InsertGroup(hListView,-1,&lvGroup)==-1)
+		return FALSE;
+	return TRUE;
+}
+
 /*****************************************************************************
 BOOL InsertItemIntoList(CONST HWND hListView, CONST FILEINFO * pFileinfo)
 	hListView	: (IN) Handle to a listview in that we want to insert an item;
@@ -513,74 +624,42 @@ Notes:
 - one special case: If pFileinfo->dwError is 2 or APPL_ERROR_ILLEGAL_CRC
 a special info text is set. For all other errors "Error" is set
 *****************************************************************************/
-BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo)
+BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo,lFILEINFO *fileList)
 {
 	INT iImageIndex;
 	LVITEM lvI;
-    LVTILEINFO tileInfo;
+    //LVTILEINFO tileInfo;
 
 	// ATTENTION: the same logic is implemented in InsertItemIntoList, InfoToIntValue, DisplayStatusOverview.
 	// Any changes here have to be transfered there
-	if(pFileinfo->dwError != NO_ERROR)
-		iImageIndex = ICON_ERROR;
-	else{
-		if(g_program_status.uiRapidCrcMode == MODE_MD5){
-			if( (g_program_status.bMd5Calculated) && (pFileinfo->bMd5Found) ){
-				if(memcmp( pFileinfo->abMd5Result, pFileinfo->abMd5Found, 16) == 0)
-					iImageIndex = ICON_OK;
-				else
-					iImageIndex = ICON_NOT_OK;
-			}
-			else
-				iImageIndex = ICON_NO_CRC;
-		}
-		else{ // MODE_SFV and MODE_NORMAL; the icon does not differ between these modes
-			if( (g_program_status.bCrcCalculated) && (pFileinfo->bCrcFound) ){
-				if(pFileinfo->dwCrc32Result == pFileinfo->dwCrc32Found)
-					iImageIndex = ICON_OK;
-				else
-					iImageIndex = ICON_NOT_OK;
-			}
-			else
-				iImageIndex = ICON_NO_CRC;
-		}
+
+	/*switch(InfoToIntValue(pFileinfo)) {
+		case 1: iImageIndex = ICON_OK;
+				break;
+		case 2: iImageIndex = ICON_NOT_OK;
+				break;
+		case 3: iImageIndex = ICON_NO_CRC;
+				break;
+		case 4: iImageIndex = ICON_ERROR;
+				break;
+		default: iImageIndex = ICON_NO_CRC;
+	}*/
+	iImageIndex = InfoToIntValue(pFileinfo) - 1;
+
+	lvI.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE;
+	lvI.state = 0;
+	lvI.stateMask = 0;
+	if(g_program_options.bEnableQueue && gComCtrlv6) {
+		lvI.mask |= LVIF_GROUPID;
+		lvI.iGroupId = fileList->iGroupId;
 	}
-
-	if(g_program_status.bCrcCalculated && pFileinfo->dwError == NOERROR)
-		StringCchPrintf(pFileinfo->szCrcResult, CRC_AS_STRING_LENGHT, TEXT("%08LX"), pFileinfo->dwCrc32Result);
-	else
-		StringCchPrintf(pFileinfo->szCrcResult, CRC_AS_STRING_LENGHT, TEXT(""));
-
-	if(g_program_status.bMd5Calculated && pFileinfo->dwError == NOERROR)
-		StringCchPrintf(pFileinfo->szMd5Result, MD5_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
-		pFileinfo->abMd5Result[0], pFileinfo->abMd5Result[1], pFileinfo->abMd5Result[2], pFileinfo->abMd5Result[3], 
-		pFileinfo->abMd5Result[4], pFileinfo->abMd5Result[5], pFileinfo->abMd5Result[6], pFileinfo->abMd5Result[7], 
-		pFileinfo->abMd5Result[8], pFileinfo->abMd5Result[9], pFileinfo->abMd5Result[10], pFileinfo->abMd5Result[11], 
-		pFileinfo->abMd5Result[12], pFileinfo->abMd5Result[13], pFileinfo->abMd5Result[14], pFileinfo->abMd5Result[15]);
-	else
-		StringCchPrintf(pFileinfo->szMd5Result, MD5_AS_STRING_LENGHT, TEXT(""));
-
-	if(g_program_status.bEd2kCalculated && pFileinfo->dwError == NOERROR)
-		StringCchPrintf(pFileinfo->szEd2kResult, ED2K_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
-		pFileinfo->abEd2kResult[0], pFileinfo->abEd2kResult[1], pFileinfo->abEd2kResult[2], pFileinfo->abEd2kResult[3], 
-		pFileinfo->abEd2kResult[4], pFileinfo->abEd2kResult[5], pFileinfo->abEd2kResult[6], pFileinfo->abEd2kResult[7], 
-		pFileinfo->abEd2kResult[8], pFileinfo->abEd2kResult[9], pFileinfo->abEd2kResult[10], pFileinfo->abEd2kResult[11], 
-		pFileinfo->abEd2kResult[12], pFileinfo->abEd2kResult[13], pFileinfo->abEd2kResult[14], pFileinfo->abEd2kResult[15]);
-	else
-		StringCchPrintf(pFileinfo->szEd2kResult, ED2K_AS_STRING_LENGHT, TEXT(""));
-
-	GetInfoColumnText(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, iImageIndex, pFileinfo->dwError);
-
-	lvI.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE; 
-	lvI.state = 0; 
-	lvI.stateMask = 0; 
 
 	lvI.iItem = INT_MAX; // a big value; lresult becomes the real item index
 	lvI.iImage = iImageIndex; // Value of iImageIndex is chosen above
 	lvI.iSubItem = 0;
 	lvI.lParam = (LPARAM) pFileinfo;
 	lvI.pszText = LPSTR_TEXTCALLBACK;
-	if((tileInfo.iItem = SendMessage(hListView, LVM_INSERTITEM, 0, (LPARAM) &lvI)) == -1)
+	if(SendMessage(hListView, LVM_INSERTITEM, 0, (LPARAM) &lvI) == -1)
 		return FALSE;
     /*UINT cols[4] = { 2, 3, 4, 4 };
     tileInfo.cbSize = sizeof(LVTILEINFO);
@@ -590,6 +669,24 @@ BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo)
     tileInfo.puColumns = cols;
     SendMessage(hListView,LVM_SETTILEINFO,0,(LPARAM) &tileInfo);*/
 	return TRUE;
+}
+
+VOID UpdateListViewStatusIcons(CONST HWND hListView)
+{
+	LVITEM lvitem={0};
+	int iImageIndex;
+
+	for(int i=0;i<ListView_GetItemCount(hListView);i++) {
+		lvitem.mask = LVIF_PARAM | LVIF_IMAGE;
+		lvitem.iItem = i;
+		ListView_GetItem(hListView,&lvitem);
+		iImageIndex = InfoToIntValue((FILEINFO *)lvitem.lParam) - 1;
+		if(lvitem.iImage != iImageIndex) {
+			lvitem.iImage = iImageIndex;
+			lvitem.mask = LVIF_IMAGE;
+			ListView_SetItem(hListView,&lvitem);
+		}
+	}
 }
 
 /*****************************************************************************
@@ -606,27 +703,26 @@ in the listview
 *****************************************************************************/
 VOID UpdateListViewColumns(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LONG lACW)
 {
-	FILEINFO * pFileinfo;
 	RECT rect;
 
-	ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
+	//ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
 
 	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 4);
 	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 3);
 	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 2);
 	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 1);
 
-	SetSubItemColumns(arrHwnd[ID_LISTVIEW], lACW);
+	SetSubItemColumns(arrHwnd[ID_LISTVIEW]);
 
 	// trying to send WM_SIZE to resize the columns
 	GetClientRect(arrHwnd[ID_MAIN_WND], & rect);
 	SendMessage(arrHwnd[ID_MAIN_WND], WM_SIZE, SIZE_RESTORED, MAKELPARAM(rect.right - rect.left, rect.bottom - rect.top));
 
-	pFileinfo = g_fileinfo_list_first_item;
-	while(pFileinfo != NULL){
-		InsertItemIntoList(arrHwnd[ID_LISTVIEW], pFileinfo);
-		pFileinfo = pFileinfo->nextListItem;
-	}
+	//pFileinfo = g_fileinfo_list_first_item;
+	//while(pFileinfo != NULL){
+		//InsertItemIntoList(arrHwnd[ID_LISTVIEW], pFileinfo);
+	//	pFileinfo = pFileinfo->nextListItem;
+	//}
 
 	return;
 }
@@ -646,7 +742,7 @@ g_program_options.bDisplayCrcInListView
 column; this width is set in UpdateListViewColumns and InitListView)
 - filename / CRC / MD5 / Info
 *****************************************************************************/
-BOOL SetSubItemColumns(CONST HWND hWndListView, CONST LONG lACW)
+BOOL SetSubItemColumns(CONST HWND hWndListView)
 {
 	LVCOLUMN lvcolumn;
 	INT iCurrentSubItem = 1;
@@ -761,9 +857,9 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 
 		}
 		else{
-			if(g_program_status.bCrcCalculated){
+			if(pFileinfo->parentList->bCrcCalculated){
 				if( (pFileinfo->bCrcFound) && (pFileinfo->dwCrc32Result != pFileinfo->dwCrc32Found)){
-					if(g_program_status.uiRapidCrcMode == MODE_SFV)
+					if(pFileinfo->parentList->uiRapidCrcMode == MODE_SFV)
 						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX  =>  %08LX found in SFV file"), pFileinfo->dwCrc32Result, pFileinfo->dwCrc32Found );
 					else
 						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX  =>  %08LX found in filename"), pFileinfo->dwCrc32Result, pFileinfo->dwCrc32Found );
@@ -776,7 +872,7 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
 			SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE], szTemp1);
 
-			if(g_program_status.bMd5Calculated){
+			if(pFileinfo->parentList->bMd5Calculated){
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
 					pFileinfo->abMd5Result[0], pFileinfo->abMd5Result[1], pFileinfo->abMd5Result[2], pFileinfo->abMd5Result[3], 
 					pFileinfo->abMd5Result[4], pFileinfo->abMd5Result[5], pFileinfo->abMd5Result[6], pFileinfo->abMd5Result[7], 
@@ -856,49 +952,40 @@ VOID DisplayStatusOverview(CONST HWND hEditStatus)
 {
 	TCHAR szLine[MAX_LINE_LENGTH];
 	TCHAR szLineTmp[MAX_LINE_LENGTH];
-	FILEINFO * pFileinfo;
+	lFILEINFO *fileList;
+	FILEINFO *pFileinfo;
+	list<lFILEINFO*> *doneList;
 	DWORD dwCountOK, dwCountNotOK, dwCountNoCrcFound, dwCountNotFound, dwCountErrors;
 	size_t stLength;
-	BOOL bEqual;
 
 	dwCountOK = dwCountNotOK = dwCountNoCrcFound = dwCountNotFound = dwCountErrors = 0;
-	pFileinfo = g_fileinfo_list_first_item;
-	while(pFileinfo != NULL){
-		// ATTENTION: the same logic is implemented in InsertItemIntoList, InfoToIntValue, DisplayStatusOverview.
-		// Any changes here have to be transfered there
-		if(pFileinfo->dwError != NO_ERROR)
-			if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND)
-				dwCountNotFound++;
-			else
-				dwCountErrors++;
-		else{
-			if(g_program_status.uiRapidCrcMode == MODE_MD5){
-				if( (g_program_status.bMd5Calculated) && (pFileinfo->bMd5Found) ){
-					bEqual = TRUE;
-					for(INT i = 0; i < 16; ++i)
-						if(pFileinfo->abMd5Result[i] != pFileinfo->abMd5Found[i])
-							bEqual = FALSE;
-					if(bEqual)
-						dwCountOK++;
-					else
-						dwCountNotOK++;
-				}
-				else
-					dwCountNoCrcFound++;
-			}
-			else{ // MODE_SFV and MODE_NORMAL; the icon does not differ between these modes
-				if( (g_program_status.bCrcCalculated) && (pFileinfo->bCrcFound) ){
-					if(pFileinfo->dwCrc32Result == pFileinfo->dwCrc32Found)
-						dwCountOK++;
-					else
-						dwCountNotOK++;
-				}
-				else
-					dwCountNoCrcFound++;
+	//pFileinfo = g_fileinfo_list_first_item;
+	doneList = SyncQueue.getDoneList();
+	//while(pFileinfo != NULL){
+	for(list<lFILEINFO*>::iterator it=doneList->begin();it!=doneList->end();it++) {
+		fileList = *it;
+		for(list<FILEINFO>::iterator fInfoIt=fileList->fInfos.begin();fInfoIt!=fileList->fInfos.end();fInfoIt++) {
+			pFileinfo = &(*fInfoIt);
+			// ATTENTION: the same logic is implemented in InsertItemIntoList, InfoToIntValue, DisplayStatusOverview.
+			// Any changes here have to be transfered there
+			switch(InfoToIntValue(pFileinfo)) {
+				case 1: dwCountOK++;
+						break;
+				case 2: dwCountNotOK++;
+						break;
+				case 3: dwCountNoCrcFound++;
+						break;
+				case 4: if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND)
+							dwCountNotFound++;
+						else
+							dwCountErrors++;
+						break;
+				default: dwCountNoCrcFound++;
 			}
 		}
-		pFileinfo = pFileinfo->nextListItem;
 	}
+
+	SyncQueue.releaseDoneList();
 
 	StringCchCopy(szLine, MAX_LINE_LENGTH, TEXT(""));
 	if(dwCountOK > 0){
@@ -1005,6 +1092,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 	CheckDlgButton(hDlg, IDC_CHECK_CREATE_UNIX_STYLE, pprogram_options->bCreateUnixStyle ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_CREATE_UNICODE_FILES, pprogram_options->bCreateUnicodeFiles ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_MD5_IN_LIST, pprogram_options->bDisplayMd5InListView ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(hDlg, IDC_ENABLE_QUEUE, pprogram_options->bEnableQueue ? BST_CHECKED : BST_UNCHECKED);
 
     ComboBox_SetCurSel(GetDlgItem(hDlg,IDC_UNICODE_TYPE),pprogram_options->iUnicodeSaveType);
 	
@@ -1047,4 +1135,13 @@ VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStat
 	EnableWindow(arrHwnd[ID_BTN_OPTIONS], bStatus);
 
 	return;
+}
+
+VOID ClearAllItems(CONST HWND hListView)
+{
+	SyncQueue.clearQueue();
+	SyncQueue.clearList();
+	ListView_DeleteAllItems(hListView);
+	if(gComCtrlv6)
+		ListView_RemoveAllGroups(hListView);	
 }

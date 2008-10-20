@@ -163,20 +163,16 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 {
 	// File OK < File not OK < No CRC/MD5 found < Error
 	int iResult;
-	BOOL bEqual;
+	//BOOL bEqual;
 
 	// ATTENTION: the same logic is implemented in InsertItemIntoList, InfoToIntValue, DisplayStatusOverview.
 	// Any changes here have to be transfered there
 	if(pFileinfo->dwError != NO_ERROR)
 		iResult = 4;
 	else{
-		if(g_program_status.uiRapidCrcMode == MODE_MD5){
-			if( (g_program_status.bMd5Calculated) && (pFileinfo->bMd5Found) ){
-				bEqual = TRUE;
-				for(INT i = 0; i < 16; ++i)
-					if(pFileinfo->abMd5Result[i] != pFileinfo->abMd5Found[i])
-						bEqual = FALSE;
-				if(bEqual)
+		if(pFileinfo->parentList->uiRapidCrcMode == MODE_MD5){
+			if( (pFileinfo->parentList->bMd5Calculated) && (pFileinfo->bMd5Found) ){
+				if(memcmp( pFileinfo->abMd5Result, pFileinfo->abMd5Found, 16) == 0)
 					iResult = 1;
 				else
 					iResult = 2;
@@ -185,7 +181,7 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 				iResult = 3;
 		}
 		else{ // MODE_SFV and MODE_NORMAL; the icon does not differ between these modes
-			if( (g_program_status.bCrcCalculated) && (pFileinfo->bCrcFound) ){
+			if( (pFileinfo->parentList->bCrcCalculated) && (pFileinfo->bCrcFound) ){
 				if(pFileinfo->dwCrc32Result == pFileinfo->dwCrc32Found)
 					iResult = 1;
 				else
@@ -199,6 +195,38 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 	return iResult;
 }
 
+bool ListCompFunction(const FILEINFO& pFileinfo1, const FILEINFO& pFileinfo2)
+{
+	TCHAR szFilenameTemp1[MAX_PATH];
+	TCHAR szFilenameTemp2[MAX_PATH];
+	INT iDiff;
+
+	StringCchCopy(szFilenameTemp1, MAX_PATH, pFileinfo1.szFilenameShort);
+	StringCchCopy(szFilenameTemp2, MAX_PATH, pFileinfo2.szFilenameShort);
+
+	ReduceToPath(szFilenameTemp1);
+	ReduceToPath(szFilenameTemp2);
+
+	iDiff = lstrcmpi( szFilenameTemp1, szFilenameTemp2);
+	if(iDiff==0)
+		iDiff = lstrcmpi( pFileinfo1.szFilenameShort, pFileinfo2.szFilenameShort);
+
+	if(iDiff < 0)
+		return true;
+	else
+		return false;
+}
+
+bool ListPointerCompFunction(const FILEINFO *pFileinfo1, const FILEINFO *pFileinfo2)
+{
+	return ListCompFunction(*pFileinfo1,*pFileinfo2);
+}
+
+bool ListPointerUniqFunction(const FILEINFO *pFileinfo1, const FILEINFO *pFileinfo2)
+{
+	return (lstrcmp(pFileinfo1->szFilename,pFileinfo2->szFilename)==0);
+}
+
 /*****************************************************************************
 VOID QuickSortList()
 
@@ -209,14 +237,14 @@ Notes:
 - creates a pointer array from the list, then sorts this array with MS QuickSort fct,
 then builds a new list from the sorted list and frees the array
 *****************************************************************************/
-VOID QuickSortList()
+VOID QuickSortList(lFILEINFO *fileList)
 {
-	FILEINFO ** arrFileinfo;
-	UINT uiNumElements, uiIndex;
+	//FILEINFO ** arrFileinfo;
+	//UINT uiNumElements, uiIndex;
 
-	arrFileinfo = GenArrayFromFileinfoList(& uiNumElements);
+	//arrFileinfo = GenArrayFromFileinfoList(& uiNumElements);
 
-	if(uiNumElements > 0){
+	/*if(uiNumElements > 0){
 
 		qsort( (void *)arrFileinfo, (size_t)uiNumElements, sizeof(FILEINFO *), QuickCompFunction);
 
@@ -226,7 +254,8 @@ VOID QuickSortList()
 		arrFileinfo[uiNumElements - 1]->nextListItem = NULL;
 
 		free(arrFileinfo);
-	}
+	}*/
+	fileList->fInfos.sort(ListCompFunction);
 
 	return;
 }

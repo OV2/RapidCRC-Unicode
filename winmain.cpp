@@ -33,12 +33,13 @@ returns return value of the main window
 INT WINAPI WinMain (HINSTANCE hInst, HINSTANCE /*hPrevInstance*/, LPSTR /*szCmdLine*/, int iCmdShow)
 {
 	MSG msg;
+	HWND mainHwnd;
 
 	g_hInstance = hInst;
 
 	RegisterMainWindowClass();
 
-	if (!InitInstance(iCmdShow)) 
+	if (!(mainHwnd = InitInstance(iCmdShow))) 
 	{
 		MessageBox(NULL, TEXT("Program uses Unicode and requires Windows NT or higher"), TEXT("Error"), MB_ICONERROR);
 		return 0;
@@ -46,8 +47,10 @@ INT WINAPI WinMain (HINSTANCE hInst, HINSTANCE /*hPrevInstance*/, LPSTR /*szCmdL
 
 	while(GetMessage(&msg, NULL, 0, 0))
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		if (!IsDialogMessage(mainHwnd, &msg)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 
 	return (INT) msg.wParam;

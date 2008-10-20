@@ -19,9 +19,10 @@
 
 #include "resource.h"
 #include "globals.h"
+#include "CSyncQueue.h"
 
 static DWORD GetTypeOfPath(CONST TCHAR szPath[MAX_PATH]);
-static VOID SetBasePath();
+static VOID SetBasePath(lFILEINFO *fileList);
 
 /*****************************************************************************
 BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH])
@@ -397,25 +398,30 @@ Notes:
 7.) fills pbCalculateCrc32 and pbCalculateMd5 depending on in which program mode
     we are. These values are passed by the caller to THREAD_CALC
 *****************************************************************************/
-VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS], QWORD * pqwFilesizeSum,
-					 BOOL * pbCalculateCrc32, BOOL * pbCalculateMd5, SHOWRESULT_PARAMS * pshowresult_params)
+VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
+					 SHOWRESULT_PARAMS * pshowresult_params,
+					 lFILEINFO *fileList)
 {
-	SetWindowText(arrHwnd[ID_EDIT_STATUS], TEXT("Getting Fileinfo..."));
-
-	EnableWindowsForThread(arrHwnd, FALSE);
-	ShowResult(arrHwnd, NULL, pshowresult_params);
+	if(SyncQueue.bThreadDone) {
+		SetWindowText(arrHwnd[ID_EDIT_STATUS], TEXT("Getting Fileinfo..."));
+		EnableWindowsForThread(arrHwnd, FALSE);
+		ShowResult(arrHwnd, NULL, pshowresult_params);
+	}
 
 	// reseting g_program_status which perhaps is still set by a previous run
-	g_program_status.bCrcCalculated = FALSE;
+	/*g_program_status.bCrcCalculated = FALSE;
 	g_program_status.bMd5Calculated = FALSE;
-	g_program_status.bEd2kCalculated = FALSE;
+	g_program_status.bEd2kCalculated = FALSE;*/
+	fileList->bCrcCalculated = FALSE;
+	fileList->bMd5Calculated = FALSE;
+	fileList->bEd2kCalculated = FALSE;
 
-	MakesPathsAbsolute();
+	MakesPathsAbsolute(fileList);
 
 	// enter normal mode
-	g_program_status.uiRapidCrcMode = MODE_NORMAL;
+	fileList->uiRapidCrcMode = MODE_NORMAL;
 
-	if(g_fileinfo_list_first_item != NULL){
+	/*if(g_fileinfo_list_first_item != NULL){
 		if(HasFileExtension(g_fileinfo_list_first_item->szFilename, TEXT(".sfv")))
 			EnterSfvMode(arrHwnd[ID_LISTVIEW]);
 		else if(HasFileExtension(g_fileinfo_list_first_item->szFilename, TEXT(".md5")))
@@ -424,22 +430,33 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS], QWORD * pqwFilesizeSum,
 			SetBasePath();
 			ProcessDirectories();
 		}
+	}*/
+	if(!fileList->fInfos.empty()) {
+		if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sfv")))
+			EnterSfvMode(fileList);
+		else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".md5")))
+			EnterMd5Mode(fileList);
+		else{
+			SetBasePath(fileList);
+			ProcessDirectories(fileList);
+		}
 	}
 
-	ProcessFileProperties(pqwFilesizeSum);
+	ProcessFileProperties(fileList);
+
+	fileList->bCalculateCrc	= ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcCrcPerDefault))
+								|| (fileList->uiRapidCrcMode == MODE_SFV);
+	fileList->bCalculateMd5	= ((fileList->uiRapidCrcMode == MODE_NORMAL) &&	(g_program_options.bCalcMd5PerDefault))
+								|| (fileList->uiRapidCrcMode == MODE_MD5);
+	fileList->bCalculateEd2k  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcEd2kPerDefault));
 
 	if(g_program_options.bSortList)
-		QuickSortList();
+		QuickSortList(fileList);
 
-	(*pbCalculateCrc32)	= ((g_program_status.uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcCrcPerDefault))
-		|| (g_program_status.uiRapidCrcMode == MODE_SFV);
-	(*pbCalculateMd5)	= ((g_program_status.uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcMd5PerDefault))
-		|| (g_program_status.uiRapidCrcMode == MODE_MD5);
-	(*pbCalculateMd5) |= ((g_program_status.uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcEd2kPerDefault)) << 1;
-
-	EnableWindowsForThread(arrHwnd, TRUE);
-
-	SetWindowText(arrHwnd[ID_EDIT_STATUS], TEXT("Getting Fileinfo done..."));
+	if(SyncQueue.bThreadDone) {
+		EnableWindowsForThread(arrHwnd, TRUE);
+		SetWindowText(arrHwnd[ID_EDIT_STATUS], TEXT("Getting Fileinfo done..."));
+	}
 
 	return;
 }
@@ -453,10 +470,10 @@ returns nothing
 Notes:
 - essentially gives some additional code to call ExpandDirectory correctly
 *****************************************************************************/
-VOID ProcessDirectories()
+VOID ProcessDirectories(lFILEINFO *fileList)
 {
-	FILEINFO Fileinfo;
-	FILEINFO * pFileinfo, * pFileinfo_prev;
+	//FILEINFO Fileinfo;
+	//FILEINFO * pFileinfo, * pFileinfo_prev;
 	TCHAR szCurrentPath[MAX_PATH];
 
 	// save org. path
@@ -465,7 +482,7 @@ VOID ProcessDirectories()
 	// the part after the next part needs pFileinfo_prev to integrate into the list.
 	// With that we make sure that there is a prev item (g_fileinfo_list_first_item is
 	// no expandable item anymore when we arrive at the next part)
-	Fileinfo.nextListItem = g_fileinfo_list_first_item;
+	/*Fileinfo.nextListItem = g_fileinfo_list_first_item;
 	while((Fileinfo.nextListItem != NULL) && (IsThisADirectory(Fileinfo.nextListItem->szFilename)) )
 	{
 			Fileinfo.nextListItem = ExpandDirectory(& Fileinfo);
@@ -499,7 +516,22 @@ VOID ProcessDirectories()
 				}
 			}
 		}
+	}*/
+
+	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();) {
+		if(IsThisADirectory((*it).szFilename))
+			it = ExpandDirectory(&fileList->fInfos,it);
+		else{
+            // check to see if the current file-extension matches our exclude string
+            // if so, we remove it from the list
+			if(CheckExcludeStringMatch((*it).szFilename)) {
+				it = fileList->fInfos.erase(it);
+			}
+			else it++;
+		}
 	}
+
+
 
 	// restore org. path
 	SetCurrentDirectory(szCurrentPath);
@@ -525,61 +557,64 @@ Notes:
   I hope I (or someone else) will make this list expansion stuff more elegant
   some day
 *****************************************************************************/
-FILEINFO * ExpandDirectory(FILEINFO * pFileinfo_prev)
+list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it)
 {
-	FILEINFO * pFileinfo;
-	FILEINFO * pFileinfo_org_next;
-	FILEINFO * pFileinfo_tmp_first, * pFileinfo_tmp, * pFileinfo_tmp_last;
+	//FILEINFO * pFileinfo;
+	//FILEINFO * pFileinfo_org_next;
+	//FILEINFO * pFileinfo_tmp_first, * pFileinfo_tmp, * pFileinfo_tmp_last;
 	HANDLE hFileSearch;
 	WIN32_FIND_DATA  findFileData;
-	BOOL bWeFoundSomethingUsable;
+	FILEINFO fileinfoTmp={0};
+	fileinfoTmp.parentList=(*it).parentList;
+	//list<FILEINFO>::iterator itNext;
+	UINT insertCount=0;
 
-	pFileinfo = pFileinfo_prev->nextListItem;
+	//pFileinfo = pFileinfo_prev->nextListItem;
 
 	// save the original nextListItem, because we are expanding in the middle of a list
-	pFileinfo_org_next = pFileinfo->nextListItem;
+	//pFileinfo_org_next = pFileinfo->nextListItem;
 
-	if(!SetCurrentDirectory(pFileinfo->szFilename)){
-		free(pFileinfo);
-		pFileinfo_prev->nextListItem = pFileinfo_org_next;
-		return pFileinfo_prev->nextListItem;
+	if(!SetCurrentDirectory((*it).szFilename)){
+		it = fList->erase(it);
+		return it;
 	}
+	it = fList->erase(it);
 
 	// start to find files and directories in this directory
 	hFileSearch = FindFirstFile(TEXT("*.*"), & findFileData);
 	if(hFileSearch == INVALID_HANDLE_VALUE){
-		free(pFileinfo);
-		pFileinfo_prev->nextListItem = pFileinfo_org_next;
-		return pFileinfo_prev->nextListItem;
+		return it;
 	}
 
 	// we create a new small list; we integrate it later in the main list
-	bWeFoundSomethingUsable = FALSE;
+	/*bWeFoundSomethingUsable = FALSE;
 	pFileinfo_tmp_first = AllocateFileinfo();
 	pFileinfo_tmp_first->nextListItem = NULL;
-	pFileinfo_tmp = pFileinfo_tmp_first;
+	pFileinfo_tmp = pFileinfo_tmp_first;*/
 	do{
 		if( (lstrcmpi(findFileData.cFileName, TEXT(".")) != 0) && (lstrcmpi(findFileData.cFileName, TEXT("..")) != 0) ){
-			GetFullPathName(findFileData.cFileName, MAX_PATH, pFileinfo_tmp->szFilename, NULL);
+			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
+			GetFullPathName(findFileData.cFileName, MAX_PATH, fileinfoTmp.szFilename, NULL);
 			
 			// now create a new item and remember the last valid list member
-			if(IsThisADirectory(pFileinfo_tmp->szFilename) || !CheckExcludeStringMatch(pFileinfo_tmp->szFilename)) {
-				pFileinfo_tmp->nextListItem = AllocateFileinfo();
-				pFileinfo_tmp_last = pFileinfo_tmp;
-				pFileinfo_tmp = pFileinfo_tmp->nextListItem;
-				bWeFoundSomethingUsable = TRUE;
+			if(IsThisADirectory(fileinfoTmp.szFilename) || !CheckExcludeStringMatch(fileinfoTmp.szFilename)) {
+				fList->insert(it,fileinfoTmp);
+				insertCount++;
 			}
 		}
 
 	}while(FindNextFile(hFileSearch, & findFileData));
 
+	for(UINT i=0;i<insertCount;i++)
+		it--;
+
 	// we created one too much, so we delete it now
-	free(pFileinfo_tmp);
+	//free(pFileinfo_tmp);
 
 	// stop the search
 	FindClose(hFileSearch);
 
-	if(!bWeFoundSomethingUsable){
+	/*if(!bWeFoundSomethingUsable){
 		free(pFileinfo);
 		pFileinfo_prev->nextListItem = pFileinfo_org_next;
 		return pFileinfo_prev->nextListItem;
@@ -592,7 +627,8 @@ FILEINFO * ExpandDirectory(FILEINFO * pFileinfo_prev)
 		pFileinfo_tmp_last->nextListItem = pFileinfo_org_next;
 
 		return pFileinfo_prev->nextListItem;
-	}
+	}*/
+	return it;
 }
 
 /*****************************************************************************
@@ -605,21 +641,21 @@ returns nothing
 Notes:
 - sets file information like filesize, CrcFromFilename, Long Pathname, szFilenameShort
 *****************************************************************************/
-VOID ProcessFileProperties(QWORD * pqwFilesizeSum)
+VOID ProcessFileProperties(lFILEINFO *fileList)
 {
 	size_t stString;
-	FILEINFO * pFileinfo;
+	//FILEINFO * pFileinfo;
 
-	StringCchLength(g_szBasePath, MAX_PATH, & stString);
+	StringCchLength(fileList->g_szBasePath, MAX_PATH, & stString);
 	// g_szBasePath can have a trailing '\' or not. For example 'D:\' or 'D:\Bla'. If the trailing '\'
 	// is missing we increase stString by 1 because we don't want a \ as the first symbol in szFilename
 	if(stString > 0)
-		if( g_szBasePath[stString - 1] != TEXT('\\') )
+		if( fileList->g_szBasePath[stString - 1] != TEXT('\\') )
 			++stString;
 
-	(*pqwFilesizeSum) = 0;
+	fileList->qwFilesizeSum = 0;
 
-	pFileinfo = g_fileinfo_list_first_item;
+	/*pFileinfo = g_fileinfo_list_first_item;
 	while(pFileinfo != NULL){
 		GetLongPathName(pFileinfo->szFilename, pFileinfo->szFilename, MAX_PATH);
 		pFileinfo->szFilenameShort = pFileinfo->szFilename + stString;
@@ -639,6 +675,25 @@ VOID ProcessFileProperties(QWORD * pqwFilesizeSum)
 		}
 
 		pFileinfo = pFileinfo->nextListItem;
+	}*/
+	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
+		GetLongPathName((*it).szFilename, (*it).szFilename, MAX_PATH);
+		(*it).szFilenameShort = (*it).szFilename + stString;
+		if(!IsApplDefError((*it).dwError)){
+			(*it).dwError = GetFileSizeQW((*it).szFilename, &((*it).qwFilesize));
+			if ((*it).dwError == NO_ERROR){
+				fileList->qwFilesizeSum += (*it).qwFilesize;
+				if(fileList->uiRapidCrcMode == MODE_NORMAL)
+					if(GetCrcFromFilename((*it).szFilenameShort, & (*it).dwCrc32Found))
+						(*it).bCrcFound = TRUE;
+					else
+						if(GetCrcFromStream((*it).szFilename, & (*it).dwCrc32Found))
+							(*it).bCrcFound = TRUE;
+						else
+							(*it).bCrcFound = FALSE;
+			}
+		}
+
 	}
 
 	return;
@@ -654,18 +709,23 @@ Notes:
 - walks through the list and makes sure that all paths are absolute.
 - it distinguishes between paths like c:\..., \... and ...
 *****************************************************************************/
-VOID MakesPathsAbsolute()
+VOID MakesPathsAbsolute(lFILEINFO *fileList)
 {
-	FILEINFO * pFileinfo;
+	//FILEINFO * pFileinfo;
 	TCHAR szFilenameTemp[MAX_PATH];
 
-	pFileinfo = g_fileinfo_list_first_item;
+	/*pFileinfo = g_fileinfo_list_first_item;
 	while(pFileinfo != NULL){
 		StringCchCopy(szFilenameTemp, MAX_PATH, pFileinfo->szFilename);
 		ReplaceChar(szFilenameTemp, MAX_PATH, TEXT('/'), TEXT('\\'));
 		GetFullPathName(szFilenameTemp, MAX_PATH, pFileinfo->szFilename, NULL);
 		pFileinfo = pFileinfo->nextListItem;
-	}	
+	}*/
+	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
+		StringCchCopy(szFilenameTemp, MAX_PATH, (*it).szFilename);
+		ReplaceChar(szFilenameTemp, MAX_PATH, TEXT('/'), TEXT('\\'));
+		GetFullPathName(szFilenameTemp, MAX_PATH, (*it).szFilename, NULL);
+	}
 
 	return;
 }
@@ -679,26 +739,56 @@ returns nothing
 Notes:
 - if choose a basepath and if it is a common prefix for all e
 *****************************************************************************/
-static VOID SetBasePath()
+static VOID SetBasePath(lFILEINFO *fileList)
 {
 	BOOL bIsPraefixForAll;
-	FILEINFO * pFileinfo;
+	//FILEINFO * pFileinfo;
 
-	StringCchCopy(g_szBasePath, MAX_PATH, g_fileinfo_list_first_item->szFilename);
-	ReduceToPath(g_szBasePath);
+	StringCchCopy(fileList->g_szBasePath, MAX_PATH, fileList->fInfos.front().szFilename);
+	ReduceToPath(fileList->g_szBasePath);
 
 	GetLongPathName(g_szBasePath, g_szBasePath, MAX_PATH);
 
 	bIsPraefixForAll = TRUE;
-	pFileinfo = g_fileinfo_list_first_item->nextListItem;	//g_fileinfo_list_first_item is of course
+	/*pFileinfo = g_fileinfo_list_first_item->nextListItem;	//g_fileinfo_list_first_item is of course
 	while(pFileinfo != NULL){
 		if(!IsStringPrefix(g_szBasePath, pFileinfo->szFilename))
 			bIsPraefixForAll = FALSE;
 		pFileinfo = pFileinfo->nextListItem;
+	}*/
+	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
+		if(!IsStringPrefix(fileList->g_szBasePath, (*it).szFilename))
+			bIsPraefixForAll = FALSE;
 	}
 
-	if(!bIsPraefixForAll || !IsThisADirectory(g_szBasePath))
+	if(!bIsPraefixForAll || !IsThisADirectory(fileList->g_szBasePath))
 		StringCchCopy(g_szBasePath, MAX_PATH, TEXT(""));
 
 	return;
+}
+
+UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
+{
+	list<FILEINFO*>::iterator itLast;
+	UINT countSameChars=MAXUINT;;
+
+	if(fileInfoList->empty())
+		return 0;
+
+	for(list<FILEINFO*>::iterator it=fileInfoList->begin(),itLast=it++;it!=fileInfoList->end();it++) {
+		UINT i=0;
+		while(i<countSameChars && (*it)->szFilename[i]!=TEXT('\0') && (*itLast)->szFilename[i]!=TEXT('\0')) {
+			if((*it)->szFilename[i]!=(*itLast)->szFilename[i])
+				countSameChars = i;
+			i++;
+		}
+		if(countSameChars<3) return 0;
+	}
+
+	while( (countSameChars > 0) && (fileInfoList->front()->szFilename[countSameChars - 1] != TEXT('\\')) )
+		countSameChars--;
+	if(countSameChars == 2) // this is the case for example for C:\ or C:\test.txt. Then we want soemthing like C:\ and not C:
+		countSameChars++;
+
+	return countSameChars;
 }

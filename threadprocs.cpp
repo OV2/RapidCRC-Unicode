@@ -22,6 +22,7 @@
 #include <process.h>
 #include <commctrl.h>
 #include "ed2k_hash.h"
+#include "CSyncQueue.h"
 
 // used in UINT __stdcall ThreadProc_Calc(VOID * pParam)
 #define SWAPBUFFERS() \
@@ -53,13 +54,17 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 {
 	THREAD_PARAMS_CALC * CONST pthread_params_calc = (THREAD_PARAMS_CALC *)pParam;
 	// put thread parameter into (const) locale variable. This might be a bit faster
-	CONST BOOL bCalculateCrc = pthread_params_calc->bCalculateCrc; // I hope this way less adress calculation has to be done
-	CONST BOOL bCalculateMd5 = pthread_params_calc->bCalculateMd5;
-	CONST BOOL bCalculateEd2k = pthread_params_calc->bCalculateEd2k;
+	//CONST BOOL bCalculateCrc = pthread_params_calc->bCalculateCrc; // I hope this way less adress calculation has to be done
+	//CONST BOOL bCalculateMd5 = pthread_params_calc->bCalculateMd5;
+	//CONST BOOL bCalculateEd2k = pthread_params_calc->bCalculateEd2k;
 	CONST HWND * CONST arrHwnd = pthread_params_calc->arrHwnd;
 	SHOWRESULT_PARAMS * CONST pshowresult_params = pthread_params_calc->pshowresult_params;
 
-	DWORD dwErrorCode = NO_ERROR;
+	BOOL bCalculateCrc;
+	BOOL bCalculateMd5;
+	BOOL bCalculateEd2k;
+
+	//DWORD dwErrorCode = NO_ERROR;
 	QWORD qwStart, qwStop, wqFreq;
 	HANDLE hFile;
 	BYTE *readBuffer = (BYTE *)malloc(MAX_BUFFER_SIZE_CALC);
@@ -72,7 +77,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	BOOL bSuccess;
 	BOOL bFileDone;
 
-	FILEINFO * pFileinfo;
+	//FILEINFO * pFileinfo;
 
 	HANDLE hEvtThreadMd5Go;
 	HANDLE hEvtThreadEd2kGo;
@@ -90,11 +95,13 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	HANDLE hThreadCrc=NULL;
 	
 	HANDLE hEvtReadyHandles[3];
-	DWORD cEvtReadyHandles=0;
+	DWORD cEvtReadyHandles;
 
 	THREAD_PARAMS_HASHCALC md5CalcParams;
 	THREAD_PARAMS_HASHCALC ed2kCalcParams;
 	THREAD_PARAMS_HASHCALC crcCalcParams;
+
+	lFILEINFO *fileList;
 
 	if(readBuffer == NULL || calcBuffer == NULL) {
 		ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
@@ -106,201 +113,220 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	// - clear the result windows
 	// - clear the list window
 	// - disable action buttons while in thread
-	ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
 	EnableWindowsForThread(arrHwnd, FALSE);
+
 	ShowResult(arrHwnd, NULL, pshowresult_params);
+	
+	while((fileList = SyncQueue.popQueue()) != NULL) {
 
-	if(bCalculateCrc) {
-		g_program_status.bCrcCalculated = TRUE;
-		hEvtThreadCrcGo = CreateEvent(NULL,FALSE,FALSE,NULL);
-		hEvtThreadCrcReady = CreateEvent(NULL,FALSE,FALSE,NULL);
-		if(hEvtThreadCrcGo == NULL || hEvtThreadCrcReady == NULL) {
+		//pthread_params_calc->qwFilesizeSum = fileList->qwFilesizeSum;
+
+		bCalculateCrc	= !fileList->bCrcCalculated && fileList->bCalculateCrc;
+		bCalculateMd5	= !fileList->bMd5Calculated && fileList->bCalculateMd5;
+		bCalculateEd2k  = !fileList->bEd2kCalculated && fileList->bCalculateEd2k;
+
+		cEvtReadyHandles = 0;
+
+		if(bCalculateCrc) {
+			fileList->bCrcCalculated = TRUE;
+			hEvtThreadCrcGo = CreateEvent(NULL,FALSE,FALSE,NULL);
+			hEvtThreadCrcReady = CreateEvent(NULL,FALSE,FALSE,NULL);
+			if(hEvtThreadCrcGo == NULL || hEvtThreadCrcReady == NULL) {
+				ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+				ExitProcess(1);
+			}
+			hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadCrcReady;
+			cEvtReadyHandles++;
+			crcCalcParams.bFileDone = &bFileDone;
+			crcCalcParams.hHandleGo = hEvtThreadCrcGo;
+			crcCalcParams.hHandleReady = hEvtThreadCrcReady;
+			crcCalcParams.buffer = &calcBuffer;
+			crcCalcParams.dwBytesRead = &dwBytesReadCb;
+		}
+
+		if(bCalculateMd5) {
+			fileList->bMd5Calculated = TRUE;
+			hEvtThreadMd5Go = CreateEvent(NULL,FALSE,FALSE,NULL);
+			hEvtThreadMd5Ready = CreateEvent(NULL,FALSE,FALSE,NULL);
+			if(hEvtThreadMd5Go == NULL || hEvtThreadMd5Ready == NULL) {
+				ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+				ExitProcess(1);
+			}
+			hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadMd5Ready;
+			cEvtReadyHandles++;
+			md5CalcParams.bFileDone = &bFileDone;
+			md5CalcParams.hHandleGo = hEvtThreadMd5Go;
+			md5CalcParams.hHandleReady = hEvtThreadMd5Ready;
+			md5CalcParams.buffer = &calcBuffer;
+			md5CalcParams.dwBytesRead = &dwBytesReadCb;
+		}
+
+		if(bCalculateEd2k) {
+			fileList->bEd2kCalculated = TRUE;
+			hEvtThreadEd2kGo = CreateEvent(NULL,FALSE,FALSE,NULL);
+			hEvtThreadEd2kReady = CreateEvent(NULL,FALSE,FALSE,NULL);
+			if(hEvtThreadEd2kGo == NULL || hEvtThreadEd2kReady == NULL) {
+				ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+				ExitProcess(1);
+			}
+			hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadEd2kReady;
+			cEvtReadyHandles++;
+			ed2kCalcParams.bFileDone = &bFileDone;
+			ed2kCalcParams.hHandleGo = hEvtThreadEd2kGo;
+			ed2kCalcParams.hHandleReady = hEvtThreadEd2kReady;
+			ed2kCalcParams.buffer = &calcBuffer;
+			ed2kCalcParams.dwBytesRead = &dwBytesReadCb;
+		}
+
+		hEvtReadDone = CreateEvent(NULL,FALSE,FALSE,NULL);
+		if(hEvtReadDone == NULL) {
 			ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
 			ExitProcess(1);
 		}
-		hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadCrcReady;
-		cEvtReadyHandles++;
-		crcCalcParams.bFileDone = &bFileDone;
-		crcCalcParams.hHandleGo = hEvtThreadCrcGo;
-		crcCalcParams.hHandleReady = hEvtThreadCrcReady;
-		crcCalcParams.buffer = &calcBuffer;
-		crcCalcParams.dwBytesRead = &dwBytesReadCb;
-	}
 
-	if(bCalculateMd5) {
-		g_program_status.bMd5Calculated = TRUE;
-		hEvtThreadMd5Go = CreateEvent(NULL,FALSE,FALSE,NULL);
-		hEvtThreadMd5Ready = CreateEvent(NULL,FALSE,FALSE,NULL);
-		if(hEvtThreadMd5Go == NULL || hEvtThreadMd5Ready == NULL) {
-			ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-			ExitProcess(1);
+		QueryPerformanceFrequency((LARGE_INTEGER*)&wqFreq);
+
+		if(g_program_options.bEnableQueue && gComCtrlv6) {
+			if(fileList->iGroupId==0)
+				InsertGroupIntoListView(arrHwnd[ID_LISTVIEW],fileList);
+			else
+				RemoveGroupItems(arrHwnd[ID_LISTVIEW],fileList->iGroupId);
 		}
-		hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadMd5Ready;
-		cEvtReadyHandles++;
-		md5CalcParams.bFileDone = &bFileDone;
-		md5CalcParams.hHandleGo = hEvtThreadMd5Go;
-		md5CalcParams.hHandleReady = hEvtThreadMd5Ready;
-		md5CalcParams.buffer = &calcBuffer;
-		md5CalcParams.dwBytesRead = &dwBytesReadCb;
-	}
 
-	if(bCalculateEd2k) {
-		g_program_status.bEd2kCalculated = TRUE;
-		hEvtThreadEd2kGo = CreateEvent(NULL,FALSE,FALSE,NULL);
-		hEvtThreadEd2kReady = CreateEvent(NULL,FALSE,FALSE,NULL);
-		if(hEvtThreadEd2kGo == NULL || hEvtThreadEd2kReady == NULL) {
-			ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-			ExitProcess(1);
-		}
-		hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadEd2kReady;
-		cEvtReadyHandles++;
-		ed2kCalcParams.bFileDone = &bFileDone;
-		ed2kCalcParams.hHandleGo = hEvtThreadEd2kGo;
-		ed2kCalcParams.hHandleReady = hEvtThreadEd2kReady;
-		ed2kCalcParams.buffer = &calcBuffer;
-		ed2kCalcParams.dwBytesRead = &dwBytesReadCb;
-	}
-
-	hEvtReadDone = CreateEvent(NULL,FALSE,FALSE,NULL);
-	if(hEvtReadDone == NULL) {
-		ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-		ExitProcess(1);
-	}
-
-	QueryPerformanceFrequency((LARGE_INTEGER*)&wqFreq);
-
-	pFileinfo = g_fileinfo_list_first_item;
-	while(pFileinfo != NULL)
-	{
-		pthread_params_calc->pFileinfo_cur = pFileinfo;
-		pthread_params_calc->qwBytesReadCurFile = 0;
-		
-
-        if ( (pFileinfo->dwError == NO_ERROR) && (pFileinfo->qwFilesize != 0) && (bCalculateCrc || bCalculateMd5 || bCalculateEd2k))
+		for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++)
 		{
+			pthread_params_calc->pFileinfo_cur = &(*it);
+			pthread_params_calc->qwBytesReadCurFile = 0;
+			
+			FILEINFO& curFileInfo = (*it);
 
-			SetWindowText(arrHwnd[ID_EDIT_STATUS], pFileinfo->szFilename);
+			if ( (curFileInfo.dwError == NO_ERROR) && (curFileInfo.qwFilesize != 0) && (bCalculateCrc || bCalculateMd5 || bCalculateEd2k))
+			{
 
-			QueryPerformanceCounter((LARGE_INTEGER*) &qwStart);
-			hFile = CreateFile(pFileinfo->szFilename,
-					GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN , 0);
-			if(hFile == INVALID_HANDLE_VALUE){
-				pFileinfo->dwError = GetLastError();
-				continue;
-			}
+				SetWindowText(arrHwnd[ID_EDIT_STATUS], curFileInfo.szFilename);
 
-			bFileDone = FALSE;
-
-			if(bCalculateCrc) {
-				ResetEvent(hEvtThreadCrcGo);
-				ResetEvent(hEvtThreadCrcReady);
-				crcCalcParams.result = &pFileinfo->dwCrc32Result;
-				hThreadCrc = CreateThread(NULL,0,ThreadProc_CrcCalc,&crcCalcParams,0,NULL);
-				if(hThreadCrc == NULL) {
-					ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-					ExitProcess(1);
+				QueryPerformanceCounter((LARGE_INTEGER*) &qwStart);
+				hFile = CreateFile(curFileInfo.szFilename,
+						GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN , 0);
+				if(hFile == INVALID_HANDLE_VALUE){
+					curFileInfo.dwError = GetLastError();
+					continue;
 				}
-			}
-			if(bCalculateMd5) {
-				ResetEvent(hEvtThreadMd5Go);
-				ResetEvent(hEvtThreadMd5Ready);
-				md5CalcParams.result = &pFileinfo->abMd5Result;
-				hThreadMd5 = CreateThread(NULL,0,ThreadProc_Md5Calc,&md5CalcParams,0,NULL);
-				if(hThreadMd5 == NULL) {
-					ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-					ExitProcess(1);
-				}
-			}
-			if(bCalculateEd2k) {
-				ResetEvent(hEvtThreadEd2kGo);
-				ResetEvent(hEvtThreadEd2kReady);
-				ed2kCalcParams.result = &pFileinfo->abEd2kResult;
-				hThreadEd2k = CreateThread(NULL,0,ThreadProc_Ed2kCalc,&ed2kCalcParams,0,NULL);
-				if(hThreadEd2k == NULL) {
-					ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-					ExitProcess(1);
-				}
-			}
 
-			ZeroMemory(&olp,sizeof(olp));
-			olp.hEvent = hEvtReadDone;
-			olp.Offset = 0;
-			olp.OffsetHigh = 0;
-			ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, NULL, &olp);
+				bFileDone = FALSE;
 
-			do {
-				bSuccess = GetOverlappedResult(hFile,&olp,dwBytesReadRb,TRUE);
-				if(!bSuccess && GetLastError() != ERROR_HANDLE_EOF) {
-					pFileinfo->dwError = GetLastError();
-					bFileDone = TRUE;
-					if(bCalculateCrc)
-						SetEvent(hEvtThreadCrcGo);
-					if(bCalculateMd5)
-						SetEvent(hEvtThreadMd5Go);
-					if(bCalculateEd2k)
-						SetEvent(hEvtThreadEd2kGo);
-					break;
+				if(bCalculateCrc) {
+					ResetEvent(hEvtThreadCrcGo);
+					ResetEvent(hEvtThreadCrcReady);
+					crcCalcParams.result = &curFileInfo.dwCrc32Result;
+					hThreadCrc = CreateThread(NULL,0,ThreadProc_CrcCalc,&crcCalcParams,0,NULL);
+					if(hThreadCrc == NULL) {
+						ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+						ExitProcess(1);
+					}
 				}
-				pthread_params_calc->qwBytesReadCurFile  += *dwBytesReadRb; //for progress bar
-				pthread_params_calc->qwBytesReadAllFiles += *dwBytesReadRb;
+				if(bCalculateMd5) {
+					ResetEvent(hEvtThreadMd5Go);
+					ResetEvent(hEvtThreadMd5Ready);
+					md5CalcParams.result = &curFileInfo.abMd5Result;
+					hThreadMd5 = CreateThread(NULL,0,ThreadProc_Md5Calc,&md5CalcParams,0,NULL);
+					if(hThreadMd5 == NULL) {
+						ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+						ExitProcess(1);
+					}
+				}
+				if(bCalculateEd2k) {
+					ResetEvent(hEvtThreadEd2kGo);
+					ResetEvent(hEvtThreadEd2kReady);
+					ed2kCalcParams.result = &curFileInfo.abEd2kResult;
+					hThreadEd2k = CreateThread(NULL,0,ThreadProc_Ed2kCalc,&ed2kCalcParams,0,NULL);
+					if(hThreadEd2k == NULL) {
+						ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+						ExitProcess(1);
+					}
+				}
 
-				olp.Offset = pthread_params_calc->qwBytesReadCurFile & 0xffffffff;
-				olp.OffsetHigh = (pthread_params_calc->qwBytesReadCurFile >> 32) & 0xffffffff;
-				
-				WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
-				SWAPBUFFERS();
+				ZeroMemory(&olp,sizeof(olp));
+				olp.hEvent = hEvtReadDone;
+				olp.Offset = 0;
+				olp.OffsetHigh = 0;
 				ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, NULL, &olp);
 
-				if(*dwBytesReadCb<MAX_BUFFER_SIZE_CALC)
-					bFileDone=TRUE;
+				do {
+					bSuccess = GetOverlappedResult(hFile,&olp,dwBytesReadRb,TRUE);
+					if(!bSuccess && GetLastError() != ERROR_HANDLE_EOF) {
+						curFileInfo.dwError = GetLastError();
+						bFileDone = TRUE;
+						if(bCalculateCrc)
+							SetEvent(hEvtThreadCrcGo);
+						if(bCalculateMd5)
+							SetEvent(hEvtThreadMd5Go);
+						if(bCalculateEd2k)
+							SetEvent(hEvtThreadEd2kGo);
+						break;
+					}
+					pthread_params_calc->qwBytesReadCurFile  += *dwBytesReadRb; //for progress bar
+					pthread_params_calc->qwBytesReadAllFiles += *dwBytesReadRb;
 
-				if(bCalculateCrc)
-					SetEvent(hEvtThreadCrcGo);
+					olp.Offset = pthread_params_calc->qwBytesReadCurFile & 0xffffffff;
+					olp.OffsetHigh = (pthread_params_calc->qwBytesReadCurFile >> 32) & 0xffffffff;
+					
+					WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
+					SWAPBUFFERS();
+					ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, NULL, &olp);
 
-				if(bCalculateMd5)
-					SetEvent(hEvtThreadMd5Go);
-				
-				if(bCalculateEd2k)
-					SetEvent(hEvtThreadEd2kGo);
+					if(*dwBytesReadCb<MAX_BUFFER_SIZE_CALC)
+						bFileDone=TRUE;
 
-			} while(bSuccess && (*dwBytesReadCb==MAX_BUFFER_SIZE_CALC));
+					if(bCalculateCrc)
+						SetEvent(hEvtThreadCrcGo);
 
-			WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
+					if(bCalculateMd5)
+						SetEvent(hEvtThreadMd5Go);
+					
+					if(bCalculateEd2k)
+						SetEvent(hEvtThreadEd2kGo);
 
-			if(hFile != NULL)
-				CloseHandle(hFile);
+				} while(bSuccess && (*dwBytesReadCb==MAX_BUFFER_SIZE_CALC));
 
-			if(hThreadMd5)
-				CloseHandle(hThreadMd5);
-			if(hThreadEd2k)
-				CloseHandle(hThreadEd2k);
-			if(hThreadCrc)
-				CloseHandle(hThreadCrc);
+				WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
 
-			QueryPerformanceCounter((LARGE_INTEGER*) &qwStop);
-			pFileinfo->fSeconds = (float)((qwStop - qwStart) / (float)wqFreq);
+				if(hFile != NULL)
+					CloseHandle(hFile);
+
+				if(hThreadMd5)
+					CloseHandle(hThreadMd5);
+				if(hThreadEd2k)
+					CloseHandle(hThreadEd2k);
+				if(hThreadCrc)
+					CloseHandle(hThreadCrc);
+
+				QueryPerformanceCounter((LARGE_INTEGER*) &qwStop);
+				curFileInfo.fSeconds = (float)((qwStop - qwStart) / (float)wqFreq);
+			}
+			else if(curFileInfo.qwFilesize == 0)	// this case is to have legal values in fSeconds
+				curFileInfo.fSeconds = 0;			// if the file has 0 bytes
+
+			SetFileInfoStrings(&curFileInfo,fileList);
+			InsertItemIntoList(arrHwnd[ID_LISTVIEW], &curFileInfo,fileList);
+			ShowResult(arrHwnd, &curFileInfo, pshowresult_params);
 		}
-		else if(pFileinfo->qwFilesize == 0)	// this case is to have legal values in fSeconds
-			pFileinfo->fSeconds = 0;			// if the file has 0 bytes
 
-		
-		InsertItemIntoList(arrHwnd[ID_LISTVIEW], pFileinfo);
-		ShowResult(arrHwnd, pFileinfo, pshowresult_params);
+		if(bCalculateMd5) {
+			CloseHandle(hEvtThreadMd5Go);
+			CloseHandle(hEvtThreadMd5Ready);
+		}
+		if(bCalculateEd2k) {
+			CloseHandle(hEvtThreadEd2kGo);
+			CloseHandle(hEvtThreadEd2kReady);
+		}
+		if(bCalculateCrc) {
+			CloseHandle(hEvtThreadCrcGo);
+			CloseHandle(hEvtThreadCrcReady);
+		}
 
-		pFileinfo = pFileinfo->nextListItem;
-	}
+		SyncQueue.addToList(fileList);
 
-	if(bCalculateMd5) {
-		CloseHandle(hEvtThreadMd5Go);
-		CloseHandle(hEvtThreadMd5Ready);
-	}
-	if(bCalculateEd2k) {
-		CloseHandle(hEvtThreadEd2kGo);
-		CloseHandle(hEvtThreadEd2kReady);
-	}
-	if(bCalculateCrc) {
-		CloseHandle(hEvtThreadCrcGo);
-		CloseHandle(hEvtThreadCrcReady);
 	}
 
 	// enable action button after thread is done
@@ -336,12 +362,18 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 {
 	THREAD_PARAMS_FILEINFO * CONST thread_params_fileinfo = (THREAD_PARAMS_FILEINFO *)pParam;
 	INT iNumFiles;
-	FILEINFO * pFileinfo;
+	//FILEINFO * pFileinfo;
 	BOOL bCalculateCrc32, bCalculateMd5;
 	// put thread parameter into (const) locale variable. This might be a bit faster
 	CONST HWND * CONST arrHwnd = thread_params_fileinfo->arrHwnd;
-	QWORD * CONST pqwFilesizeSum = thread_params_fileinfo->pqwFilesizeSum;
+	//QWORD * CONST pqwFilesizeSum = thread_params_fileinfo->pqwFilesizeSum;
 	SHOWRESULT_PARAMS * CONST pshowresult_params = thread_params_fileinfo->pshowresult_params;
+
+	lFILEINFO *fileList;
+	FILEINFO fileinfoTmp={0};
+
+	fileList = new lFILEINFO;
+	fileinfoTmp.parentList = fileList;
 
 #ifdef UNICODE
 	LPTSTR* argv;
@@ -352,10 +384,17 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	#define argc __argc
 	#define argv __argv
 #endif
+
+	// setting the initial value of the filesize sum to 0
+	//(*pqwFilesizeSum) = 0;
+
+	if(!g_program_options.bEnableQueue) {
+		ClearAllItems(arrHwnd[ID_LISTVIEW]);
+	}
     
 	// is there anything to do? (< 2, because 1st element is the path to the executable itself)
 	if(argc < 2){
-		g_fileinfo_list_first_item = NULL;
+		//g_fileinfo_list_first_item = NULL;
 		PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);
 		return 0;
 	}
@@ -382,8 +421,9 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 				gCMDOpts = CMD_NTFS;
 			}
 		}
-		if(!GetDataViaPipe(arrHwnd)){
-			g_fileinfo_list_first_item = NULL;
+		if(!GetDataViaPipe(arrHwnd,fileList)){
+			//g_fileinfo_list_first_item = NULL;
+			delete fileList;
 			PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);
 		return 1;
 		}
@@ -392,16 +432,14 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	{
 		// get number of files
 		iNumFiles = argc - 1; // -1 because 1st element is the path to the executable itself
-		DeallocateFileinfoMemory(arrHwnd[ID_LISTVIEW]);
-		AllocateMultipleFileinfo(iNumFiles);
+		//DeallocateFileinfoMemory(arrHwnd[ID_LISTVIEW]);
+		//AllocateMultipleFileinfo(iNumFiles);
 
-		// setting the initial value of the filesize sum to 0
-		(*pqwFilesizeSum) = 0;
 
-		pFileinfo = g_fileinfo_list_first_item;
 		for(INT i = 0; i < iNumFiles; ++i){
-			StringCchCopy(pFileinfo->szFilename, MAX_PATH, argv[i+1]);
-			pFileinfo = pFileinfo->nextListItem;
+			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
+			StringCchCopy(fileinfoTmp.szFilename, MAX_PATH, argv[i+1]);
+			fileList->fInfos.push_back(fileinfoTmp);
 		}
 	}
 
@@ -410,7 +448,9 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	GlobalFree(argv);
 #endif
 
-	PostProcessList(arrHwnd, pqwFilesizeSum, & bCalculateCrc32, & bCalculateMd5, pshowresult_params);
+	PostProcessList(arrHwnd, pshowresult_params, fileList);
+
+	SyncQueue.pushQueue(fileList);
 
 	if(gCMDOpts==CMD_MD5)
 	{

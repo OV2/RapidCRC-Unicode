@@ -19,6 +19,7 @@
 
 #include "resource.h"
 #include "globals.h"
+#include "CSyncQueue.h"
 
 static VOID BeforeReturnOnError_PipeComm(CONST HWND hWndMain, CONST HANDLE hPipe, CONST HANDLE hEvent1, CONST HANDLE hEvent2, CONST DWORD dwError);
 
@@ -42,17 +43,20 @@ Notes:
 	  functions can block, is a malfunction in the pipe comm. So ThreadProc_FileInfo remains
 	  threaded and remain normal calls
 *****************************************************************************/
-BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList)
 {
 	HANDLE hPipe;
 	HANDLE hEventWriteDone, hEventReadDone;
 	TCHAR szPipeName[100];
 	DWORD dwNumBytesRead;
 	UINT uiNumFiles;
-	FILEINFO * pFileinfo;
+	//FILEINFO * pFileinfo;
 	#ifdef _DEBUG
 	TCHAR szTemp[100];
 	#endif
+
+	FILEINFO fileinfoTmp={0};
+	fileinfoTmp.parentList = fileList;
 
 	StringCchCopy(szPipeName, 100, TEXT("\\\\.\\pipe\\RapidCRCNamedPipe"));
 
@@ -114,16 +118,18 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 	#endif
 
 	//memory allocation
-	AllocateMultipleFileinfo(uiNumFiles);
+	//AllocateMultipleFileinfo(uiNumFiles);
 
 	// get the command line parameter itself 	
-	pFileinfo = g_fileinfo_list_first_item;
+	//pFileinfo = g_fileinfo_list_first_item;
 	for(UINT i = 0; i < uiNumFiles; ++i)
 	{
 		#ifdef _DEBUG
 		StringCchPrintf(szTemp, 100, TEXT("RapidCRC: In Runde %u der Dateinamen Einlese Proz"),i);
 		OutputDebugString(szTemp);
 		#endif
+
+		ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
 
 		if(WaitForSingleObject(hEventWriteDone, 3000) == WAIT_TIMEOUT){
 			MessageBox(	NULL, TEXT("Interprocess communication failed: waiting too long for client"),
@@ -133,7 +139,7 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 		}
 		ResetEvent(hEventWriteDone);
 
-		if(!ReadFile(hPipe, pFileinfo->szFilename, MAX_PATH * sizeof(TCHAR), &dwNumBytesRead, NULL)){
+		if(!ReadFile(hPipe, fileinfoTmp.szFilename, MAX_PATH * sizeof(TCHAR), &dwNumBytesRead, NULL)){
 			#ifdef _DEBUG
 			OutputDebugString(TEXT("RapidCRC: Dateinamen einlesen ist schief gegangen"));
 			#endif
@@ -141,10 +147,11 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 			return FALSE;
 		}
 		#ifdef _DEBUG
-		OutputDebugString(pFileinfo->szFilename);
+		OutputDebugString(fileinfoTmp.szFilename);
 		#endif
 		
-		pFileinfo = pFileinfo->nextListItem;
+		//pFileinfo = pFileinfo->nextListItem;
+		fileList->fInfos.push_back(fileinfoTmp);
 
 		SetEvent(hEventReadDone);
 	}

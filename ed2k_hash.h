@@ -5,7 +5,9 @@
 
 #include <windows.h>
 #include "md4.h"
+#pragma warning(disable:4995)
 #include <list>
+#pragma warning(default:4995)
 using namespace std;
 
 #define BLOCKSIZE	(9500*1024)

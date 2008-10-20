@@ -33,7 +33,7 @@ Notes:
 	  fileinfo list
 	- is called after IsFileSfv returned true
 *****************************************************************************/
-BOOL EnterSfvMode(CONST HWND hListView)
+BOOL EnterSfvMode(lFILEINFO *fileList)
 {
 #ifdef UNICODE
 	CHAR	szLineAnsi[MAX_LINE_LENGTH];
@@ -45,41 +45,42 @@ BOOL EnterSfvMode(CONST HWND hListView)
 	BOOL	bErrorOccured, bEndOfFile;
 
 	BOOL	bCrcOK;
-	FILEINFO * pFileinfo;
-	FILEINFO * pFileinfo_prev;
 	BOOL	fileIsUnicode;
     UINT    codePage;
 
+	FILEINFO fileinfoTmp;
+
 	// save SFV filename and path
 	// => g_szBasePath in SFV-mode is the path part of the complete filename of the .sfv file
-	StringCchCopy(szFilenameSfv, MAX_PATH, g_fileinfo_list_first_item->szFilename);
-	StringCchCopy(g_szBasePath, MAX_PATH, szFilenameSfv);
-	ReduceToPath(g_szBasePath);
-	GetLongPathName(g_szBasePath, g_szBasePath, MAX_PATH);
+	StringCchCopy(szFilenameSfv, MAX_PATH, fileList->fInfos.front().szFilename);
+	StringCchCopy(fileList->g_szBasePath, MAX_PATH, szFilenameSfv);
+	ReduceToPath(fileList->g_szBasePath);
+	GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH);
 
 	// This is(should be) the ONLY place where a persistent change of the current directory is done
 	// (for GetFullPathName())
-	if(!SetCurrentDirectory(g_szBasePath))
+	if(!SetCurrentDirectory(fileList->g_szBasePath))
 		return FALSE;
 
 	// set sfv mode
-	g_program_status.uiRapidCrcMode = MODE_SFV;
+	fileList->uiRapidCrcMode = MODE_SFV;
 
 	// free everything we did so far
-	DeallocateFileinfoMemory(hListView);
+	//DeallocateFileinfoMemory(hListView);
+	fileList->fInfos.clear();
 
 	hFile = CreateFile(szFilenameSfv, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
 	if(hFile == INVALID_HANDLE_VALUE){
 		MessageBox(NULL, TEXT("SFV file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		DeallocateFileinfoMemory(hListView);
+		//DeallocateFileinfoMemory(hListView);
 		return FALSE;
 	}
 
-	g_fileinfo_list_first_item = AllocateFileinfo();
-	g_fileinfo_list_first_item->nextListItem = NULL;
+	//g_fileinfo_list_first_item = AllocateFileinfo();
+	//g_fileinfo_list_first_item->nextListItem = NULL;
 
-	pFileinfo = g_fileinfo_list_first_item;
-	pFileinfo_prev = NULL;
+	//pFileinfo = g_fileinfo_list_first_item;
+	//pFileinfo_prev = NULL;
 
     // check for the BOM and read accordingly
 	if(!(fileIsUnicode = IsUnicodeFile(hFile)))
@@ -89,13 +90,16 @@ BOOL EnterSfvMode(CONST HWND hListView)
 
 	if(bErrorOccured){
 		MessageBox(NULL, TEXT("SFV file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		DeallocateFileinfoMemory(hListView);
+		//DeallocateFileinfoMemory(hListView);
 		return FALSE;
 	}
 
 	while( !(bEndOfFile && uiStringLength == 0) ){
 
 		if(uiStringLength > 8){
+
+			ZeroMemory(&fileinfoTmp,sizeof(FILEINFO));
+			fileinfoTmp.parentList = fileList;
 
 #ifdef UNICODE
             // if we already read unicode characters we don't need the conversion here
@@ -123,12 +127,12 @@ BOOL EnterSfvMode(CONST HWND hListView)
 					if(! IsLegalHexSymbol(szLine[uiStringLength-i]))
 						bCrcOK = FALSE;
 				if(bCrcOK){
-					pFileinfo->bCrcFound = TRUE;
-					pFileinfo->dwCrc32Found = HexToDword(szLine + uiStringLength - 8, 8);
-					pFileinfo->dwError = NOERROR;
+					fileinfoTmp.bCrcFound = TRUE;
+					fileinfoTmp.dwCrc32Found = HexToDword(szLine + uiStringLength - 8, 8);
+					fileinfoTmp.dwError = NOERROR;
 				}
 				else
-					pFileinfo->dwError = APPL_ERROR_ILLEGAL_CRC;
+					fileinfoTmp.dwError = APPL_ERROR_ILLEGAL_CRC;
 
 				uiStringLength -= 8;
 				szLine[uiStringLength] = NULL; // keep only the filename
@@ -138,30 +142,29 @@ BOOL EnterSfvMode(CONST HWND hListView)
 					uiStringLength--;
 				}
 
-				GetFullPathName(szLine, MAX_PATH, pFileinfo->szFilename, NULL);
+				GetFullPathName(szLine, MAX_PATH, fileinfoTmp.szFilename, NULL);
 
-				pFileinfo->nextListItem = AllocateFileinfo();
-				pFileinfo_prev = pFileinfo;
-				pFileinfo = pFileinfo->nextListItem;
+				fileList->fInfos.push_back(fileinfoTmp);
 			}
 		}
 		
 		GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUnicode);
 		if(bErrorOccured){
 			MessageBox(NULL, TEXT("SFV file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-			DeallocateFileinfoMemory(hListView);
+			//DeallocateFileinfoMemory(hListView);
+			fileList->fInfos.clear();
 			return FALSE;
 		}
 	}
 	CloseHandle(hFile);
 
-	if(pFileinfo_prev == NULL) // did we do something?
+	/*if(pFileinfo_prev == NULL) // did we do something?
 		DeallocateFileinfoMemory(hListView);
 	else{
 		// we created one Fileinfo too much
 		free(pFileinfo_prev->nextListItem);
 		pFileinfo_prev->nextListItem = NULL;
-	}
+	}*/
 
 	return TRUE;
 }
@@ -441,7 +444,7 @@ Notes:
 fileinfo list
 - is called after IsFileMd5 returned true
 *****************************************************************************/
-BOOL EnterMd5Mode(CONST HWND hListView)
+BOOL EnterMd5Mode(lFILEINFO *fileList)
 {
 #ifdef UNICODE
 	CHAR	szLineAnsi[MAX_LINE_LENGTH];
@@ -454,41 +457,44 @@ BOOL EnterMd5Mode(CONST HWND hListView)
 	UINT	uiIndex;
 
 	BOOL	bMd5OK;
-	FILEINFO * pFileinfo;
-	FILEINFO * pFileinfo_prev;
+	//FILEINFO * pFileinfo;
+	//FILEINFO * pFileinfo_prev;
 	BOOL	fileIsUnicode;
     UINT    codePage;
 
+	FILEINFO fileinfoTmp;
+
 	// save MD5 filename and path
 	// => g_szBasePath in MD5-mode is the path part of the complete filename of the .md5 file
-	StringCchCopy(szFilenameMd5, MAX_PATH, g_fileinfo_list_first_item->szFilename);
-	StringCchCopy(g_szBasePath, MAX_PATH, szFilenameMd5);
-	ReduceToPath(g_szBasePath);
-	GetLongPathName(g_szBasePath, g_szBasePath, MAX_PATH);
+	StringCchCopy(szFilenameMd5, MAX_PATH, fileList->fInfos.front().szFilename);
+	StringCchCopy(fileList->g_szBasePath, MAX_PATH, szFilenameMd5);
+	ReduceToPath(fileList->g_szBasePath);
+	GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH);
 
 	// This is(should be) the ONLY place where a persistent change of the current directory is done
 	// (for GetFullPathName())
-	if(!SetCurrentDirectory(g_szBasePath))
+	if(!SetCurrentDirectory(fileList->g_szBasePath))
 		return FALSE;
 
 	// set md5 mode
-	g_program_status.uiRapidCrcMode = MODE_MD5;
+	fileList->uiRapidCrcMode = MODE_MD5;
 
 	// free everything we did so far
-	DeallocateFileinfoMemory(hListView);
+	//DeallocateFileinfoMemory(hListView);
+	fileList->fInfos.clear();
 
 	hFile = CreateFile(szFilenameMd5, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
 	if(hFile == INVALID_HANDLE_VALUE){
 		MessageBox(NULL, TEXT("MD5 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		DeallocateFileinfoMemory(hListView);
+		//DeallocateFileinfoMemory(hListView);
 		return FALSE;
 	}
 
-	g_fileinfo_list_first_item = AllocateFileinfo();
-	g_fileinfo_list_first_item->nextListItem = NULL;
+	//g_fileinfo_list_first_item = AllocateFileinfo();
+	//g_fileinfo_list_first_item->nextListItem = NULL;
 
-	pFileinfo = g_fileinfo_list_first_item;
-	pFileinfo_prev = NULL;
+	//pFileinfo = g_fileinfo_list_first_item;
+	//pFileinfo_prev = NULL;
 
     // check for the BOM and read accordingly
 	if(!(fileIsUnicode = IsUnicodeFile(hFile)))
@@ -498,13 +504,16 @@ BOOL EnterMd5Mode(CONST HWND hListView)
 
 	if(bErrorOccured){
 		MessageBox(NULL, TEXT("MD5 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		DeallocateFileinfoMemory(hListView);
+		//DeallocateFileinfoMemory(hListView);
 		return FALSE;
 	}
 
 	while( !(bEndOfFile && uiStringLength == 0) ){
 
 		if(uiStringLength > 34){ // a valid line has 32 hex values for the md5 value and then either "  " or " *"
+
+			ZeroMemory(&fileinfoTmp,sizeof(FILEINFO));
+			fileinfoTmp.parentList=fileList;
 
 #ifdef UNICODE
             // if we already read unicode characters we don't need the conversion here
@@ -526,13 +535,13 @@ BOOL EnterMd5Mode(CONST HWND hListView)
 					if(! IsLegalHexSymbol(szLine[uiIndex]))
 						bMd5OK = FALSE;
 				if(bMd5OK){
-					pFileinfo->bMd5Found = TRUE;
+					fileinfoTmp.bMd5Found = TRUE;
 					for(uiIndex=0; uiIndex < 16; ++uiIndex)
-						pFileinfo->abMd5Found[uiIndex] = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
-					pFileinfo->dwError = NOERROR;
+						fileinfoTmp.abMd5Found[uiIndex] = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
+					fileinfoTmp.dwError = NOERROR;
 				}
 				else
-					pFileinfo->dwError = APPL_ERROR_ILLEGAL_CRC;
+					fileinfoTmp.dwError = APPL_ERROR_ILLEGAL_CRC;
 
 				//delete trailing spaces
 				while(szLine[uiStringLength - 1] == TEXT(' ')){
@@ -545,30 +554,29 @@ BOOL EnterMd5Mode(CONST HWND hListView)
 				while( (uiIndex < uiStringLength) && ((szLine[uiIndex] == TEXT(' ')) || (szLine[uiIndex] == TEXT('*'))) )
 					uiIndex++;
 
-				GetFullPathName(szLine + uiIndex, MAX_PATH, pFileinfo->szFilename, NULL);
+				GetFullPathName(szLine + uiIndex, MAX_PATH, fileinfoTmp.szFilename, NULL);
 
-				pFileinfo->nextListItem = AllocateFileinfo();
-				pFileinfo_prev = pFileinfo;
-				pFileinfo = pFileinfo->nextListItem;
+				fileList->fInfos.push_back(fileinfoTmp);
 			}
 		}
 
 		GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUnicode);
 		if(bErrorOccured){
 			MessageBox(NULL, TEXT("MD5 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-			DeallocateFileinfoMemory(hListView);
+			//DeallocateFileinfoMemory(hListView);
+			fileList->fInfos.clear();
 			return FALSE;
 		}
 	}
 	CloseHandle(hFile);
 
-	if(pFileinfo_prev == NULL) // did we do something?
+	/*if(pFileinfo_prev == NULL) // did we do something?
 		DeallocateFileinfoMemory(hListView);
 	else{
 		// we created one Fileinfo too much
 		free(pFileinfo_prev->nextListItem);
 		pFileinfo_prev->nextListItem = NULL;
-	}
+	}*/
 
 	return TRUE;
 }

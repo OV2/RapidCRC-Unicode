@@ -17,7 +17,6 @@
 #define IDI_ICON_MODERN_NOCRC           123
 #define IDI_ICON_MODERN_NOTOK           124
 #define IDI_ICON_MODERN_OK              125
-#define IDI_ICON1                       128
 #define IDI_ICON_MODERN_OK2             128
 #define IDC_EDIT_FILENAME_PATTERN       1018
 #define IDC_BTN_DEFAULT                 1019
@@ -33,6 +32,8 @@
 #define IDC_CHECK_DISPLAY_MD5_IN_LIST   1027
 #define IDC_CHECK_DISPLAY_MD5_IN_LIST2  1028
 #define IDC_CHECK_DISPLAY_ED2K_IN_LIST  1028
+#define IDC_CHECK_AUTO_SCROLL2          1029
+#define IDC_ENABLE_QUEUE                1029
 #define IDC_CHECK_MD5_DEFAULT           1030
 #define IDC_CHECK_CRC_DEFAULT           1031
 #define IDC_CHECK_ED2K_DEFAULT          1032

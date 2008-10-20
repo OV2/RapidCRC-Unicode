@@ -24,8 +24,10 @@
 
 #include "globals.h"
 #include "resource.h"
+#include <commctrl.h>
+#include "CSyncQueue.h"
 
-static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, QWORD * pqwFilesizeSum, SHOWRESULT_PARAMS * pshowresult_params);
+static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, SHOWRESULT_PARAMS * pshowresult_params);
 
 //
 //	This is our definition of a class which implements
@@ -46,7 +48,7 @@ public:
 	HRESULT __stdcall Drop (IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect);
 
 	// Constructor
-	CDropTarget(HWND arrHwnd[ID_NUM_WINDOWS], BOOL * pbThreadDone, QWORD * pqwFilesizeSum, SHOWRESULT_PARAMS	* pshowresult_params);
+	CDropTarget(HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS	* pshowresult_params);
 	~CDropTarget();
 
 private:
@@ -60,8 +62,8 @@ private:
 	LONG				m_lRefCount;
 	HWND				* m_arrHwnd;
 	BOOL				 m_fAllowDrop;
-	BOOL				* m_pbThreadDone;
-	QWORD				* m_pqwFilesizeSum;
+	//BOOL				* m_pbThreadDone;
+	//QWORD				* m_pqwFilesizeSum;
 	SHOWRESULT_PARAMS	* m_pshowresult_params;
 
 	IDataObject *m_pDataObject;
@@ -70,13 +72,13 @@ private:
 //
 //	Constructor for the CDropTarget class
 //
-CDropTarget::CDropTarget(HWND arrHwnd[ID_NUM_WINDOWS], BOOL * pbThreadDone, QWORD * pqwFilesizeSum, SHOWRESULT_PARAMS	* pshowresult_params)
+CDropTarget::CDropTarget(HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS	* pshowresult_params)
 {
 	m_lRefCount			= 1;
 	m_arrHwnd				= arrHwnd;
 	m_fAllowDrop		= FALSE;
-	m_pbThreadDone		= pbThreadDone;
-	m_pqwFilesizeSum	= pqwFilesizeSum;
+	//m_pbThreadDone		= pbThreadDone;
+	//m_pqwFilesizeSum	= pqwFilesizeSum;
 	m_pshowresult_params= pshowresult_params;
 }
 
@@ -141,7 +143,7 @@ BOOL CDropTarget::QueryDataObject(IDataObject *pDataObject)
 
 	// does the data object support CF_HDROP using a HGLOBAL?
 	// return pDataObject->QueryGetData(&fmtetc) == S_OK ? true : false;
-	return ( (pDataObject->QueryGetData(&fmtetc) == S_OK) && (*m_pbThreadDone));
+	return ( (pDataObject->QueryGetData(&fmtetc) == S_OK) && (SyncQueue.bThreadDone || g_program_options.bEnableQueue));
 }
 
 //
@@ -154,7 +156,7 @@ HRESULT __stdcall CDropTarget::DragEnter(IDataObject * pDataObject, DWORD grfKey
 	// does the dataobject contain data we want?
 	m_fAllowDrop = QueryDataObject(pDataObject);
 	
-	if(m_fAllowDrop && (*m_pbThreadDone))
+	if(m_fAllowDrop && (SyncQueue.bThreadDone || g_program_options.bEnableQueue))
 		*pdwEffect = DROPEFFECT_COPY;
 	else
 		*pdwEffect = DROPEFFECT_NONE;
@@ -169,7 +171,7 @@ HRESULT __stdcall CDropTarget::DragEnter(IDataObject * pDataObject, DWORD grfKey
 //
 HRESULT __stdcall CDropTarget::DragOver(DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
 {
-	if(m_fAllowDrop && (*m_pbThreadDone))
+	if(m_fAllowDrop && (SyncQueue.bThreadDone || g_program_options.bEnableQueue))
 		*pdwEffect = DROPEFFECT_COPY;
 	else
 		*pdwEffect = DROPEFFECT_NONE;
@@ -191,9 +193,9 @@ HRESULT __stdcall CDropTarget::DragLeave(void)
 //
 HRESULT __stdcall CDropTarget::Drop(IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
 {
-	if(m_fAllowDrop && (*m_pbThreadDone))
+	if(m_fAllowDrop && (SyncQueue.bThreadDone || g_program_options.bEnableQueue))
 	{
-		DropData(m_arrHwnd, pDataObject, m_pqwFilesizeSum, m_pshowresult_params);
+		DropData(m_arrHwnd, pDataObject, m_pshowresult_params);
 
 		*pdwEffect = DROPEFFECT_COPY;;
 	}
@@ -205,15 +207,17 @@ HRESULT __stdcall CDropTarget::Drop(IDataObject * pDataObject, DWORD grfKeyState
 	return S_OK;
 }
 
-static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, QWORD * pqwFilesizeSum, SHOWRESULT_PARAMS * pshowresult_params)
+static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, SHOWRESULT_PARAMS * pshowresult_params)
 {
 	// construct a FORMATETC object
 	FORMATETC fmtetc = { CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
 	STGMEDIUM stgmed;
 	UINT uiCount;
-	FILEINFO * pFileinfo;
+	//FILEINFO * pFileinfo;
 	PVOID data;
-	BOOL bCalculateCrc32, bCalculateMd5;
+
+	lFILEINFO *pFInfoList;
+	FILEINFO fileinfoTmp={0};
 
 	// See if the dataobject contains any files stored as a HGLOBAL
 	if(pDataObject->QueryGetData(&fmtetc) == S_OK)
@@ -226,16 +230,24 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, QWO
 
 			uiCount = DragQueryFile((HDROP)stgmed.hGlobal, 0xFFFFFFFF, NULL, 0);
 
-			DeallocateFileinfoMemory(arrHwnd[ID_LISTVIEW]);
+			pFInfoList = new lFILEINFO;
+			fileinfoTmp.parentList = pFInfoList;
 
-			AllocateMultipleFileinfo(uiCount);
+			//DeallocateFileinfoMemory(arrHwnd[ID_LISTVIEW]);
 
-			pFileinfo = g_fileinfo_list_first_item;
+			//AllocateMultipleFileinfo(uiCount);
+
+			if(!g_program_options.bEnableQueue) {
+				ClearAllItems(arrHwnd[ID_LISTVIEW]);
+			}
+
+			//pFileinfo = g_fileinfo_list_first_item;
 			for (UINT i=0; i < uiCount; i++)
 			{
-				ZeroMemory(pFileinfo->szFilename, MAX_PATH * sizeof(TCHAR));
-				DragQueryFile((HDROP)stgmed.hGlobal, i, pFileinfo->szFilename, MAX_PATH);
-				pFileinfo = pFileinfo->nextListItem;
+				ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
+				DragQueryFile((HDROP)stgmed.hGlobal, i, fileinfoTmp.szFilename, MAX_PATH);
+				pFInfoList->fInfos.push_back(fileinfoTmp);
+				//pFileinfo = pFileinfo->nextListItem;
 			}
 
 			GlobalUnlock(stgmed.hGlobal);
@@ -243,17 +255,19 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, QWO
 			// release the data using the COM API
 			ReleaseStgMedium(&stgmed);
 
-			PostProcessList(arrHwnd, pqwFilesizeSum, & bCalculateCrc32, & bCalculateMd5, pshowresult_params);
+			PostProcessList(arrHwnd, pshowresult_params,pFInfoList);
 
-			PostMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, bCalculateCrc32, bCalculateMd5);
+			SyncQueue.pushQueue(pFInfoList);
+
+			PostMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL,NULL);
 		}
 	}
 }
 
 VOID RegisterDropWindow(HWND arrHwnd[ID_NUM_WINDOWS], IDropTarget **ppDropTarget,
-						BOOL * pbThreadDone, QWORD * pqwFilesizeSum, SHOWRESULT_PARAMS * pshowresult_params)
+						 SHOWRESULT_PARAMS * pshowresult_params)
 {
-	CDropTarget *pDropTarget = new CDropTarget(arrHwnd, pbThreadDone, pqwFilesizeSum, pshowresult_params);
+	CDropTarget *pDropTarget = new CDropTarget(arrHwnd, pshowresult_params);
 
 	// acquire a strong lock
 	CoLockObjectExternal(pDropTarget, TRUE, FALSE);

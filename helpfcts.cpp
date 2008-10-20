@@ -193,7 +193,9 @@ Notes:
 *****************************************************************************/
 VOID AnsiFromUnicode(CHAR *szAnsiString,CONST int max_line,TCHAR *szUnicodeString) {
 	for(int i=0;i<max_line;i++) {
+#pragma warning(disable:4244)
 		*szAnsiString = *szUnicodeString;
+#pragma warning(default:4244)
 		if (*szUnicodeString == TEXT('\0')) break;
 		szAnsiString++;
 		szUnicodeString++;
@@ -374,6 +376,9 @@ VOID ReadOptions()
 		CloseHandle(hFile);
 	}
 
+	if(!gComCtrlv6)
+		g_program_options.bEnableQueue = FALSE;
+
 	if(!IsLegalFilename(g_program_options.szFilenamePattern) ||
 	   !IsLegalFilename(g_program_options.szFilenameMd5) ||
 	   !IsLegalFilename(g_program_options.szFilenameSfv))
@@ -499,7 +504,9 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	pprogram_options->bCreateUnixStyle = FALSE;
 	pprogram_options->bCreateUnicodeFiles = TRUE;
     pprogram_options->iUnicodeSaveType = UTF_16LE;
-
+	pprogram_options->uiWndLeft = 10;
+	pprogram_options->uiWndTop = 10;
+	pprogram_options->bEnableQueue = FALSE;
 	return;
 }
 
@@ -512,7 +519,7 @@ returns a pointer to the new FILEINFO item
 Notes:
 - allocates memory and does a basic error handling
 *****************************************************************************/
-FILEINFO * AllocateFileinfo()
+/*FILEINFO * AllocateFileinfo()
 {
 	FILEINFO * pFileinfo;
 
@@ -530,7 +537,7 @@ FILEINFO * AllocateFileinfo()
 	}
 
 	return pFileinfo;
-}
+}*/
 
 /*****************************************************************************
 VOID AllocateMultipleFileinfo(CONST UINT uiCount)
@@ -542,7 +549,7 @@ nothing
 Notes:
 - creates a list of uiCount linked FILEINFO items
 *****************************************************************************/
-VOID AllocateMultipleFileinfo(CONST UINT uiCount)
+/*VOID AllocateMultipleFileinfo(CONST UINT uiCount)
 {
 	FILEINFO * Fileinfo_list_last;
 
@@ -556,7 +563,7 @@ VOID AllocateMultipleFileinfo(CONST UINT uiCount)
 	Fileinfo_list_last->nextListItem = NULL; // set end of the list
 
 	return;
-}
+}*/
 
 /*****************************************************************************
 VOID DeallocateFileinfoMemory(CONST HWND hListView);
@@ -568,7 +575,7 @@ Return Value:
 Notes:
 - dealloctates the FILEINFO list
 *****************************************************************************/
-VOID DeallocateFileinfoMemory(CONST HWND hListView)
+/*VOID DeallocateFileinfoMemory(CONST HWND hListView)
 {
 	FILEINFO * Fileinfo;
 
@@ -585,7 +592,7 @@ VOID DeallocateFileinfoMemory(CONST HWND hListView)
 	}
 
 	return;
-}
+}*/
 
 /*****************************************************************************
 BOOL IsApplDefError(CONST DWORD dwError)
@@ -615,7 +622,7 @@ Notes:
 *****************************************************************************/
 VOID CopyJustProgramOptions(CONST PROGRAM_OPTIONS * pprogram_options_src, PROGRAM_OPTIONS * pprogram_options_dst)
 {
-	StringCchCopy(pprogram_options_dst->szFilenamePattern, MAX_PATH, pprogram_options_src->szFilenamePattern);
+	/*StringCchCopy(pprogram_options_dst->szFilenamePattern, MAX_PATH, pprogram_options_src->szFilenamePattern);
 	StringCchCopy(pprogram_options_dst->szExcludeString, MAX_PATH, pprogram_options_src->szExcludeString);
 	pprogram_options_dst->bDisplayCrcInListView = pprogram_options_src->bDisplayCrcInListView;
 	pprogram_options_dst->bDisplayEd2kInListView = pprogram_options_src->bDisplayEd2kInListView;
@@ -629,6 +636,8 @@ VOID CopyJustProgramOptions(CONST PROGRAM_OPTIONS * pprogram_options_src, PROGRA
 	pprogram_options_dst->bCalcMd5PerDefault = pprogram_options_src->bCalcMd5PerDefault;
 	pprogram_options_dst->bCalcEd2kPerDefault = pprogram_options_src->bCalcEd2kPerDefault;
     pprogram_options_dst->iUnicodeSaveType = pprogram_options_src->iUnicodeSaveType;
+	pprogram_options_dst->bEnableQueue = pprogram_options_src->bEnableQueue;*/
+	memcpy(pprogram_options_dst,pprogram_options_src,sizeof(PROGRAM_OPTIONS));
 
 	return;
 }
@@ -675,7 +684,43 @@ DWORD MyPriorityToPriorityClass(CONST UINT uiMyPriority)
 }
 
 /*****************************************************************************
-VOID GetInfoColumnText(TCHAR * szString, CONST size_t stStringSize, CONST INT iImageIndex, CONST DWORD dwError)
+VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
+	pFileinfo		: (IN) FILEINFO whose strings should be set
+	fileList		: (IN) lFILEINFO of the current job
+
+Return Value:
+returns nothing
+*****************************************************************************/
+VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
+{	
+	if(fileList->bCrcCalculated && pFileinfo->dwError == NOERROR)
+		StringCchPrintf(pFileinfo->szCrcResult, CRC_AS_STRING_LENGHT, TEXT("%08LX"), pFileinfo->dwCrc32Result);
+	else
+		StringCchPrintf(pFileinfo->szCrcResult, CRC_AS_STRING_LENGHT, TEXT(""));
+
+	if(fileList->bMd5Calculated && pFileinfo->dwError == NOERROR)
+		StringCchPrintf(pFileinfo->szMd5Result, MD5_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
+		pFileinfo->abMd5Result[0], pFileinfo->abMd5Result[1], pFileinfo->abMd5Result[2], pFileinfo->abMd5Result[3], 
+		pFileinfo->abMd5Result[4], pFileinfo->abMd5Result[5], pFileinfo->abMd5Result[6], pFileinfo->abMd5Result[7], 
+		pFileinfo->abMd5Result[8], pFileinfo->abMd5Result[9], pFileinfo->abMd5Result[10], pFileinfo->abMd5Result[11], 
+		pFileinfo->abMd5Result[12], pFileinfo->abMd5Result[13], pFileinfo->abMd5Result[14], pFileinfo->abMd5Result[15]);
+	else
+		StringCchPrintf(pFileinfo->szMd5Result, MD5_AS_STRING_LENGHT, TEXT(""));
+
+	if(fileList->bEd2kCalculated && pFileinfo->dwError == NOERROR)
+		StringCchPrintf(pFileinfo->szEd2kResult, ED2K_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
+		pFileinfo->abEd2kResult[0], pFileinfo->abEd2kResult[1], pFileinfo->abEd2kResult[2], pFileinfo->abEd2kResult[3], 
+		pFileinfo->abEd2kResult[4], pFileinfo->abEd2kResult[5], pFileinfo->abEd2kResult[6], pFileinfo->abEd2kResult[7], 
+		pFileinfo->abEd2kResult[8], pFileinfo->abEd2kResult[9], pFileinfo->abEd2kResult[10], pFileinfo->abEd2kResult[11], 
+		pFileinfo->abEd2kResult[12], pFileinfo->abEd2kResult[13], pFileinfo->abEd2kResult[14], pFileinfo->abEd2kResult[15]);
+	else
+		StringCchPrintf(pFileinfo->szEd2kResult, ED2K_AS_STRING_LENGHT, TEXT(""));
+
+	SetInfoColumnText(pFileinfo, fileList, InfoToIntValue(pFileinfo) - 1);
+}
+
+/*****************************************************************************
+VOID SetInfoColumnText(TCHAR * szString, CONST size_t stStringSize, CONST INT iImageIndex, CONST DWORD dwError)
 	szString		: (OUT) string that gets the output string
 	stStringSize	: (IN) size of szString
 	iImageIndex		: (IN) Icon that was chosen for this entry by the calling function
@@ -687,29 +732,29 @@ returns nothing
 Notes:
 - creates a describtive text that is used in the info column
 *****************************************************************************/
-VOID GetInfoColumnText(TCHAR * szString, CONST size_t stStringSize, CONST INT iImageIndex, CONST DWORD dwError)
+VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList, CONST INT iImageIndex)
 {
 	// Step 1: We make all strings needed
-	if(dwError != NO_ERROR){
-		if(dwError == APPL_ERROR_ILLEGAL_CRC)
-			StringCchCopy(szString, stStringSize, TEXT("CRC/MD5 Invalid"));
-		else if(dwError == ERROR_FILE_NOT_FOUND)
-			StringCchCopy(szString, stStringSize, TEXT("File not found"));
+	if(pFileinfo->dwError != NO_ERROR){
+		if(pFileinfo->dwError == APPL_ERROR_ILLEGAL_CRC)
+			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, TEXT("CRC/MD5 Invalid"));
+		else if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND)
+			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, TEXT("File not found"));
 		else
-			StringCchCopy(szString, stStringSize, TEXT("Error"));
+			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, TEXT("Error"));
 	}
 	else{
-		if(g_program_status.bCrcCalculated || g_program_status.bMd5Calculated)
+		if(fileList->bCrcCalculated || fileList->bMd5Calculated)
 		{
 			if(iImageIndex == ICON_OK)
-				StringCchCopy(szString, stStringSize, TEXT("File OK"));
+				StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, TEXT("File OK"));
 			else if (iImageIndex == ICON_NOT_OK)
-				StringCchCopy(szString, stStringSize, TEXT("File corrupt"));
+				StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, TEXT("File corrupt"));
 			else  // iImageIndex == ICON_NO_CRC
-				StringCchCopy(szString, stStringSize, TEXT("No CRC found"));
+				StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, TEXT("No CRC found"));
 		}
 		else
-			StringCchCopy(szString, stStringSize, TEXT("No checksum calculated"));
+			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, TEXT("No checksum calculated"));
 	}
 
 	return;	
@@ -741,7 +786,7 @@ returns pointer to a new FILEINFO pointer array.
 Notes:
 - the caller is responsible to free the memory via 'free'
 *****************************************************************************/
-FILEINFO ** GenArrayFromFileinfoList(UINT * puiNumElements)
+/*FILEINFO ** GenArrayFromFileinfoList(UINT * puiNumElements)
 {
 	FILEINFO ** Fileinfo_array;
 	FILEINFO * pFileinfo;
@@ -779,7 +824,7 @@ FILEINFO ** GenArrayFromFileinfoList(UINT * puiNumElements)
 		(*puiNumElements) = 0;
 		return NULL;
 	}
-}
+}*/
 
 /*****************************************************************************
 VOID ReplaceChar(TCHAR * szString, CONST size_t stBufferLength, CONST TCHAR tcIn, CONST TCHAR tcOut)

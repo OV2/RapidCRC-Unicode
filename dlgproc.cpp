@@ -22,6 +22,7 @@
 #include <process.h>
 #include <commctrl.h>
 #include <windowsx.h>
+#include "CSyncQueue.h"
 
 /*****************************************************************************
 *                     INLINE FUNCTIONS for this file                         *
@@ -30,6 +31,7 @@
 *****************************************************************************/
 __inline VOID ProcessTextQuery(NMLVDISPINFO * pnmlvdispinfo);
 __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLISTVIEW * pnmlistview, DWORD * pdwSortStatus);
+__inline VOID ProcessSelChangeInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], NMLISTVIEW * pnmlistview, SHOWRESULT_PARAMS * pshowresult_params);
 __inline VOID ProcessClickInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], NMITEMACTIVATE * pnmitemactivate, SHOWRESULT_PARAMS * pshowresult_params);
 __inline BOOL ProcessKeyPressedInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LPNMLVKEYDOWN pnkd, SHOWRESULT_PARAMS * pshowresult_params);
 __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD wWidth, CONST WORD wHeight, CONST LONG lACW, CONST LONG lACH);
@@ -53,8 +55,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static WNDPROC arrOldWndProcs[ID_LAST_TAB_CONTROL - ID_FIRST_TAB_CONTROL + 1];
 	static LONG lAveCharWidth, lAveCharHeight;
 	static IDropTarget * pDropTarget;
-	static BOOL bThreadDone = TRUE, bThreadSuspended = FALSE;
-	static QWORD qwFilesizeSum;
+	//static QWORD qwFilesizeSum;
 	static THREAD_PARAMS_FILEINFO thread_params_fileinfo;
 	static THREAD_PARAMS_CALC thread_params_calc;
 	static HANDLE hThread;
@@ -65,18 +66,20 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 	switch (message)
 	{
+	case DM_GETDEFID: break;
+    case DM_SETDEFID: break;
 	case WM_CREATE:
 		ReadOptions();
 		SetPriorityClass(GetCurrentProcess(), MyPriorityToPriorityClass(g_program_options.uiPriority));
 		CreateAndInitChildWindows(arrHwnd, arrOldWndProcs, & lAveCharWidth, & lAveCharHeight, hWnd);
 		CreateListViewPopupMenu(&popupMenu);
         CreateListViewHeaderPopupMenu(&headerPopupMenu);
-		RegisterDropWindow(arrHwnd, & pDropTarget, & bThreadDone, & qwFilesizeSum, & showresult_params);
+		RegisterDropWindow(arrHwnd, & pDropTarget, & showresult_params);
 
 		thread_params_fileinfo.arrHwnd				= arrHwnd;
-		thread_params_fileinfo.pqwFilesizeSum		= & qwFilesizeSum;
+		//thread_params_fileinfo.pqwFilesizeSum		= & qwFilesizeSum;
 		thread_params_fileinfo.pshowresult_params	= & showresult_params;
-		bThreadDone = FALSE;
+		//bThreadDone = FALSE;
 		hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc_FileInfo, &thread_params_fileinfo, 0, &uiThreadID);
 
 		return 0;
@@ -105,17 +108,23 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			case LVN_COLUMNCLICK:
 				ProcessColumnClick(arrHwnd, (NMLISTVIEW *) lParam, & dwSortStatus);			
 				return 0;
-			case NM_CLICK:
-				ProcessClickInList(arrHwnd, (NMITEMACTIVATE *) lParam, & showresult_params);
+			case LVN_ITEMCHANGED:
+				if((((NMLISTVIEW *)lParam)->uChanged & LVIF_STATE) && (((NMLISTVIEW *)lParam)->uNewState & LVIS_SELECTED))
+					ProcessSelChangeInList(arrHwnd, (NMLISTVIEW *) lParam, & showresult_params);
 				return 0;
+			case NM_CLICK:
+				//ProcessClickInList(arrHwnd, (NMITEMACTIVATE *) lParam, & showresult_params);
+				//return 0;
+				break;
 			case NM_RCLICK:
                 // we need screen coordintes for the popup window
 				ClientToScreen(arrHwnd[ID_LISTVIEW],&(((NMITEMACTIVATE *)lParam)->ptAction));
 				ListViewPopup(arrHwnd[ID_LISTVIEW],popupMenu,((NMITEMACTIVATE *)lParam)->ptAction.x,((NMITEMACTIVATE *)lParam)->ptAction.y);
 				return 0;
 			case LVN_KEYDOWN:
-				ProcessKeyPressedInList(arrHwnd, (LPNMLVKEYDOWN) lParam, & showresult_params);
-				return 0;
+				//ProcessKeyPressedInList(arrHwnd, (LPNMLVKEYDOWN) lParam, & showresult_params);
+				//return 0;
+				break;
 			case LVN_INSERTITEM:
 				//ListView_Scroll(arrHwnd[ID_LISTVIEW],0,16);
 				if(g_program_options.bAutoScrollListView)
@@ -156,15 +165,18 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 		// go on with the CRC Calculation
 	case WM_START_THREAD_CALC: // wParam : CRC is to be calculated ; lParam : MD5 is to be calculated
+		if(!SyncQueue.bThreadDone) return 0;
 		thread_params_calc.arrHwnd = arrHwnd;
 		thread_params_calc.pshowresult_params = & showresult_params;
 		thread_params_calc.qwBytesReadAllFiles = 0;
 		thread_params_calc.qwBytesReadCurFile = 0;
-		thread_params_calc.pFileinfo_cur = g_fileinfo_list_first_item;
-		thread_params_calc.bCalculateCrc = (BOOL) wParam;
-		thread_params_calc.bCalculateMd5 = (BOOL) (lParam & 0x1);
-		thread_params_calc.bCalculateEd2k = (BOOL) (lParam & 0x2);
-		bThreadDone = FALSE;
+		thread_params_calc.pFileinfo_cur = NULL;
+		//thread_params_calc.qwFilesizeSum = 0;
+		SyncQueue.setFileAccForCalc();
+		//thread_params_calc.bCalculateCrc = (BOOL) wParam;
+		//thread_params_calc.bCalculateMd5 = (BOOL) (lParam & 0x1);
+		//thread_params_calc.bCalculateEd2k = (BOOL) (lParam & 0x2);
+		SyncQueue.bThreadDone = false;
 		hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc_Calc, &thread_params_calc, 0, &uiThreadID);
 
 		SendMessage(arrHwnd[ID_PROGRESS_FILE], PBM_SETPOS , (WPARAM) 0, 0);
@@ -175,13 +187,18 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 	case WM_THREAD_CALC_DONE:
 		CloseHandle(hThread);
-		bThreadDone = TRUE;
+		SyncQueue.bThreadDone = true;
 
 		KillTimer(hWnd, WM_TIMER_PROGRESS_500); // does not remove existing WM_TIMER messages
 		// set the progress bar explicitly because in some situations with 0 byte files it is
 		// not set to 100% via WM_TIMER
 		SendMessage(arrHwnd[ID_PROGRESS_FILE], PBM_SETPOS , (WPARAM) 100, 0);
 		SendMessage(arrHwnd[ID_PROGRESS_GLOBAL], PBM_SETPOS , (WPARAM) 100, 0);
+
+		if(!SyncQueue.isQueueEmpty()) {
+			PostMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL,NULL);
+			return 0;
+		}
 
 		DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 
@@ -213,7 +230,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		return 0;
 	case WM_TIMER:
-		if(!bThreadDone && thread_params_calc.pFileinfo_cur != NULL){
+		if(!SyncQueue.bThreadDone && thread_params_calc.pFileinfo_cur != NULL){
 			if(thread_params_calc.pFileinfo_cur->qwFilesize != 0){
 				INT iNewPos = (INT)((thread_params_calc.qwBytesReadCurFile * 100 ) /
 					thread_params_calc.pFileinfo_cur->qwFilesize);
@@ -221,8 +238,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				SendMessage(arrHwnd[ID_PROGRESS_FILE], PBM_SETPOS , (WPARAM) (INT) iNewPos, 0);
 			}
 
-			if(qwFilesizeSum != 0){
-				INT iNewPos = (INT)((thread_params_calc.qwBytesReadAllFiles * 100 ) / qwFilesizeSum);
+			if(SyncQueue.qwNewFileAcc != 0){
+				INT iNewPos = (INT)((thread_params_calc.qwBytesReadAllFiles * 100 ) / SyncQueue.qwNewFileAcc);
 				SendMessage(arrHwnd[ID_PROGRESS_GLOBAL], PBM_SETPOS , (WPARAM) (INT) iNewPos, 0);
 			}
 		}
@@ -272,20 +289,20 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			break;
 		case ID_BTN_OPENFILES_PAUSE:
 			if(HIWORD(wParam) == BN_CLICKED){
-				if(bThreadDone)
-					OpenFiles(arrHwnd, & qwFilesizeSum, & showresult_params);
+				if(SyncQueue.bThreadDone)
+					OpenFiles(arrHwnd, & showresult_params);
 				else{
-					if(bThreadSuspended){
+					if(SyncQueue.bThreadSuspended){
 						ResumeThread(hThread);
 						SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Pause"));
 						SendMessage(arrHwnd[ID_BTN_OPENFILES_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
-						bThreadSuspended = FALSE;
+						SyncQueue.bThreadSuspended = FALSE;
 					}
 					else{
 						SuspendThread(hThread);
 						SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Continue"));
 						SendMessage(arrHwnd[ID_BTN_OPENFILES_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PLAY),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
-						bThreadSuspended = TRUE;
+						SyncQueue.bThreadSuspended = TRUE;
 					}
 				}
 				return 0;
@@ -293,8 +310,15 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			break;
 		case ID_BTN_OPTIONS:
 			if(HIWORD(wParam) == BN_CLICKED){
-				if( DialogBox(g_hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hWnd, DlgProcOptions) == IDOK)
+				BOOL prevQueue=g_program_options.bEnableQueue;
+				if( DialogBox(g_hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hWnd, DlgProcOptions) == IDOK) {
+					if(prevQueue!=g_program_options.bEnableQueue) {
+						ClearAllItems(arrHwnd[ID_LISTVIEW]);
+						if(gComCtrlv6)
+							ListView_EnableGroupView(arrHwnd[ID_LISTVIEW],g_program_options.bEnableQueue);
+					}
 					UpdateListViewColumns(arrHwnd, lAveCharWidth);
+				}
 				return 0;
 			}
 			break;
@@ -312,11 +336,10 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		WriteOptions(hWnd, lAveCharWidth, lAveCharHeight);
 		UnregisterDropWindow(arrHwnd[ID_LISTVIEW], pDropTarget);
 		OleUninitialize();
-		if(!bThreadDone){
+		if(!SyncQueue.bThreadDone){
 			TerminateThread(hThread, 1);
 			CloseHandle(hThread);
 		}
-		DeallocateFileinfoMemory(arrHwnd[ID_LISTVIEW]);
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
@@ -354,6 +377,8 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		CopyJustProgramOptions(& g_program_options, & program_options_temp);
 
 		UpdateOptionsDialogControls(hDlg, TRUE, & program_options_temp);
+
+		EnableWindow(GetDlgItem(hDlg,IDC_ENABLE_QUEUE),gComCtrlv6);
 
 		return TRUE;
 
@@ -431,6 +456,12 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		case IDC_CHECK_AUTO_SCROLL:
 			if(HIWORD(wParam) == BN_CLICKED){
 				program_options_temp.bAutoScrollListView = (IsDlgButtonChecked(hDlg, IDC_CHECK_AUTO_SCROLL) == BST_CHECKED);
+				return TRUE;
+			}
+			break;
+		case IDC_ENABLE_QUEUE:
+			if(HIWORD(wParam) == BN_CLICKED){
+				program_options_temp.bEnableQueue = (IsDlgButtonChecked(hDlg, IDC_ENABLE_QUEUE) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
@@ -652,7 +683,8 @@ LRESULT CALLBACK WndProcTabInterface(HWND hWnd, UINT message, WPARAM wParam, LPA
 		if(VK_TAB == wParam){
 			INT iIndex;
 
-			iIndex = ((GetWindowLong(hWnd, GWL_ID) + (GetKeyState(VK_SHIFT) < 0 ? (-1) : 1)) % (ID_LAST_TAB_CONTROL - ID_FIRST_TAB_CONTROL + 1)) + ID_FIRST_TAB_CONTROL;
+			iIndex = GetWindowLong(hWnd, GWL_ID);
+			iIndex = ((GetWindowLong(hWnd, GWL_ID) - ID_FIRST_TAB_CONTROL + (GetKeyState(VK_SHIFT) < 0 ? (-1) : 1)) % (ID_LAST_TAB_CONTROL - ID_FIRST_TAB_CONTROL + 1)) + ID_FIRST_TAB_CONTROL;
 			SetFocus(arrHwnd[iIndex]);
 		}
 		else if(VK_RETURN == wParam){
@@ -765,34 +797,34 @@ __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLIS
 	case 1: // this can be the CRC, MD5, ED2K or Info Column (depending on the options in g_program_options)
 
 		if(g_program_options.bDisplayCrcInListView){
-			if(g_program_status.bCrcCalculated){
+			//if(g_program_status.bCrcCalculated){
 				if( ((*pdwSortStatus) & SORT_FLAG_CRC ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
 					(*pdwSortStatus) = SORT_FLAG_CRC | SORT_FLAG_DESCENDING;
 				else
 					(*pdwSortStatus) = SORT_FLAG_CRC | SORT_FLAG_ASCENDING;
 				SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
 					(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortCrc );
-			}
+			//}
 		}
 		else if(g_program_options.bDisplayMd5InListView){
-			if(g_program_status.bMd5Calculated){
+			//if(g_program_status.bMd5Calculated){
 				if( ((*pdwSortStatus) & SORT_FLAG_MD5 ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
 					(*pdwSortStatus) = SORT_FLAG_MD5 | SORT_FLAG_DESCENDING;
 				else
 					(*pdwSortStatus) = SORT_FLAG_MD5 | SORT_FLAG_ASCENDING;
 				SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
 					(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortMd5 );
-			}
+			//}
 		}
         else if(g_program_options.bDisplayEd2kInListView){
-            if(g_program_status.bEd2kCalculated){
+            //if(g_program_status.bEd2kCalculated){
 				if( ((*pdwSortStatus) & SORT_FLAG_ED2K ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
 					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_DESCENDING;
 				else
 					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_ASCENDING;
 				SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
 					(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortEd2k );
-			}
+			//}
 		}
 		else{
 			if( ((*pdwSortStatus) & SORT_FLAG_INFO ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
@@ -806,24 +838,24 @@ __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLIS
 		break;
 	case 2: // this can be the MD5, ED2K or Info Column
 		if(g_program_options.bDisplayMd5InListView  && g_program_options.bDisplayCrcInListView){
-			if(g_program_status.bMd5Calculated){
+			//if(g_program_status.bMd5Calculated){
 				if( ((*pdwSortStatus) & SORT_FLAG_MD5 ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
 					(*pdwSortStatus) = SORT_FLAG_MD5 | SORT_FLAG_DESCENDING;
 				else
 					(*pdwSortStatus) = SORT_FLAG_MD5 | SORT_FLAG_ASCENDING;
 				SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
 					(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortMd5 );
-				}
+			//}
 		}
         else if(g_program_options.bDisplayEd2kInListView && (g_program_options.bDisplayMd5InListView || g_program_options.bDisplayCrcInListView) ){
-            if(g_program_status.bEd2kCalculated){
+            //if(g_program_status.bEd2kCalculated){
 				if( ((*pdwSortStatus) & SORT_FLAG_ED2K ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
 					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_DESCENDING;
 				else
 					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_ASCENDING;
 				SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
 					(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortEd2k );
-			}
+			//}
 		}
 		else{
 			if( ((*pdwSortStatus) & SORT_FLAG_INFO ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
@@ -837,14 +869,14 @@ __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLIS
 		break;
     case 3: // this can be the ED2K or info column
         if(g_program_options.bDisplayEd2kInListView && g_program_options.bDisplayMd5InListView && g_program_options.bDisplayCrcInListView ){
-            if(g_program_status.bEd2kCalculated){
+            //if(g_program_status.bEd2kCalculated){
 				if( ((*pdwSortStatus) & SORT_FLAG_ED2K ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
 					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_DESCENDING;
 				else
 					(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_ASCENDING;
 				SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
 					(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortEd2k );
-			}
+			//}
 		}
 		else if( ((*pdwSortStatus) & SORT_FLAG_INFO ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
 			(*pdwSortStatus) = SORT_FLAG_INFO | SORT_FLAG_DESCENDING;
@@ -865,6 +897,20 @@ __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLIS
 		break;
 	}
 
+	return;
+}
+
+__inline VOID ProcessSelChangeInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], NMLISTVIEW * pnmlistview,
+						SHOWRESULT_PARAMS * pshowresult_params)
+{
+	LVITEM lvitem;
+	if(pnmlistview->iItem >= 0){
+		lvitem.mask = LVIF_PARAM;
+		lvitem.iItem = pnmlistview->iItem;
+		lvitem.iSubItem = 0;
+		ListView_GetItem(arrHwnd[ID_LISTVIEW], & lvitem);
+		ShowResult(arrHwnd, (FILEINFO *)lvitem.lParam, pshowresult_params);
+	}
 	return;
 }
 
@@ -952,10 +998,12 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 {
 	INT iCurrentSubItem, iCurrentWidthUsed;
 
-	const float leftMargin = 15/10.0;
+	const float leftMargin = 15/10.0f;
 	const float rightMargin = 3;
-	const float actButtonY = 150/10.0;
-	const float resultGroupY = 1265/100.0;
+	const float actButtonY = 150/10.0f;
+	const float resultGroupY = 1265/100.0f;
+
+#pragma warning(disable: 4244)
 
 	MoveWindow(arrHwnd[ID_LISTVIEW], lACW * leftMargin, lACH * 65/100.0, wWidth - lACW * rightMargin, wHeight - lACH * 160/10.0, TRUE);
 
@@ -988,6 +1036,8 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_PROGRESS_GLOBAL], lACW * leftMargin, wHeight - lACH * 14/10.0, wWidth - lACW * 193/10.0, lACH * 95/100.0, TRUE);
 	MoveWindow(arrHwnd[ID_BTN_OPENFILES_PAUSE], wWidth - lACW * 167/10.0, wHeight - lACH * 46/10.0, lACW * 155/10.0, lACH * 19/10.0, TRUE);
 	MoveWindow(arrHwnd[ID_BTN_EXIT], wWidth - lACW * 167/10.0, wHeight - lACH * 24/10.0, lACW * 155/10.0, lACH * 19/10.0, TRUE);
+
+#pragma warning(default: 4244)
 
 	// resize listview columns
 	iCurrentWidthUsed = 0;
