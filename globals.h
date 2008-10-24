@@ -49,6 +49,7 @@ using namespace std;
 #define WM_TIMER_PROGRESS_500		(WM_USER + 5)
 #define WM_INIT_WNDPROCTABINTERFACE	(WM_USER + 6)
 #define WM_SET_CTRLS_STATE			(WM_USER + 7)
+#define WM_ACCEPT_PIPE				(WM_USER + 8)
 
 // indexes for the icons in the image list (that is inserted into the listview)
 #define ICON_OK		0
@@ -138,20 +139,21 @@ using namespace std;
 #define ID_BTN_MD5_IN_MD5			13
 #define ID_BTN_CRC_IN_FILENAME		14
 #define ID_BTN_CRC_IN_STREAM		15
-#define ID_BTN_OPTIONS				16
+#define ID_BTN_PLAY_PAUSE			16
+#define ID_BTN_OPTIONS				17
 
-#define ID_EDIT_FILENAME			17
-#define ID_EDIT_CRC_VALUE			18
-#define ID_EDIT_MD5_VALUE			19
-#define ID_EDIT_INFO				20
-#define ID_EDIT_STATUS				21
-#define ID_BTN_ERROR_DESCR			22
+#define ID_EDIT_FILENAME			18
+#define ID_EDIT_CRC_VALUE			19
+#define ID_EDIT_MD5_VALUE			20
+#define ID_EDIT_INFO				21
+#define ID_EDIT_STATUS				22
+#define ID_BTN_ERROR_DESCR			23
 
-#define ID_COMBO_PRIORITY			23
-#define ID_BTN_OPENFILES_PAUSE		24
-#define ID_LAST_TAB_CONTROL			24
+#define ID_COMBO_PRIORITY			24
+#define ID_BTN_OPENFILES_PAUSE		25
+#define ID_LAST_TAB_CONTROL			25
 
-#define ID_NUM_WINDOWS				25
+#define ID_NUM_WINDOWS				26
 
 #define IDM_COPY_CRC				40
 #define IDM_COPY_MD5				41
@@ -207,11 +209,12 @@ typedef struct _lFILEINFO {
 	bool bCalculateCrc;
 	bool bCalculateMd5;
 	bool bCalculateEd2k;
+	UINT uiCmdOpts;
 	UINT uiRapidCrcMode;
 	int iGroupId;
 	TCHAR g_szBasePath[MAX_PATH];
 	_lFILEINFO() {qwFilesizeSum=0;bCrcCalculated=false;bMd5Calculated=false;bEd2kCalculated=false;
-				  bCalculateCrc=false;bCalculateMd5=false;bCalculateEd2k=false;
+				  bCalculateCrc=false;bCalculateMd5=false;bCalculateEd2k=false;uiCmdOpts=CMD_NORMAL;
 				  uiRapidCrcMode=MODE_NORMAL;iGroupId=0;g_szBasePath[0]=TEXT('\0');}
 }lFILEINFO;
 
@@ -236,6 +239,7 @@ typedef struct{
 	//BOOL				bCalculateCrc;					// in
 	//BOOL				bCalculateMd5;					// in
 	//BOOL				bCalculateEd2k;
+	BOOL				signalExit;
 	SHOWRESULT_PARAMS	* pshowresult_params;			// in / out
 	HWND				* arrHwnd;						// in
 	FILEINFO			* pFileinfo_cur;				// out
@@ -302,18 +306,18 @@ extern FILEINFO * g_fileinfo_list_first_item;
 extern TCHAR g_szBasePath[MAX_PATH];
 extern PROGRAM_OPTIONS g_program_options;
 //extern PROGRAM_STATUS g_program_status;
-extern lFILEINFO *compatFirstFileinfo;
-extern UINT gCMDOpts;
 extern BOOL gComCtrlv6;
 
 //****** function prototypes *******
 
 //action functions (actfcts.cpp)
 VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
+VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList);
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
-BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult);
+VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList);
 BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params);
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode);
+DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,list<FILEINFO*> *finalList);
 VOID FillFinalList(CONST HWND hListView, list<FILEINFO*> *finalList,CONST UINT uiNumSelected);
 
 //dialog and window procecures (dlgproc.cpp)

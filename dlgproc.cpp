@@ -63,6 +63,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static DWORD dwSortStatus;
 	static SHOWRESULT_PARAMS showresult_params = {NULL, FALSE, FALSE};
 	static HMENU popupMenu,headerPopupMenu;
+	lFILEINFO *fileList;
 
 	switch (message)
 	{
@@ -153,7 +154,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		break;
 	case WM_GETMINMAXINFO:
-		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 114;
+		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 120;
 		((MINMAXINFO *)lParam)->ptMinTrackSize.y = lAveCharHeight * 25;
 		return 0;
 	case WM_SIZE:
@@ -167,6 +168,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	case WM_START_THREAD_CALC: // wParam : CRC is to be calculated ; lParam : MD5 is to be calculated
 		if(!SyncQueue.bThreadDone) return 0;
 		thread_params_calc.arrHwnd = arrHwnd;
+		thread_params_calc.signalExit = FALSE;
 		thread_params_calc.pshowresult_params = & showresult_params;
 		thread_params_calc.qwBytesReadAllFiles = 0;
 		thread_params_calc.qwBytesReadCurFile = 0;
@@ -204,7 +206,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
         // check if we are getting invoked by the shell extension, if so we have to
         // do the indicated action and quit afterwards
-		if(gCMDOpts==CMD_SFV)
+		/*if(gCMDOpts==CMD_SFV)
 		{
 			CreateChecksumFiles(arrHwnd, MODE_SFV);
 			gCMDOpts=CMD_NORMAL;
@@ -227,7 +229,18 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			ActionCrcIntoStream(arrHwnd);
 			gCMDOpts=CMD_NORMAL;
 			PostMessage(arrHwnd[ID_MAIN_WND], WM_CLOSE, 0, 0);
+		}*/
+		return 0;
+	case WM_ACCEPT_PIPE:
+		fileList = new lFILEINFO;
+		if(!GetDataViaPipe(arrHwnd,fileList)) {
+			delete fileList;
+			return 0;
 		}
+		fileList->uiCmdOpts = (UINT)wParam;
+		PostProcessList(arrHwnd,&showresult_params,fileList);
+		SyncQueue.pushQueue(fileList);
+		SendMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL,NULL);
 		return 0;
 	case WM_TIMER:
 		if(!SyncQueue.bThreadDone && thread_params_calc.pFileinfo_cur != NULL){
@@ -289,9 +302,9 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			break;
 		case ID_BTN_OPENFILES_PAUSE:
 			if(HIWORD(wParam) == BN_CLICKED){
-				if(SyncQueue.bThreadDone)
+				//if(SyncQueue.bThreadDone)
 					OpenFiles(arrHwnd, & showresult_params);
-				else{
+				/*else{
 					if(SyncQueue.bThreadSuspended){
 						ResumeThread(hThread);
 						SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Pause"));
@@ -304,9 +317,24 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 						SendMessage(arrHwnd[ID_BTN_OPENFILES_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PLAY),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 						SyncQueue.bThreadSuspended = TRUE;
 					}
-				}
+				}*/
 				return 0;
 			}
+			break;
+		case ID_BTN_PLAY_PAUSE:
+			if(!SyncQueue.bThreadDone)
+				if(SyncQueue.bThreadSuspended){
+					ResumeThread(hThread);
+					//SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Pause"));
+					SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+					SyncQueue.bThreadSuspended = FALSE;
+				}
+				else{
+					SuspendThread(hThread);
+					//SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Continue"));
+					SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PLAY),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+					SyncQueue.bThreadSuspended = TRUE;
+				}
 			break;
 		case ID_BTN_OPTIONS:
 			if(HIWORD(wParam) == BN_CLICKED){
@@ -337,8 +365,10 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		UnregisterDropWindow(arrHwnd[ID_LISTVIEW], pDropTarget);
 		OleUninitialize();
 		if(!SyncQueue.bThreadDone){
-			TerminateThread(hThread, 1);
-			CloseHandle(hThread);
+			thread_params_calc.signalExit = TRUE;
+			if(SyncQueue.bThreadSuspended)
+				ResumeThread(hThread);
+			WaitForSingleObject(hThread,INFINITE);
 		}
 		break;
 	case WM_DESTROY:
@@ -1023,14 +1053,16 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 16 + 1) + 16, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, TRUE);
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 32 + 2) + 32, wHeight - lACH * actButtonY, lACW * 28, lACH * 19/10.0, TRUE);
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 60 + 3) + 32, wHeight - lACH * actButtonY, lACW * 28, lACH * 19/10.0, TRUE);
+	//MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - lACW * 125/10.0/*lACW * (leftMargin + 88 + 4) + 32*/, wHeight - lACH * actButtonY, 32, lACH * 19/10.0, TRUE);
 	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, TRUE);
 	
-	MoveWindow(arrHwnd[ID_STATIC_PRIORITY], wWidth - lACW * 38, wHeight - lACH * 44/10.0, lACW * 8, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_COMBO_PRIORITY], wWidth - lACW * 30, wHeight - lACH * 45/10.0, lACW * 12, lACH * 5, TRUE);
+	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 35 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, TRUE);
+	//MoveWindow(arrHwnd[ID_STATIC_PRIORITY], wWidth - lACW * 38, wHeight - lACH * 44/10.0, lACW * 8, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_COMBO_PRIORITY], wWidth - lACW * 35, wHeight - lACH * 45/10.0, lACW * 17/*12*/, lACH * 5, TRUE);
 	
 
 	MoveWindow(arrHwnd[ID_STATIC_STATUS], lACW * leftMargin, wHeight - lACH * 42/10.0, lACW * 7, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_STATUS], lACW * 85/10.0, wHeight - lACH * 42/10.0, wWidth - lACW * 473/10.0, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_EDIT_STATUS], lACW * 85/10.0, wHeight - lACH * 42/10.0, wWidth - lACW * 523/10.0, lACH, TRUE);
 
 	MoveWindow(arrHwnd[ID_PROGRESS_FILE], lACW * leftMargin, wHeight - lACH * 24/10.0, wWidth - lACW * 193/10.0, lACH * 95/100.0, TRUE);
 	MoveWindow(arrHwnd[ID_PROGRESS_GLOBAL], lACW * leftMargin, wHeight - lACH * 14/10.0, wWidth - lACW * 193/10.0, lACH * 95/100.0, TRUE);

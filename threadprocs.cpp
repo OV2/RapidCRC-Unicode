@@ -90,9 +90,9 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	OVERLAPPED olp;
 	ZeroMemory(&olp,sizeof(olp));
 
-	HANDLE hThreadMd5=NULL;
-	HANDLE hThreadEd2k=NULL;
-	HANDLE hThreadCrc=NULL;
+	HANDLE hThreadMd5;
+	HANDLE hThreadEd2k;
+	HANDLE hThreadCrc;
 	
 	HANDLE hEvtReadyHandles[3];
 	DWORD cEvtReadyHandles;
@@ -102,6 +102,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	THREAD_PARAMS_HASHCALC crcCalcParams;
 
 	lFILEINFO *fileList;
+	list<FILEINFO*> finalList;
 
 	if(readBuffer == NULL || calcBuffer == NULL) {
 		ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
@@ -254,7 +255,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 				do {
 					bSuccess = GetOverlappedResult(hFile,&olp,dwBytesReadRb,TRUE);
-					if(!bSuccess && GetLastError() != ERROR_HANDLE_EOF) {
+					if(pthread_params_calc->signalExit || !bSuccess && (GetLastError() != ERROR_HANDLE_EOF)) {
 						curFileInfo.dwError = GetLastError();
 						bFileDone = TRUE;
 						if(bCalculateCrc)
@@ -294,12 +295,15 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				if(hFile != NULL)
 					CloseHandle(hFile);
 
-				if(hThreadMd5)
+				if(bCalculateMd5)
 					CloseHandle(hThreadMd5);
-				if(hThreadEd2k)
+				if(bCalculateEd2k)
 					CloseHandle(hThreadEd2k);
-				if(hThreadCrc)
+				if(bCalculateCrc)
 					CloseHandle(hThreadCrc);
+
+				if(pthread_params_calc->signalExit)
+					break;
 
 				QueryPerformanceCounter((LARGE_INTEGER*) &qwStop);
 				curFileInfo.fSeconds = (float)((qwStop - qwStart) / (float)wqFreq);
@@ -325,12 +329,40 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			CloseHandle(hEvtThreadCrcReady);
 		}
 
+		if(pthread_params_calc->signalExit)
+			break;
+
+		if(fileList->uiCmdOpts!=CMD_NORMAL) {
+			for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
+				finalList.push_back(&(*it));
+			}
+			finalList.sort(ListPointerCompFunction);
+			switch(fileList->uiCmdOpts) {
+				case CMD_SFV:
+					CreateChecksumFiles(arrHwnd,MODE_SFV,&finalList);
+					break;
+				case CMD_MD5:
+					CreateChecksumFiles(arrHwnd,MODE_MD5,&finalList);
+					break;
+				case CMD_NAME:
+					ActionCrcIntoFilename(arrHwnd,TRUE,&finalList);
+					break;
+				case CMD_NTFS:
+					ActionCrcIntoStream(arrHwnd,TRUE,&finalList);
+					break;
+				default:
+					break;
+			}
+			finalList.clear();
+		}
+
 		SyncQueue.addToList(fileList);
 
 	}
 
 	// enable action button after thread is done
-	EnableWindowsForThread(arrHwnd, TRUE);
+	if(!pthread_params_calc->signalExit)
+		EnableWindowsForThread(arrHwnd, TRUE);
 
 	PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_CALC_DONE, 0, 0);
 	
@@ -363,11 +395,13 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	THREAD_PARAMS_FILEINFO * CONST thread_params_fileinfo = (THREAD_PARAMS_FILEINFO *)pParam;
 	INT iNumFiles;
 	//FILEINFO * pFileinfo;
-	BOOL bCalculateCrc32, bCalculateMd5;
+	//BOOL bCalculateCrc32, bCalculateMd5;
 	// put thread parameter into (const) locale variable. This might be a bit faster
 	CONST HWND * CONST arrHwnd = thread_params_fileinfo->arrHwnd;
 	//QWORD * CONST pqwFilesizeSum = thread_params_fileinfo->pqwFilesizeSum;
 	SHOWRESULT_PARAMS * CONST pshowresult_params = thread_params_fileinfo->pshowresult_params;
+	HWND prevInst;
+	TCHAR prevInstTitle[MAX_PATH];
 
 	lFILEINFO *fileList;
 	FILEINFO fileinfoTmp={0};
@@ -395,6 +429,7 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	// is there anything to do? (< 2, because 1st element is the path to the executable itself)
 	if(argc < 2){
 		//g_fileinfo_list_first_item = NULL;
+		LocalFree(argv);
 		PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);
 		return 0;
 	}
@@ -406,26 +441,41 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 		{
 			if(lstrcmpi(argv[2], TEXT("-CreateSFV")) == 0)
 			{
-				gCMDOpts = CMD_SFV;
+				fileList->uiCmdOpts = CMD_SFV;
 			}
 			else if(lstrcmpi(argv[2], TEXT("-CreateMD5")) == 0)
 			{
-				gCMDOpts = CMD_MD5;
+				fileList->uiCmdOpts = CMD_MD5;
 			}
 			else if(lstrcmpi(argv[2], TEXT("-PutNAME")) == 0)
 			{
-				gCMDOpts = CMD_NAME;
+				fileList->uiCmdOpts = CMD_NAME;
 			}
 			else if(lstrcmpi(argv[2], TEXT("-PutNTFS")) == 0)
 			{
-				gCMDOpts = CMD_NTFS;
+				fileList->uiCmdOpts = CMD_NTFS;
 			}
 		}
+		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH)) {
+			prevInst = NULL;
+			do {
+				prevInst = FindWindowEx(NULL,prevInst,TEXT("RapidCrcMainWindow"),prevInstTitle);
+			} while(prevInst == arrHwnd[ID_MAIN_WND]);
+			if(prevInst) {
+				PostMessage(prevInst,WM_ACCEPT_PIPE,(WPARAM)fileList->uiCmdOpts,NULL);
+				delete fileList;
+				LocalFree(argv);
+				PostMessage(arrHwnd[ID_MAIN_WND], WM_CLOSE, 0, 0);
+				return 0;
+			}
+		}
+
 		if(!GetDataViaPipe(arrHwnd,fileList)){
 			//g_fileinfo_list_first_item = NULL;
 			delete fileList;
+			LocalFree(argv);
 			PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);
-		return 1;
+			return 1;
 		}
 	}
 	else // not using pipe input => command line parameter are files and folders
@@ -445,25 +495,15 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 
 #ifdef UNICODE
 	// in ANSI mode there is nothing to clean up
-	GlobalFree(argv);
+	LocalFree(argv);
 #endif
 
 	PostProcessList(arrHwnd, pshowresult_params, fileList);
 
 	SyncQueue.pushQueue(fileList);
 
-	if(gCMDOpts==CMD_MD5)
-	{
-		bCalculateCrc32 = FALSE;
-		bCalculateMd5 = TRUE;
-	}
-	else if(gCMDOpts==CMD_SFV)
-	{
-		bCalculateCrc32 = TRUE;
-		bCalculateMd5 = FALSE;
-	}
 	// tell Window Proc that we are done...
-	PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, bCalculateCrc32, bCalculateMd5);
+	PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);
 
 	_endthreadex( 0 );
 	return 0;

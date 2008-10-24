@@ -173,6 +173,8 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	arrHwnd[ID_STATIC_STATUS]			= CreateWindow(TEXT("STATIC"), TEXT("Status:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_STATUS, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_STATUS]				= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_STATUS, g_hInstance, NULL);
 
+	arrHwnd[ID_BTN_PLAY_PAUSE]			= CreateWindow(TEXT("BUTTON"), TEXT("P"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP| BS_ICON | BS_CENTER, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_PLAY_PAUSE, g_hInstance, NULL);
+	SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 	arrHwnd[ID_BTN_CRC_IN_FILENAME]		= CreateWindow(TEXT("BUTTON"), TEXT("Put CRC into Filename"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_FILENAME, g_hInstance, NULL);
 	arrHwnd[ID_BTN_CRC_IN_SFV]			= CreateWindow(TEXT("BUTTON"), TEXT("Create SFV file"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_CRC_IN_SFV, g_hInstance, NULL);
 	SendMessage(arrHwnd[ID_BTN_CRC_IN_SFV],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
@@ -219,9 +221,9 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	InitListView(arrHwnd[ID_LISTVIEW], *plAveCharWidth);
 
 	// fill combobox with priority strings
-	SendMessage(arrHwnd[ID_COMBO_PRIORITY], CB_ADDSTRING, 0, (LPARAM) (LPCTSTR) TEXT("Low"));
-	SendMessage(arrHwnd[ID_COMBO_PRIORITY], CB_ADDSTRING, 0, (LPARAM) (LPCTSTR) TEXT("Normal"));
-	SendMessage(arrHwnd[ID_COMBO_PRIORITY], CB_ADDSTRING, 0, (LPARAM) (LPCTSTR) TEXT("High"));
+	SendMessage(arrHwnd[ID_COMBO_PRIORITY], CB_ADDSTRING, 0, (LPARAM) (LPCTSTR) TEXT("Low Priority"));
+	SendMessage(arrHwnd[ID_COMBO_PRIORITY], CB_ADDSTRING, 0, (LPARAM) (LPCTSTR) TEXT("Normal Priority"));
+	SendMessage(arrHwnd[ID_COMBO_PRIORITY], CB_ADDSTRING, 0, (LPARAM) (LPCTSTR) TEXT("High Priority"));
 	SendMessage(arrHwnd[ID_COMBO_PRIORITY], CB_SETCURSEL, g_program_options.uiPriority, 0);
 
 	return;
@@ -428,12 +430,13 @@ void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y)
 		bEd2k = false;
 	}
 
+	EnableMenuItem(popup,IDM_CLEAR_LIST,MF_BYCOMMAND | (SyncQueue.bThreadDone ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_REMOVE_ITEMS,MF_BYCOMMAND | ((uiSelected>0) ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_CRC,MF_BYCOMMAND | (bCrc ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_MD5,MF_BYCOMMAND | (bMd5 ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_ED2K,MF_BYCOMMAND | (bEd2k ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_ED2K_LINK,MF_BYCOMMAND | (bEd2k ? MF_ENABLED : MF_GRAYED));
-	
+
     ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,pHwnd,NULL);
 	switch(ret) {
 		case IDM_COPY_CRC:			
@@ -594,7 +597,7 @@ VOID RemoveGroupItems(CONST HWND hListView, int iGroupId)
 
 BOOL InsertGroupIntoListView(CONST HWND hListView, lFILEINFO *fileList)
 {
-	static int currGroupId=0;
+	static int currGroupId=1;
 	LVGROUP lvGroup={0};
 	TCHAR szGroupHeader[MAX_PATH + 9];
 
@@ -1126,11 +1129,13 @@ VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStat
 	EnableWindow(arrHwnd[ID_BTN_CRC_IN_SFV], bStatus);
 	EnableWindow(arrHwnd[ID_BTN_MD5_IN_MD5], bStatus);
 	if(bStatus) {
-		SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Open Files"));
-		SendMessage(arrHwnd[ID_BTN_OPENFILES_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_OPEN),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+		//SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Open Files"));
+		ShowWindow(arrHwnd[ID_BTN_PLAY_PAUSE],FALSE);
+		SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_OPEN),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 	} else {
-		SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Pause"));
-		SendMessage(arrHwnd[ID_BTN_OPENFILES_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+		//SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Pause"));
+		ShowWindow(arrHwnd[ID_BTN_PLAY_PAUSE],TRUE);
+		SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 	}
 	EnableWindow(arrHwnd[ID_BTN_OPTIONS], bStatus);
 

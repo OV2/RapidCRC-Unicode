@@ -412,9 +412,9 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 	/*g_program_status.bCrcCalculated = FALSE;
 	g_program_status.bMd5Calculated = FALSE;
 	g_program_status.bEd2kCalculated = FALSE;*/
-	fileList->bCrcCalculated = FALSE;
-	fileList->bMd5Calculated = FALSE;
-	fileList->bEd2kCalculated = FALSE;
+	/*fileList->bCrcCalculated = false;
+	fileList->bMd5Calculated = false;
+	fileList->bEd2kCalculated = false;*/
 
 	MakesPathsAbsolute(fileList);
 
@@ -449,6 +449,19 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 	fileList->bCalculateMd5	= ((fileList->uiRapidCrcMode == MODE_NORMAL) &&	(g_program_options.bCalcMd5PerDefault))
 								|| (fileList->uiRapidCrcMode == MODE_MD5);
 	fileList->bCalculateEd2k  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcEd2kPerDefault));
+
+	switch(fileList->uiCmdOpts) {
+		case CMD_SFV:
+		case CMD_NAME:
+		case CMD_NTFS:
+			fileList->bCalculateCrc = true;
+			break;
+		case CMD_MD5:
+			fileList->bCalculateMd5 = true;
+			break;
+		default:
+			break;
+	}
 
 	if(g_program_options.bSortList)
 		QuickSortList(fileList);

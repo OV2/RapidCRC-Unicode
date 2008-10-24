@@ -25,7 +25,24 @@
 static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *finalList);
 static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode, CONST TCHAR szChkSumFilename[MAX_PATH], list<FILEINFO*> *finalList);
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList);
-bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode);
+static BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult);
+static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode);
+
+VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+{
+	list<FILEINFO*> finalList;
+
+	if(CheckIfRehashNecessary(arrHwnd,MODE_SFV))
+		return;
+
+	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]));
+	if(finalList.size()>1) {
+		finalList.sort(ListPointerCompFunction);
+		finalList.unique(ListPointerUniqFunction);
+	}
+
+	ActionCrcIntoStream(arrHwnd,FALSE,&finalList);
+}
 
 /*****************************************************************************
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
@@ -38,32 +55,23 @@ Notes:
 	- Adds the CRC value to the file as a secondary NTFS stream (:CRC32)
 	- Action depends on if files are selected or not
 *****************************************************************************/
-VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList)
 {
 	TCHAR szFilenameTemp[MAX_PATH];
 	BOOL bAFileWasProcessed;
 	FILEINFO * pFileinfo;
-	list<FILEINFO*> finalList;
 	UINT uiNumSelected;
 
-	if(CheckIfRehashNecessary(arrHwnd,MODE_SFV))
-		return;
-
 	uiNumSelected = ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]);
-	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,uiNumSelected);
-	if(finalList.size()>1) {
-		finalList.sort(ListPointerCompFunction);
-		finalList.unique(ListPointerUniqFunction);
-	}
 
-	if(gCMDOpts==CMD_NTFS || MessageBox(arrHwnd[ID_MAIN_WND],
+	if(noPrompt || MessageBox(arrHwnd[ID_MAIN_WND],
 				(uiNumSelected?
 				TEXT("\'OK\' to put the CRC value into the stream of the selected files"):
 				TEXT("\'OK\' to put the CRC value into the stream of the files that miss a CRC (the \'blue\' ones)")),
 				TEXT("Question"),
 				MB_OKCANCEL | MB_ICONQUESTION | MB_APPLMODAL | MB_SETFOREGROUND) == IDOK){
 		bAFileWasProcessed = FALSE;
-		for(list<FILEINFO*>::iterator it=finalList.begin();it!=finalList.end();it++) {
+		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 			pFileinfo = (*it);
 			if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(pFileinfo->bCrcFound)) ){
 					bAFileWasProcessed = TRUE;
@@ -103,7 +111,7 @@ Return Value:
 Notes:
 	helper function for ActionCrcIntoStream - this is the actual writing logic
 *****************************************************************************/
-BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult) {
+static BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult) {
 	TCHAR szFileOut[MAX_PATH]=TEXT("");
 	CHAR szCrcInHex[9];
 	HANDLE hFile;
@@ -122,6 +130,21 @@ BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult) {
 	return TRUE;
 }
 
+VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+{
+	list<FILEINFO*> finalList;
+
+	if(CheckIfRehashNecessary(arrHwnd,MODE_SFV))
+		return;
+
+	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]));
+	if(finalList.size()>1) {
+		finalList.sort(ListPointerCompFunction);
+		finalList.unique(ListPointerUniqFunction);
+	}
+	ActionCrcIntoFilename(arrHwnd,FALSE,&finalList);
+}
+
 /*****************************************************************************
 VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 	arrHwnd : (IN) window handle array
@@ -133,32 +156,23 @@ Notes:
 	- Renames the files in the list
 	- Action depends on if files are selected or not
 *****************************************************************************/
-VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList)
 {
 	TCHAR szFilenameTemp[MAX_PATH];
 	BOOL bAFileWasProcessed;
 	FILEINFO * pFileinfo;
-	list<FILEINFO*> finalList;
 	UINT uiNumSelected;
 
-	if(CheckIfRehashNecessary(arrHwnd,MODE_SFV))
-		return;
-
 	uiNumSelected = ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]);
-	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,uiNumSelected);
-	if(finalList.size()>1) {
-		finalList.sort(ListPointerCompFunction);
-		finalList.unique(ListPointerUniqFunction);
-	}
 
-	if(gCMDOpts==CMD_NAME || MessageBox(arrHwnd[ID_MAIN_WND],
+	if(noPrompt || MessageBox(arrHwnd[ID_MAIN_WND],
 				(uiNumSelected?
 				TEXT("\'OK\' to put the CRC value into the filename of the selected files"):
 				TEXT("\'OK\' to put the CRC value into the filename of the files that miss a CRC (the \'blue\' ones)")),
 				TEXT("Question"),
 				MB_OKCANCEL | MB_ICONQUESTION | MB_APPLMODAL | MB_SETFOREGROUND) == IDOK){
 		bAFileWasProcessed = FALSE;
-		for(list<FILEINFO*>::iterator it=finalList.begin();it!=finalList.end();it++) {
+		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 			pFileinfo = (*it);
 			if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(pFileinfo->bCrcFound)) ){
 					bAFileWasProcessed = TRUE;
@@ -293,6 +307,25 @@ BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresu
 	return TRUE;
 }
 
+DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
+{
+	list<FILEINFO*> finalList;
+
+	// check if there are any item in our list (without checking an access violation could occur)
+	if(ListView_GetItemCount(arrHwnd[ID_LISTVIEW]) == 0)
+		return NOERROR;
+
+	if(CheckIfRehashNecessary(arrHwnd,uiMode))
+		return NOERROR;
+
+	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]));
+	if(finalList.size()>1) {
+		finalList.sort(ListPointerCompFunction);
+		finalList.unique(ListPointerUniqFunction);
+	}
+	return CreateChecksumFiles(arrHwnd,uiMode,&finalList);
+}
+
 /*****************************************************************************
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 	arrHwnd		: (IN) array with window handles
@@ -305,26 +338,14 @@ Notes:
 - Displays a dialog where the user can choose if he wants to create a sfv/md5 file
   for every single file, for every directory or for the whole directory tree
 *****************************************************************************/
-DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
+DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,list<FILEINFO*> *finalList)
 {
 	DWORD dwResult;
 	FILECREATION_OPTIONS fco;
-	list<FILEINFO*> finalList;
 
 	// check if there are any item in our list (without checking an access violation could occur)
-	if(ListView_GetItemCount(arrHwnd[ID_LISTVIEW]) == 0)
-		return NOERROR;
-
-	if(CheckIfRehashNecessary(arrHwnd,uiMode))
-		return NOERROR;
-
 	fco.uiModeSfvOrMd5 = uiMode;
 	fco.uiNumSelected = ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]);
-	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,fco.uiNumSelected);
-	if(finalList.size()>1) {
-		finalList.sort(ListPointerCompFunction);
-		finalList.unique(ListPointerUniqFunction);
-	}
 
 	fco.uiCreateFileMode = (uiMode == MODE_MD5) ? g_program_options.uiCreateFileModeMd5 : g_program_options.uiCreateFileModeSfv;
 	if(uiMode == MODE_MD5)
@@ -346,13 +367,13 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 
 	switch(fco.uiCreateFileMode){
 	case CREATE_ONE_PER_FILE:
-		dwResult = CreateChecksumFiles_OnePerFile(uiMode, &finalList);
+		dwResult = CreateChecksumFiles_OnePerFile(uiMode, finalList);
 		break;
 	case CREATE_ONE_PER_DIR:
-		dwResult = CreateChecksumFiles_OnePerDir(uiMode, fco.szFilename, &finalList);
+		dwResult = CreateChecksumFiles_OnePerDir(uiMode, fco.szFilename, finalList);
 		break;
 	case CREATE_ONE_FILE:
-		dwResult = CreateChecksumFiles_OneFile(arrHwnd, uiMode, &finalList);
+		dwResult = CreateChecksumFiles_OneFile(arrHwnd, uiMode, finalList);
 		break;
 	}
 	
@@ -669,7 +690,7 @@ VOID FillFinalList(CONST HWND hListView, list<FILEINFO*> *finalList,CONST UINT u
 	}
 }
 
-bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode)
+static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode)
 {
 	LVITEM lvitem={0};
 	bool doRehash=false;
