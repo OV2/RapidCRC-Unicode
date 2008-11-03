@@ -421,25 +421,26 @@ void RemoveItems(CONST HWND hListView,list<FILEINFO*> *finalList)
 }
 
 /*****************************************************************************
-void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y)
-	pHwnd	: (IN) HWND of the window where the popup occurs
+void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, SHOWRESULT_PARAMS * pshowresult_params)
+	arrHwnd	: (IN) array with window handles
 	popup	: (IN) HMENU of the popup
 	x		: (IN) x coordinate (client)
 	y		: (IN) y coordinate (client)
+	pshowresult_params	: (OUT) pointer to special parameter struct for ShowResult
 
 Notes:
 	This function displays the listview popup and calls the corresponding function
 *****************************************************************************/
-void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y)
+void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, SHOWRESULT_PARAMS * pshowresult_params)
 {
 	int ret;
 	UINT uiSelected = 0;	
 	list<FILEINFO*> finalList;
 	bool bCrc=true,bMd5=true,bEd2k=true;
 
-	uiSelected = ListView_GetSelectedCount(pHwnd);
+	uiSelected = ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]);
 
-	FillFinalList(pHwnd,&finalList,uiSelected);
+	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,uiSelected);
 
 	for(list<FILEINFO*>::iterator it=finalList.begin();it!=finalList.end();it++) {
 		if(!(*it)->parentList->bCrcCalculated) bCrc = false;
@@ -459,16 +460,16 @@ void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y)
 	EnableMenuItem(popup,IDM_COPY_ED2K,MF_BYCOMMAND | (bEd2k ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_ED2K_LINK,MF_BYCOMMAND | (bEd2k ? MF_ENABLED : MF_GRAYED));
 
-    ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,pHwnd,NULL);
+    ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,arrHwnd[ID_LISTVIEW],NULL);
 	switch(ret) {
 		case IDM_COPY_CRC:			
 		case IDM_COPY_MD5:			
 		case IDM_COPY_ED2K:			
-		case IDM_COPY_ED2K_LINK:	HandleClipboard(pHwnd,ret,&finalList);
+		case IDM_COPY_ED2K_LINK:	HandleClipboard(arrHwnd[ID_LISTVIEW],ret,&finalList);
 									break;
-		case IDM_CLEAR_LIST:		ClearAllItems(pHwnd);
+		case IDM_CLEAR_LIST:		ClearAllItems(arrHwnd,pshowresult_params);
 									break;
-		case IDM_REMOVE_ITEMS:		RemoveItems(pHwnd,&finalList);
+		case IDM_REMOVE_ITEMS:		RemoveItems(arrHwnd[ID_LISTVIEW],&finalList);
 									break;
 		default:					return;
 	}
@@ -1166,35 +1167,33 @@ VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStat
 	EnableWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], bStatus);
 	EnableWindow(arrHwnd[ID_BTN_CRC_IN_SFV], bStatus);
 	EnableWindow(arrHwnd[ID_BTN_MD5_IN_MD5], bStatus);
-	if(bStatus) {
-		//SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Open Files"));
-		ShowWindow(arrHwnd[ID_BTN_PLAY_PAUSE],FALSE);
-		SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_OPEN),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
-	} else {
-		//SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Pause"));
-		ShowWindow(arrHwnd[ID_BTN_PLAY_PAUSE],TRUE);
-		SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
-	}
+	ShowWindow(arrHwnd[ID_BTN_PLAY_PAUSE],!bStatus);
+	if(!g_program_options.bEnableQueue)
+		EnableWindow(arrHwnd[ID_BTN_OPENFILES_PAUSE],bStatus);
 	EnableWindow(arrHwnd[ID_BTN_OPTIONS], bStatus);
 
 	return;
 }
 
 /*****************************************************************************
-VOID ClearAllItems(CONST HWND hListView)
-	hListView	: (IN) listview handle
+VOID ClearAllItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params)
+	arrHwnd				: (IN) array with window handles
+	pshowresult_params	: (OUT) pointer to special parameter struct for ShowResult
 
 Return Value:
 returns nothing
 
 Notes:
-- clears all items from the list view, the workQueue and the doneList
+- clears all items from the list view, the workQueue and the doneList and
+  removes the current status text
 *****************************************************************************/
-VOID ClearAllItems(CONST HWND hListView)
+VOID ClearAllItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params)
 {
 	SyncQueue.clearQueue();
 	SyncQueue.clearList();
-	ListView_DeleteAllItems(hListView);
+	ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
 	if(gComCtrlv6)
-		ListView_RemoveAllGroups(hListView);	
+		ListView_RemoveAllGroups(arrHwnd[ID_LISTVIEW]);
+	ShowResult(arrHwnd,NULL,pshowresult_params);
+	SetWindowText(arrHwnd[ID_EDIT_STATUS],TEXT(""));
 }

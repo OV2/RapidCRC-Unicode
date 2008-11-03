@@ -70,6 +70,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	DWORD *dwBytesReadTb;
 	BOOL bSuccess;
 	BOOL bFileDone;
+	BOOL bAsync;
 
 	HANDLE hEvtThreadMd5Go;
 	HANDLE hEvtThreadEd2kGo;
@@ -239,20 +240,18 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				olp.hEvent = hEvtReadDone;
 				olp.Offset = 0;
 				olp.OffsetHigh = 0;
-				ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, NULL, &olp);
+				bSuccess = ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, dwBytesReadRb, &olp);
+				if(!bSuccess && (GetLastError()==ERROR_IO_PENDING))
+					bAsync = TRUE;
+				else
+					bAsync = FALSE;
 
 				do {
-					bSuccess = GetOverlappedResult(hFile,&olp,dwBytesReadRb,TRUE);
-					if(pthread_params_calc->signalExit || !bSuccess && (GetLastError() != ERROR_HANDLE_EOF)) {
+					if(bAsync)
+						bSuccess = GetOverlappedResult(hFile,&olp,dwBytesReadRb,TRUE);
+					if(!bSuccess && (GetLastError() != ERROR_HANDLE_EOF)) {
 						curFileInfo.dwError = GetLastError();
 						bFileDone = TRUE;
-						if(bCalculateCrc)
-							SetEvent(hEvtThreadCrcGo);
-						if(bCalculateMd5)
-							SetEvent(hEvtThreadMd5Go);
-						if(bCalculateEd2k)
-							SetEvent(hEvtThreadEd2kGo);
-						break;
 					}
 					pthread_params_calc->qwBytesReadCurFile  += *dwBytesReadRb; //for progress bar
 					pthread_params_calc->qwBytesReadAllFiles += *dwBytesReadRb;
@@ -262,9 +261,13 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 					
 					WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
 					SWAPBUFFERS();
-					ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, NULL, &olp);
+					bSuccess = ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, dwBytesReadRb, &olp);
+					if(!bSuccess && (GetLastError()==ERROR_IO_PENDING))
+						bAsync = TRUE;
+					else
+						bAsync = FALSE;
 
-					if(*dwBytesReadCb<MAX_BUFFER_SIZE_CALC)
+					if(*dwBytesReadCb<MAX_BUFFER_SIZE_CALC || pthread_params_calc->signalExit)
 						bFileDone=TRUE;
 
 					if(bCalculateCrc)
@@ -276,7 +279,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 					if(bCalculateEd2k)
 						SetEvent(hEvtThreadEd2kGo);
 
-				} while(bSuccess && (*dwBytesReadCb==MAX_BUFFER_SIZE_CALC));
+				} while(!bFileDone);
 
 				WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
 
@@ -413,7 +416,7 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 
 
 	if(!g_program_options.bEnableQueue) {
-		ClearAllItems(arrHwnd[ID_LISTVIEW]);
+		ClearAllItems(arrHwnd,pshowresult_params);
 	}
     
 	// is there anything to do? (< 2, because 1st element is the path to the executable itself)

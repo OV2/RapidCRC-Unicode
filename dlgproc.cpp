@@ -116,7 +116,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			case NM_RCLICK:
                 // we need screen coordintes for the popup window
 				ClientToScreen(arrHwnd[ID_LISTVIEW],&(((NMITEMACTIVATE *)lParam)->ptAction));
-				ListViewPopup(arrHwnd[ID_LISTVIEW],popupMenu,((NMITEMACTIVATE *)lParam)->ptAction.x,((NMITEMACTIVATE *)lParam)->ptAction.y);
+				ListViewPopup(arrHwnd,popupMenu,((NMITEMACTIVATE *)lParam)->ptAction.x,((NMITEMACTIVATE *)lParam)->ptAction.y,&showresult_params);
 				return 0;
 			case LVN_KEYDOWN: //now handled by LVN_ITEMCHANGED
 				//ProcessKeyPressedInList(arrHwnd, (LPNMLVKEYDOWN) lParam, & showresult_params);
@@ -294,7 +294,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				if( DialogBox(g_hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hWnd, DlgProcOptions) == IDOK) {
 					//if the queueing option has been changed we need to clear the lists, since this also enables/disables grouping
 					if(prevQueue!=g_program_options.bEnableQueue) {
-						ClearAllItems(arrHwnd[ID_LISTVIEW]);
+						ClearAllItems(arrHwnd,&showresult_params);
 						if(gComCtrlv6)
 							ListView_EnableGroupView(arrHwnd[ID_LISTVIEW],g_program_options.bEnableQueue);
 					}

@@ -234,7 +234,7 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, SHO
 			fileinfoTmp.parentList = pFInfoList;
 
 			if(!g_program_options.bEnableQueue) {
-				ClearAllItems(arrHwnd[ID_LISTVIEW]);
+				ClearAllItems(arrHwnd,pshowresult_params);
 			}
 
 			for (UINT i=0; i < uiCount; i++)
