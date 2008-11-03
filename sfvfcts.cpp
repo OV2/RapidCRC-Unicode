@@ -21,17 +21,15 @@
 #include "globals.h"
 
 /*****************************************************************************
-BOOL EnterSfvMode(CONST HWND hListView)
-	hListView	: (IN) handle to the listview (used for DeallocateFileinfoMemory)
+BOOL EnterSfvMode(lFILEINFO *fileList)
+	fileList	: (IN/OUT) pointer to the job structure whose files are to be processed
 
 Return Value:
-	returns TRUE if everything went fine. FALSE went something went wrong; in this
-	case memory is deallocated and g_fileinfo_list_first_item is NULL
+	returns TRUE if everything went fine. FALSE went something went wrong
 
 Notes:
-	- takes g_fileinfo_list_first_item->szFilename as .sfv file and creates a new my
-	  fileinfo list
-	- is called after IsFileSfv returned true
+	- takes fileList->fInfos.front().szFilename as .sfv file and creates new list entries
+	  based on that
 *****************************************************************************/
 BOOL EnterSfvMode(lFILEINFO *fileList)
 {
@@ -66,21 +64,13 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 	fileList->uiRapidCrcMode = MODE_SFV;
 
 	// free everything we did so far
-	//DeallocateFileinfoMemory(hListView);
 	fileList->fInfos.clear();
 
 	hFile = CreateFile(szFilenameSfv, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
 	if(hFile == INVALID_HANDLE_VALUE){
 		MessageBox(NULL, TEXT("SFV file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		//DeallocateFileinfoMemory(hListView);
 		return FALSE;
 	}
-
-	//g_fileinfo_list_first_item = AllocateFileinfo();
-	//g_fileinfo_list_first_item->nextListItem = NULL;
-
-	//pFileinfo = g_fileinfo_list_first_item;
-	//pFileinfo_prev = NULL;
 
     // check for the BOM and read accordingly
 	if(!(fileIsUnicode = IsUnicodeFile(hFile)))
@@ -90,7 +80,6 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 
 	if(bErrorOccured){
 		MessageBox(NULL, TEXT("SFV file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		//DeallocateFileinfoMemory(hListView);
 		return FALSE;
 	}
 
@@ -151,20 +140,11 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 		GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUnicode);
 		if(bErrorOccured){
 			MessageBox(NULL, TEXT("SFV file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-			//DeallocateFileinfoMemory(hListView);
 			fileList->fInfos.clear();
 			return FALSE;
 		}
 	}
 	CloseHandle(hFile);
-
-	/*if(pFileinfo_prev == NULL) // did we do something?
-		DeallocateFileinfoMemory(hListView);
-	else{
-		// we created one Fileinfo too much
-		free(pFileinfo_prev->nextListItem);
-		pFileinfo_prev->nextListItem = NULL;
-	}*/
 
 	return TRUE;
 }
@@ -267,7 +247,6 @@ Return Value:
 
 Notes:
 - overwrites existing files
-- is used if g_program_options.bOwnSfvFile is true
 - takes pFileinfo->szFilename (that is always the full pathname), appends 
 a ".sfv" and writes just pFileinfo->szFilename and dwCrc into that file (and
 the header eventually)
@@ -393,10 +372,8 @@ Return Value:
 
 Notes:
 - overwrites existing files
-- is used if g_program_options.bOwnSfvFile is true
 - takes pFileinfo->szFilename (that is always the full pathname), appends 
-a ".sfv" and writes just pFileinfo->szFilename and dwCrc into that file (and
-the header eventually)
+a ".md5" and writes just pFileinfo->szFilename and abMd5Result into that file
 *****************************************************************************/
 DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo)
 {
@@ -432,17 +409,15 @@ DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo)
 }
 
 /*****************************************************************************
-BOOL EnterMd5Mode(CONST HWND hListView)
-	hListView	: (IN) handle to the listview (used for DeallocateFileinfoMemory)
+BOOL EnterMd5Mode(lFILEINFO *fileList)
+	fileList	: (IN/OUT) pointer to the job structure whose files are to be processed
 
 Return Value:
-returns TRUE if everything went fine. FALSE went something went wrong; in this
-case memory is deallocated and g_fileinfo_list_first_item is NULL
+returns TRUE if everything went fine. FALSE went something went wrong.
 
 Notes:
-- takes g_fileinfo_list_first_item->szFilename as .sfv file and creates a new my
-fileinfo list
-- is called after IsFileMd5 returned true
+- takes fileList->fInfos.front().szFilename as .sfv file and creates new list entries
+  based on that
 *****************************************************************************/
 BOOL EnterMd5Mode(lFILEINFO *fileList)
 {
@@ -480,21 +455,13 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 	fileList->uiRapidCrcMode = MODE_MD5;
 
 	// free everything we did so far
-	//DeallocateFileinfoMemory(hListView);
 	fileList->fInfos.clear();
 
 	hFile = CreateFile(szFilenameMd5, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
 	if(hFile == INVALID_HANDLE_VALUE){
 		MessageBox(NULL, TEXT("MD5 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		//DeallocateFileinfoMemory(hListView);
 		return FALSE;
 	}
-
-	//g_fileinfo_list_first_item = AllocateFileinfo();
-	//g_fileinfo_list_first_item->nextListItem = NULL;
-
-	//pFileinfo = g_fileinfo_list_first_item;
-	//pFileinfo_prev = NULL;
 
     // check for the BOM and read accordingly
 	if(!(fileIsUnicode = IsUnicodeFile(hFile)))
@@ -504,7 +471,6 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 
 	if(bErrorOccured){
 		MessageBox(NULL, TEXT("MD5 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		//DeallocateFileinfoMemory(hListView);
 		return FALSE;
 	}
 
@@ -563,20 +529,11 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 		GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUnicode);
 		if(bErrorOccured){
 			MessageBox(NULL, TEXT("MD5 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-			//DeallocateFileinfoMemory(hListView);
 			fileList->fInfos.clear();
 			return FALSE;
 		}
 	}
 	CloseHandle(hFile);
-
-	/*if(pFileinfo_prev == NULL) // did we do something?
-		DeallocateFileinfoMemory(hListView);
-	else{
-		// we created one Fileinfo too much
-		free(pFileinfo_prev->nextListItem);
-		pFileinfo_prev->nextListItem = NULL;
-	}*/
 
 	return TRUE;
 }

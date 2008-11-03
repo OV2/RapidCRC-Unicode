@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <math.h>
 #include <limits.h>
 #include <commctrl.h>
-//#include <uxtheme.h>
 #include <windowsx.h>
 #include "CSyncQueue.h"
 
@@ -117,6 +116,8 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	INITCOMMONCONTROLSEX iccex;
 	INT i;
 	LOGFONT lf;
+	WINDOWPLACEMENT wp;
+	RECT rect;
 
 	//InitCommonControls();
 	iccex.dwSize	= sizeof(INITCOMMONCONTROLSEX);
@@ -182,7 +183,7 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	SendMessage(arrHwnd[ID_BTN_MD5_IN_MD5],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 	arrHwnd[ID_BTN_OPTIONS]				= CreateWindow(TEXT("BUTTON"), TEXT("Options"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_OPTIONS, g_hInstance, NULL);
 
-	arrHwnd[ID_STATIC_PRIORITY]			= CreateWindow(TEXT("STATIC"), TEXT("Priority"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_PRIORITY, g_hInstance, NULL);
+	//arrHwnd[ID_STATIC_PRIORITY]			= CreateWindow(TEXT("STATIC"), TEXT("Priority"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_PRIORITY, g_hInstance, NULL);
 	arrHwnd[ID_COMBO_PRIORITY]			= CreateWindow(TEXT("COMBOBOX"), NULL, CBS_DROPDOWNLIST | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_COMBO_PRIORITY, g_hInstance, NULL);	
 
 	arrHwnd[ID_PROGRESS_FILE]			= CreateWindow(PROGRESS_CLASS, NULL, WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_PROGRESS_FILE, g_hInstance, NULL);
@@ -206,6 +207,7 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	#pragma warning(default: 4312)
 	#pragma warning(default: 4244)*/
 
+	//set window order so that the dialog manager can handle tab order
 	SetWindowPos(arrHwnd[ID_BTN_EXIT],HWND_TOP,0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
 	SetWindowPos(arrHwnd[ID_FIRST_TAB_CONTROL],arrHwnd[ID_BTN_EXIT],0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
 	for(i=ID_FIRST_TAB_CONTROL + 1; i < ID_LAST_TAB_CONTROL + 1; i++)
@@ -216,7 +218,15 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	SetFocus(arrHwnd[ID_BTN_OPENFILES_PAUSE]);
 
 	// resize main window to the desired size
-	MoveWindow(arrHwnd[ID_MAIN_WND], g_program_options.uiWndLeft, g_program_options.uiWndTop, (*plAveCharWidth) * g_program_options.uiWndWidth, (*plAveCharHeight) * g_program_options.uiWndHeight, FALSE);
+	wp.length = sizeof(WINDOWPLACEMENT);
+	wp.rcNormalPosition.left = g_program_options.uiWndLeft;
+	wp.rcNormalPosition.top = g_program_options.uiWndTop;
+	wp.rcNormalPosition.right = g_program_options.uiWndLeft + g_program_options.uiWndWidth * *plAveCharWidth;
+	wp.rcNormalPosition.bottom = g_program_options.uiWndTop + g_program_options.uiWndHeight * *plAveCharHeight;
+	wp.showCmd = SW_SHOW;
+	SetWindowPlacement(arrHwnd[ID_MAIN_WND],&wp); 
+	GetWindowRect(arrHwnd[ID_MAIN_WND], & rect);
+	MoveWindow(arrHwnd[ID_MAIN_WND], rect.left , rect.top, rect.right - rect.left, rect.bottom - rect.top, FALSE);
 
 	InitListView(arrHwnd[ID_LISTVIEW], *plAveCharWidth);
 
@@ -249,6 +259,15 @@ void CreateListViewPopupMenu(HMENU *menu) {
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_REMOVE_ITEMS,TEXT("Remove Selected Items"));
 }
 
+/*****************************************************************************
+void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
+	hListView	: (IN) HWND of the listview
+	finalList	: (IN) list of FILEINFO pointers whose FILEINFOs should be removed
+					   from the listview and from their jobs
+
+Notes:
+	This function handles the clipboard functions of the listview
+*****************************************************************************/
 void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 {
 #define MAX_ED2K_LINK_ENCODED_SIZE (MAX_PATH * 3 + 20 + 49 + 1)
@@ -349,6 +368,9 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 	CloseClipboard();
 }
 
+/*****************************************************************************
+Class for the list.remove_if function
+*****************************************************************************/
 class ComparePtr
 {
 	FILEINFO *pCompare;
@@ -357,18 +379,23 @@ public:
 	bool operator() (const FILEINFO& value) {return ((&value)==pCompare); }
 };
 
+/*****************************************************************************
+void RemoveItems(CONST HWND hListView,list<FILEINFO*> *finalList)
+	hListView	: (IN) HWND of the listview
+	finalList	: (IN) list of FILEINFO pointers whose FILEINFOs should be removed
+					   from the listview and from their jobs
 
+Notes:
+	This function removes the currently selected items from the listview and their
+	corresponding FILEINFOs in the finalList
+*****************************************************************************/
 void RemoveItems(CONST HWND hListView,list<FILEINFO*> *finalList)
 {
 	FILEINFO *pFileinfo;
 	lFILEINFO *pList;
 	list<lFILEINFO*> *doneList;
 	LVITEM lvitem={0};
-		
-	/*uiIndex = ListView_GetNextItem(hListView,ListView_GetItemCount(hListView),LVNI_SELECTED|LVNI_ABOVE);
-	do {
-		ListView_DeleteItem(hListView,uiIndex);
-	} while((uiIndex = ListView_GetNextItem(hListView,uiIndex,LVNI_SELECTED|LVNI_ABOVE))!=-1);*/
+
 	lvitem.mask = LVIF_STATE;
 	lvitem.stateMask = LVIS_SELECTED;
 	for(int i=ListView_GetItemCount(hListView)-1;i>=0;i--) {
@@ -401,8 +428,7 @@ void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y)
 	y		: (IN) y coordinate (client)
 
 Notes:
-	This function handles the listview popup and generates the data to place
-	in the clipboard
+	This function displays the listview popup and calls the corresponding function
 *****************************************************************************/
 void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y)
 {
@@ -411,10 +437,6 @@ void ListViewPopup(HWND pHwnd,HMENU popup,int x,int y)
 	list<FILEINFO*> finalList;
 	bool bCrc=true,bMd5=true,bEd2k=true;
 
-
-	//lvitem.iSubItem = 0;
-	//lvitem.mask = LVIF_PARAM;
-	//uiItemCount = ListView_GetItemCount(pHwnd);
 	uiSelected = ListView_GetSelectedCount(pHwnd);
 
 	FillFinalList(pHwnd,&finalList,uiSelected);
@@ -531,7 +553,7 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	//full row select
 	ListView_SetExtendedListViewStyle(hWndListView, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
-    //explorer-style listview
+    //explorer-style listview and group view work only with common controls v6
 	if(gComCtrlv6) {
 		uxTheme = LoadLibrary(TEXT("uxtheme.dll"));
 		if(uxTheme) {
@@ -582,6 +604,17 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	return TRUE; 
 }
 
+/*****************************************************************************
+VOID RemoveGroupItems(CONST HWND hListView, int iGroupId)
+	hListView	: (IN) Handle to the listview
+	iGroupId	: (IN) goupId that will be removed
+
+Return Value:
+returns nothing
+
+Notes:
+- does a reverse traversal of the listview and removes items with matching groupId
+*****************************************************************************/
 VOID RemoveGroupItems(CONST HWND hListView, int iGroupId)
 {
 	LVITEM lvItem={0};
@@ -595,6 +628,18 @@ VOID RemoveGroupItems(CONST HWND hListView, int iGroupId)
 	}
 }
 
+/*****************************************************************************
+BOOL InsertGroupIntoListView(CONST HWND hListView, lFILEINFO *fileList)
+	hListView	: (IN) Handle to the listview
+	fileList	: (IN/OUT) pointer to a job corresponding to the new group
+
+Return Value:
+returns TRUE if successful, FALSE otherwise
+
+Notes:
+- inserts a new group into the listview and increases the clobal group count
+- sets the jobs groupId to the id of the newly inserted group
+*****************************************************************************/
 BOOL InsertGroupIntoListView(CONST HWND hListView, lFILEINFO *fileList)
 {
 	static int currGroupId=1;
@@ -622,31 +667,13 @@ Return Value:
 returns FALSE if there was an error inserting. Otherwise TRUE
 
 Notes:
-- sets filename and info column of our listview and eventually crc column
-- icon and info text is chosen with the info in pFileinfo
-- one special case: If pFileinfo->dwError is 2 or APPL_ERROR_ILLEGAL_CRC
-a special info text is set. For all other errors "Error" is set
+- inserts the item into the listview, using information from pFileinfo
 *****************************************************************************/
 BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo,lFILEINFO *fileList)
 {
 	INT iImageIndex;
 	LVITEM lvI;
-    //LVTILEINFO tileInfo;
 
-	// ATTENTION: the same logic is implemented in InsertItemIntoList, InfoToIntValue, DisplayStatusOverview.
-	// Any changes here have to be transfered there
-
-	/*switch(InfoToIntValue(pFileinfo)) {
-		case 1: iImageIndex = ICON_OK;
-				break;
-		case 2: iImageIndex = ICON_NOT_OK;
-				break;
-		case 3: iImageIndex = ICON_NO_CRC;
-				break;
-		case 4: iImageIndex = ICON_ERROR;
-				break;
-		default: iImageIndex = ICON_NO_CRC;
-	}*/
 	iImageIndex = InfoToIntValue(pFileinfo) - 1;
 
 	lvI.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE;
@@ -674,6 +701,17 @@ BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo,lFILEINFO *fi
 	return TRUE;
 }
 
+/*****************************************************************************
+VOID UpdateListViewStatusIcons(CONST HWND hListView)
+	hListView		: (IN) handle to listview
+
+Return Value:
+returns nothing
+
+Notes:
+- checks the image icon of all items in the listview and updates if necessary
+- called by some action functions
+*****************************************************************************/
 VOID UpdateListViewStatusIcons(CONST HWND hListView)
 {
 	LVITEM lvitem={0};
@@ -1142,6 +1180,16 @@ VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStat
 	return;
 }
 
+/*****************************************************************************
+VOID ClearAllItems(CONST HWND hListView)
+	hListView	: (IN) listview handle
+
+Return Value:
+returns nothing
+
+Notes:
+- clears all items from the list view, the workQueue and the doneList
+*****************************************************************************/
 VOID ClearAllItems(CONST HWND hListView)
 {
 	SyncQueue.clearQueue();

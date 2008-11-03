@@ -233,21 +233,15 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, SHO
 			pFInfoList = new lFILEINFO;
 			fileinfoTmp.parentList = pFInfoList;
 
-			//DeallocateFileinfoMemory(arrHwnd[ID_LISTVIEW]);
-
-			//AllocateMultipleFileinfo(uiCount);
-
 			if(!g_program_options.bEnableQueue) {
 				ClearAllItems(arrHwnd[ID_LISTVIEW]);
 			}
 
-			//pFileinfo = g_fileinfo_list_first_item;
 			for (UINT i=0; i < uiCount; i++)
 			{
 				ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
 				DragQueryFile((HDROP)stgmed.hGlobal, i, fileinfoTmp.szFilename, MAX_PATH);
 				pFInfoList->fInfos.push_back(fileinfoTmp);
-				//pFileinfo = pFileinfo->nextListItem;
 			}
 
 			GlobalUnlock(stgmed.hGlobal);

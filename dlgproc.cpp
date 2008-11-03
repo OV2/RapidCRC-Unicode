@@ -55,7 +55,6 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static WNDPROC arrOldWndProcs[ID_LAST_TAB_CONTROL - ID_FIRST_TAB_CONTROL + 1];
 	static LONG lAveCharWidth, lAveCharHeight;
 	static IDropTarget * pDropTarget;
-	//static QWORD qwFilesizeSum;
 	static THREAD_PARAMS_FILEINFO thread_params_fileinfo;
 	static THREAD_PARAMS_CALC thread_params_calc;
 	static HANDLE hThread;
@@ -78,9 +77,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		RegisterDropWindow(arrHwnd, & pDropTarget, & showresult_params);
 
 		thread_params_fileinfo.arrHwnd				= arrHwnd;
-		//thread_params_fileinfo.pqwFilesizeSum		= & qwFilesizeSum;
 		thread_params_fileinfo.pshowresult_params	= & showresult_params;
-		//bThreadDone = FALSE;
 		hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc_FileInfo, &thread_params_fileinfo, 0, &uiThreadID);
 
 		return 0;
@@ -94,7 +91,6 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
                     // we need screen coordintes for the popup window
                     DWORD dwPos;
                     dwPos = GetMessagePos();
-				    //ClientToScreen(arrHwnd[ID_LISTVIEW],&(((NMITEMACTIVATE *)lParam)->ptAction));
 				    if(ListViewHeaderPopup(arrHwnd[ID_LISTVIEW],headerPopupMenu,LOWORD (dwPos),HIWORD (dwPos)))
                         UpdateListViewColumns(arrHwnd, lAveCharWidth);
                     return 0;
@@ -113,7 +109,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				if((((NMLISTVIEW *)lParam)->uChanged & LVIF_STATE) && (((NMLISTVIEW *)lParam)->uNewState & LVIS_SELECTED))
 					ProcessSelChangeInList(arrHwnd, (NMLISTVIEW *) lParam, & showresult_params);
 				return 0;
-			case NM_CLICK:
+			case NM_CLICK: //now handled by LVN_ITEMCHANGED
 				//ProcessClickInList(arrHwnd, (NMITEMACTIVATE *) lParam, & showresult_params);
 				//return 0;
 				break;
@@ -122,12 +118,11 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				ClientToScreen(arrHwnd[ID_LISTVIEW],&(((NMITEMACTIVATE *)lParam)->ptAction));
 				ListViewPopup(arrHwnd[ID_LISTVIEW],popupMenu,((NMITEMACTIVATE *)lParam)->ptAction.x,((NMITEMACTIVATE *)lParam)->ptAction.y);
 				return 0;
-			case LVN_KEYDOWN:
+			case LVN_KEYDOWN: //now handled by LVN_ITEMCHANGED
 				//ProcessKeyPressedInList(arrHwnd, (LPNMLVKEYDOWN) lParam, & showresult_params);
 				//return 0;
 				break;
 			case LVN_INSERTITEM:
-				//ListView_Scroll(arrHwnd[ID_LISTVIEW],0,16);
 				if(g_program_options.bAutoScrollListView)
 					ListView_EnsureVisible(arrHwnd[ID_LISTVIEW],((LPNMLISTVIEW)lParam)->iItem,FALSE);
 				return 0;
@@ -160,12 +155,12 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	case WM_SIZE:
 		MoveAndSizeWindows(arrHwnd, LOWORD(lParam), HIWORD(lParam), lAveCharWidth, lAveCharHeight);
 		return 0;
-	case WM_THREAD_FILEINFO_DONE: // wParam, lParam are passed to WM_THREAD_CRC. So they have the same meaning
+	case WM_THREAD_FILEINFO_DONE:
 		CloseHandle(hThread);
-		//bThreadDone = TRUE;
 
 		// go on with the CRC Calculation
-	case WM_START_THREAD_CALC: // wParam : CRC is to be calculated ; lParam : MD5 is to be calculated
+	case WM_START_THREAD_CALC:
+		//only start thread if not currently running
 		if(!SyncQueue.bThreadDone) return 0;
 		thread_params_calc.arrHwnd = arrHwnd;
 		thread_params_calc.signalExit = FALSE;
@@ -173,11 +168,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		thread_params_calc.qwBytesReadAllFiles = 0;
 		thread_params_calc.qwBytesReadCurFile = 0;
 		thread_params_calc.pFileinfo_cur = NULL;
-		//thread_params_calc.qwFilesizeSum = 0;
+		//reset filesize count for current thread run
 		SyncQueue.setFileAccForCalc();
-		//thread_params_calc.bCalculateCrc = (BOOL) wParam;
-		//thread_params_calc.bCalculateMd5 = (BOOL) (lParam & 0x1);
-		//thread_params_calc.bCalculateEd2k = (BOOL) (lParam & 0x2);
 		SyncQueue.bThreadDone = false;
 		hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc_Calc, &thread_params_calc, 0, &uiThreadID);
 
@@ -197,6 +189,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		SendMessage(arrHwnd[ID_PROGRESS_FILE], PBM_SETPOS , (WPARAM) 100, 0);
 		SendMessage(arrHwnd[ID_PROGRESS_GLOBAL], PBM_SETPOS , (WPARAM) 100, 0);
 
+		//if queue is empty start another thread
+		//message is ignored if another WM_START_THREAD_CALC is already in the message queue
 		if(!SyncQueue.isQueueEmpty()) {
 			PostMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL,NULL);
 			return 0;
@@ -204,34 +198,9 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 		DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 
-        // check if we are getting invoked by the shell extension, if so we have to
-        // do the indicated action and quit afterwards
-		/*if(gCMDOpts==CMD_SFV)
-		{
-			CreateChecksumFiles(arrHwnd, MODE_SFV);
-			gCMDOpts=CMD_NORMAL;
-			PostMessage(arrHwnd[ID_MAIN_WND], WM_CLOSE, 0, 0);
-		}
-		else if(gCMDOpts==CMD_MD5)
-		{
-			CreateChecksumFiles(arrHwnd, MODE_MD5);
-			gCMDOpts=CMD_NORMAL;
-			PostMessage(arrHwnd[ID_MAIN_WND], WM_CLOSE, 0, 0);
-		}
-		else if(gCMDOpts==CMD_NAME)
-		{
-			ActionCrcIntoFilename(arrHwnd);
-			gCMDOpts=CMD_NORMAL;
-			PostMessage(arrHwnd[ID_MAIN_WND], WM_CLOSE, 0, 0);
-		}
-		else if(gCMDOpts==CMD_NTFS)
-		{
-			ActionCrcIntoStream(arrHwnd);
-			gCMDOpts=CMD_NORMAL;
-			PostMessage(arrHwnd[ID_MAIN_WND], WM_CLOSE, 0, 0);
-		}*/
 		return 0;
-	case WM_ACCEPT_PIPE:
+	case WM_ACCEPT_PIPE:	//message generated by another rapidcrc instance if queueing is enabled
+							//wparam is the action to perform (if invoked by the shell extension)
 		fileList = new lFILEINFO;
 		if(!GetDataViaPipe(arrHwnd,fileList)) {
 			delete fileList;
@@ -302,22 +271,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			break;
 		case ID_BTN_OPENFILES_PAUSE:
 			if(HIWORD(wParam) == BN_CLICKED){
-				//if(SyncQueue.bThreadDone)
 					OpenFiles(arrHwnd, & showresult_params);
-				/*else{
-					if(SyncQueue.bThreadSuspended){
-						ResumeThread(hThread);
-						SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Pause"));
-						SendMessage(arrHwnd[ID_BTN_OPENFILES_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
-						SyncQueue.bThreadSuspended = FALSE;
-					}
-					else{
-						SuspendThread(hThread);
-						SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Continue"));
-						SendMessage(arrHwnd[ID_BTN_OPENFILES_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PLAY),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
-						SyncQueue.bThreadSuspended = TRUE;
-					}
-				}*/
 				return 0;
 			}
 			break;
@@ -325,13 +279,11 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			if(!SyncQueue.bThreadDone)
 				if(SyncQueue.bThreadSuspended){
 					ResumeThread(hThread);
-					//SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Pause"));
 					SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 					SyncQueue.bThreadSuspended = FALSE;
 				}
 				else{
 					SuspendThread(hThread);
-					//SetWindowText(arrHwnd[ID_BTN_OPENFILES_PAUSE], TEXT("Continue"));
 					SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PLAY),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 					SyncQueue.bThreadSuspended = TRUE;
 				}
@@ -340,6 +292,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			if(HIWORD(wParam) == BN_CLICKED){
 				BOOL prevQueue=g_program_options.bEnableQueue;
 				if( DialogBox(g_hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hWnd, DlgProcOptions) == IDOK) {
+					//if the queueing option has been changed we need to clear the lists, since this also enables/disables grouping
 					if(prevQueue!=g_program_options.bEnableQueue) {
 						ClearAllItems(arrHwnd[ID_LISTVIEW]);
 						if(gComCtrlv6)
@@ -364,11 +317,13 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		WriteOptions(hWnd, lAveCharWidth, lAveCharHeight);
 		UnregisterDropWindow(arrHwnd[ID_LISTVIEW], pDropTarget);
 		OleUninitialize();
+		//signal the calculation thread that we want to exit
+		//this causes the theads to end in a controlled manner
 		if(!SyncQueue.bThreadDone){
 			thread_params_calc.signalExit = TRUE;
 			if(SyncQueue.bThreadSuspended)
 				ResumeThread(hThread);
-			WaitForSingleObject(hThread,INFINITE);
+			WaitForSingleObject(hThread,4000);
 		}
 		break;
 	case WM_DESTROY:
@@ -930,6 +885,19 @@ __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLIS
 	return;
 }
 
+/*****************************************************************************
+__inline VOID ProcessSelChangeInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], NMLISTVIEW * pnmlistview,
+						SHOWRESULT_PARAMS * pshowresult_params)
+	arrHwnd				: (IN) array with window handles
+	pnmlistview			: (IN) struct with infos to the selected row in the listview
+	pshowresult_params	: (OUT) struct for ShowResult
+
+Return Value:
+returns nothing
+
+Notes:
+- handles the situation when the selection in the listview changes
+*****************************************************************************/
 __inline VOID ProcessSelChangeInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], NMLISTVIEW * pnmlistview,
 						SHOWRESULT_PARAMS * pshowresult_params)
 {
@@ -957,7 +925,7 @@ returns nothing
 Notes:
 - handles the situation when the user clicks a row in the listview
 *****************************************************************************/
-__inline VOID ProcessClickInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], NMITEMACTIVATE * pnmitemactivate,
+__declspec(deprecated) __inline VOID ProcessClickInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], NMITEMACTIVATE * pnmitemactivate,
 						SHOWRESULT_PARAMS * pshowresult_params)
 {
 	LVITEM lvitem;
@@ -984,7 +952,7 @@ returns TRUE if successfull, FALSE otherwise
 Notes:
 - updates the text windows that displays info about an item via MyShowResult
 *****************************************************************************/
-__inline BOOL ProcessKeyPressedInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LPNMLVKEYDOWN pnkd,
+__declspec(deprecated) __inline BOOL ProcessKeyPressedInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LPNMLVKEYDOWN pnkd,
 							 SHOWRESULT_PARAMS * pshowresult_params)
 {
 	INT iSelectedItem;
@@ -1033,7 +1001,7 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	const float actButtonY = 150/10.0f;
 	const float resultGroupY = 1265/100.0f;
 
-#pragma warning(disable: 4244)
+#pragma warning(disable: 4244) //disable float cut-off warnings
 
 	MoveWindow(arrHwnd[ID_LISTVIEW], lACW * leftMargin, lACH * 65/100.0, wWidth - lACW * rightMargin, wHeight - lACH * 160/10.0, TRUE);
 

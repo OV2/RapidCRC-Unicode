@@ -41,22 +41,17 @@ Return Value:
 	returns 0
 
 Notes:
-- walks trough the Fileinfo list and calculates CRCs
+- requests jobs from the queue and calculates hashes until the queue is empty
 - spawns up to three additional threads, one for each hash value
 - performs asynchronous I/O with two buffers -> one buffer is filled while the hash-threads
   work on the other buffer
 - if an error occured, GetLastError() is saved in the current pFileinfo->dwError
-- what is has be calculated is sent to ThreadProc_Crc via pthread_params_crc->bCalculateCrc,
-  pthread_params_crc->bCalculateMd5 and pthread_params_crc->bCalculateEd2k.
-  The calling function has to implement the above logic
+- what has be calculated is determined by bCalculateCrc/bCalculateMd5/bCalculateEd2k of the
+  current job
 *****************************************************************************/
 UINT __stdcall ThreadProc_Calc(VOID * pParam)
 {
 	THREAD_PARAMS_CALC * CONST pthread_params_calc = (THREAD_PARAMS_CALC *)pParam;
-	// put thread parameter into (const) locale variable. This might be a bit faster
-	//CONST BOOL bCalculateCrc = pthread_params_calc->bCalculateCrc; // I hope this way less adress calculation has to be done
-	//CONST BOOL bCalculateMd5 = pthread_params_calc->bCalculateMd5;
-	//CONST BOOL bCalculateEd2k = pthread_params_calc->bCalculateEd2k;
 	CONST HWND * CONST arrHwnd = pthread_params_calc->arrHwnd;
 	SHOWRESULT_PARAMS * CONST pshowresult_params = pthread_params_calc->pshowresult_params;
 
@@ -64,7 +59,6 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	BOOL bCalculateMd5;
 	BOOL bCalculateEd2k;
 
-	//DWORD dwErrorCode = NO_ERROR;
 	QWORD qwStart, qwStop, wqFreq;
 	HANDLE hFile;
 	BYTE *readBuffer = (BYTE *)malloc(MAX_BUFFER_SIZE_CALC);
@@ -76,8 +70,6 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	DWORD *dwBytesReadTb;
 	BOOL bSuccess;
 	BOOL bFileDone;
-
-	//FILEINFO * pFileinfo;
 
 	HANDLE hEvtThreadMd5Go;
 	HANDLE hEvtThreadEd2kGo;
@@ -111,16 +103,12 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	
 
 	// set some UI stuff:
-	// - clear the result windows
-	// - clear the list window
 	// - disable action buttons while in thread
 	EnableWindowsForThread(arrHwnd, FALSE);
 
 	ShowResult(arrHwnd, NULL, pshowresult_params);
 	
 	while((fileList = SyncQueue.popQueue()) != NULL) {
-
-		//pthread_params_calc->qwFilesizeSum = fileList->qwFilesizeSum;
 
 		bCalculateCrc	= !fileList->bCrcCalculated && fileList->bCalculateCrc;
 		bCalculateMd5	= !fileList->bMd5Calculated && fileList->bCalculateMd5;
@@ -384,9 +372,13 @@ Notes:
 1) It checks that there are command line parameters
 2) If there are, it reads the parameter either from the shell extension via Named Pipe
 or it uses command line parameter as Input
+   If queueing is enabled and there is a previous instance it sends a window message to
+   this instance and terminates. The previous instance is then responsible for accepting
+   the pipe data.
 3) In this step directories are expanded and filesizes, found CRC (from filename) are
-get
-4) At last it is checked if the first file is an SFV file. If so EnterSfvMode() is called
+collected
+4) At last it is checked if the first file is an SFV/MD5 file. If so EnterSfvMode/EnterMd5Mode
+   is called
 5) It sends an application defined window message to signal that is has done its job and
 the CRC Thread can start
 *****************************************************************************/
@@ -419,8 +411,6 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	#define argv __argv
 #endif
 
-	// setting the initial value of the filesize sum to 0
-	//(*pqwFilesizeSum) = 0;
 
 	if(!g_program_options.bEnableQueue) {
 		ClearAllItems(arrHwnd[ID_LISTVIEW]);
@@ -428,7 +418,6 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
     
 	// is there anything to do? (< 2, because 1st element is the path to the executable itself)
 	if(argc < 2){
-		//g_fileinfo_list_first_item = NULL;
 		LocalFree(argv);
 		PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);
 		return 0;
@@ -471,7 +460,6 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 		}
 
 		if(!GetDataViaPipe(arrHwnd,fileList)){
-			//g_fileinfo_list_first_item = NULL;
 			delete fileList;
 			LocalFree(argv);
 			PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);
@@ -482,9 +470,6 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	{
 		// get number of files
 		iNumFiles = argc - 1; // -1 because 1st element is the path to the executable itself
-		//DeallocateFileinfoMemory(arrHwnd[ID_LISTVIEW]);
-		//AllocateMultipleFileinfo(iNumFiles);
-
 
 		for(INT i = 0; i < iNumFiles; ++i){
 			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));

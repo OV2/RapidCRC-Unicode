@@ -377,26 +377,25 @@ BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH], DWORD * pdwFoundCrc)
 }
 
 /*****************************************************************************
-VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS], QWORD * pqwFilesizeSum,
-					 BOOL * pbCalculateCrc32, BOOL * pbCalculateMd5, SHOWRESULT_PARAMS * pshowresult_params)
-	arrHwnd				: (IN) array to all window handles
+VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
+					 SHOWRESULT_PARAMS * pshowresult_params,
+					 lFILEINFO *fileList)
 	pqwFilesizeSum		: (OUT) pointer to the QWORD that sums up all filesizes
-	pbCalculateCrc32	: (OUT) signals that crc32 has to be calculated for this filelist
-	pbCalculateMd5		: (OUT) signals that md5 has to be calculated for this filelist
 	pshowresult_params	: (IN/OUT) struct for ShowResult
+	fileList			: (IN/OUT) pointer to the job structure that should be processed
 
 Return Value:
 returns nothing
 
 Notes:
-1.) disables buttons that should not be active while process the list
-2.) sets the global g_szBasePath that specifies the directory that we use as a base
+1.) disables buttons that should not be active while processing the list (if not already disabled)
+2.) sets the lists g_szBasePath that specifies the directory that we use as a base
 3.) calls ProcessDirectories to expand all directories and get the files inside
 4.) if we have an .sfv file we process the .sfv file
 5.) call ProcessFileProperties to get file properties like size etc...
-6.) eventually sort the list
-7.) fills pbCalculateCrc32 and pbCalculateMd5 depending on in which program mode
-    we are. These values are passed by the caller to THREAD_CALC
+6.) eventually sort the list (this seems pointless, will check in a later version)
+7.) sets bCalculateCrc, bCalculateMd5 and bCalculateEd2k of the job structure depending on in which
+	program mode we are and or if we want those by default. These values are passed by the caller to THREAD_CALC
 *****************************************************************************/
 VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 					 SHOWRESULT_PARAMS * pshowresult_params,
@@ -408,29 +407,11 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 		ShowResult(arrHwnd, NULL, pshowresult_params);
 	}
 
-	// reseting g_program_status which perhaps is still set by a previous run
-	/*g_program_status.bCrcCalculated = FALSE;
-	g_program_status.bMd5Calculated = FALSE;
-	g_program_status.bEd2kCalculated = FALSE;*/
-	/*fileList->bCrcCalculated = false;
-	fileList->bMd5Calculated = false;
-	fileList->bEd2kCalculated = false;*/
-
-	MakesPathsAbsolute(fileList);
+	MakePathsAbsolute(fileList);
 
 	// enter normal mode
 	fileList->uiRapidCrcMode = MODE_NORMAL;
 
-	/*if(g_fileinfo_list_first_item != NULL){
-		if(HasFileExtension(g_fileinfo_list_first_item->szFilename, TEXT(".sfv")))
-			EnterSfvMode(arrHwnd[ID_LISTVIEW]);
-		else if(HasFileExtension(g_fileinfo_list_first_item->szFilename, TEXT(".md5")))
-			EnterMd5Mode(arrHwnd[ID_LISTVIEW]);
-		else{
-			SetBasePath();
-			ProcessDirectories();
-		}
-	}*/
 	if(!fileList->fInfos.empty()) {
 		if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sfv")))
 			EnterSfvMode(fileList);
@@ -475,7 +456,8 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 }
 
 /*****************************************************************************
-VOID ProcessDirectories()
+VOID ProcessDirectories(lFILEINFO *fileList)
+	fileList	: (IN/OUT) pointer to the job structure that should be processed
 
 Return Value:
 returns nothing
@@ -485,51 +467,10 @@ Notes:
 *****************************************************************************/
 VOID ProcessDirectories(lFILEINFO *fileList)
 {
-	//FILEINFO Fileinfo;
-	//FILEINFO * pFileinfo, * pFileinfo_prev;
 	TCHAR szCurrentPath[MAX_PATH];
 
 	// save org. path
 	GetCurrentDirectory(MAX_PATH, szCurrentPath);
-
-	// the part after the next part needs pFileinfo_prev to integrate into the list.
-	// With that we make sure that there is a prev item (g_fileinfo_list_first_item is
-	// no expandable item anymore when we arrive at the next part)
-	/*Fileinfo.nextListItem = g_fileinfo_list_first_item;
-	while((Fileinfo.nextListItem != NULL) && (IsThisADirectory(Fileinfo.nextListItem->szFilename)) )
-	{
-			Fileinfo.nextListItem = ExpandDirectory(& Fileinfo);
-	}
-	g_fileinfo_list_first_item = Fileinfo.nextListItem;
-
-    // remove all files at the start of the list whose extension matches the exclude string
-	while((g_fileinfo_list_first_item != NULL) && CheckExcludeStringMatch(g_fileinfo_list_first_item->szFilename)) {
-		pFileinfo = g_fileinfo_list_first_item;
-		g_fileinfo_list_first_item = g_fileinfo_list_first_item->nextListItem;
-		free(pFileinfo);
-	}
-	
-	if(g_fileinfo_list_first_item != NULL){
-		pFileinfo = g_fileinfo_list_first_item->nextListItem;
-		pFileinfo_prev = g_fileinfo_list_first_item;
-		while(pFileinfo != NULL)
-		{
-			if(IsThisADirectory(pFileinfo->szFilename))
-				pFileinfo = ExpandDirectory(pFileinfo_prev);
-			else{
-                // check to see if the current file-extension matches our exclude string
-                // if so, we remove it from the list
-				if(CheckExcludeStringMatch(pFileinfo->szFilename)) {
-					pFileinfo_prev->nextListItem = pFileinfo->nextListItem;
-					free(pFileinfo);
-					pFileinfo = pFileinfo_prev->nextListItem;
-				} else {
-					pFileinfo_prev = pFileinfo;
-					pFileinfo = pFileinfo->nextListItem;
-				}
-			}
-		}
-	}*/
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();) {
 		if(IsThisADirectory((*it).szFilename))
@@ -544,8 +485,6 @@ VOID ProcessDirectories(lFILEINFO *fileList)
 		}
 	}
 
-
-
 	// restore org. path
 	SetCurrentDirectory(szCurrentPath);
 
@@ -554,38 +493,26 @@ VOID ProcessDirectories(lFILEINFO *fileList)
 
 
 /*****************************************************************************
-FILEINFO * ExpandDirectory(FILEINFO * pFileinfo_prev)
-	pFileinfo_prev : (IN/OUT) pFileinfo_prev->nextListItem is expanded
+list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it)
+	fList : (IN/OUT) pointer to the FILEINFO list we are working on
+	it	  : (IN)	 iterator to the directory item we want to expand
 
 Return Value:
-pFileinfo_prev->nextListItem is expanded; that means is replaced with the files
+"it" is expanded; that means is replaced with the files
 (or subdirectories) in that directory (if there are any). Because it is deleted we
-return the pointer to the first item that replaced it, so that the calling function
+return an iterator to the first item that replaced it, so that the calling function
 knows where to go on in the list
 
 Notes:
-- expands pFileinfo_prev->nextListItem
-- this pFileinfo_prev stuff is necessary or something similar complicated
-  because list expanding just has several special cases that have to be handeled.
-  I hope I (or someone else) will make this list expansion stuff more elegant
-  some day
+- expands the item at "it"
 *****************************************************************************/
 list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it)
 {
-	//FILEINFO * pFileinfo;
-	//FILEINFO * pFileinfo_org_next;
-	//FILEINFO * pFileinfo_tmp_first, * pFileinfo_tmp, * pFileinfo_tmp_last;
 	HANDLE hFileSearch;
 	WIN32_FIND_DATA  findFileData;
 	FILEINFO fileinfoTmp={0};
 	fileinfoTmp.parentList=(*it).parentList;
-	//list<FILEINFO>::iterator itNext;
 	UINT insertCount=0;
-
-	//pFileinfo = pFileinfo_prev->nextListItem;
-
-	// save the original nextListItem, because we are expanding in the middle of a list
-	//pFileinfo_org_next = pFileinfo->nextListItem;
 
 	if(!SetCurrentDirectory((*it).szFilename)){
 		it = fList->erase(it);
@@ -599,17 +526,12 @@ list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::i
 		return it;
 	}
 
-	// we create a new small list; we integrate it later in the main list
-	/*bWeFoundSomethingUsable = FALSE;
-	pFileinfo_tmp_first = AllocateFileinfo();
-	pFileinfo_tmp_first->nextListItem = NULL;
-	pFileinfo_tmp = pFileinfo_tmp_first;*/
 	do{
 		if( (lstrcmpi(findFileData.cFileName, TEXT(".")) != 0) && (lstrcmpi(findFileData.cFileName, TEXT("..")) != 0) ){
 			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
 			GetFullPathName(findFileData.cFileName, MAX_PATH, fileinfoTmp.szFilename, NULL);
 			
-			// now create a new item and remember the last valid list member
+			// now create a new item amd increase the count of inserted items
 			if(IsThisADirectory(fileinfoTmp.szFilename) || !CheckExcludeStringMatch(fileinfoTmp.szFilename)) {
 				fList->insert(it,fileinfoTmp);
 				insertCount++;
@@ -618,35 +540,19 @@ list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::i
 
 	}while(FindNextFile(hFileSearch, & findFileData));
 
+	//we want to return an iterator to the first inserted item, so we hop back the number of inserted items
 	for(UINT i=0;i<insertCount;i++)
 		it--;
-
-	// we created one too much, so we delete it now
-	//free(pFileinfo_tmp);
 
 	// stop the search
 	FindClose(hFileSearch);
 
-	/*if(!bWeFoundSomethingUsable){
-		free(pFileinfo);
-		pFileinfo_prev->nextListItem = pFileinfo_org_next;
-		return pFileinfo_prev->nextListItem;
-	}
-	else{
-		// we found something, so we have a small local list, that needs to be integrated into the global one;
-		// we don't need pFileinfo anymore, because it is expanded and is replaced with the expanded small list
-		free(pFileinfo);
-		pFileinfo_prev->nextListItem = pFileinfo_tmp_first;
-		pFileinfo_tmp_last->nextListItem = pFileinfo_org_next;
-
-		return pFileinfo_prev->nextListItem;
-	}*/
 	return it;
 }
 
 /*****************************************************************************
-VOID ProcessFileProperties(QWORD * pqwFilesizeSum)
-	pqwFilesizeSum	: (OUT) sum of filesizes is stored here
+VOID ProcessFileProperties(lFILEINFO *fileList)
+	fileList	: (IN/OUT) pointer to the job structure whose files are to be processed
 
 Return Value:
 returns nothing
@@ -668,27 +574,6 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 
 	fileList->qwFilesizeSum = 0;
 
-	/*pFileinfo = g_fileinfo_list_first_item;
-	while(pFileinfo != NULL){
-		GetLongPathName(pFileinfo->szFilename, pFileinfo->szFilename, MAX_PATH);
-		pFileinfo->szFilenameShort = pFileinfo->szFilename + stString;
-		if(!IsApplDefError(pFileinfo->dwError)){
-			pFileinfo->dwError = GetFileSizeQW(pFileinfo->szFilename, &(pFileinfo->qwFilesize));
-			if (pFileinfo->dwError == NO_ERROR){
-				(*pqwFilesizeSum) += pFileinfo->qwFilesize;
-				if(g_program_status.uiRapidCrcMode == MODE_NORMAL)
-					if(GetCrcFromFilename(pFileinfo->szFilenameShort, & pFileinfo->dwCrc32Found))
-						pFileinfo->bCrcFound = TRUE;
-					else
-						if(GetCrcFromStream(pFileinfo->szFilename, & pFileinfo->dwCrc32Found))
-							pFileinfo->bCrcFound = TRUE;
-						else
-							pFileinfo->bCrcFound = FALSE;
-			}
-		}
-
-		pFileinfo = pFileinfo->nextListItem;
-	}*/
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
 		GetLongPathName((*it).szFilename, (*it).szFilename, MAX_PATH);
 		(*it).szFilenameShort = (*it).szFilename + stString;
@@ -713,7 +598,8 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 }
 
 /*****************************************************************************
-VOID MakesPathsAbsolute()
+VOID MakePathsAbsolute(lFILEINFO *fileList)
+	fileList	: (IN/OUT) pointer to the job structure whose files are to be processed
 
 Return Value:
 returns nothing
@@ -722,18 +608,10 @@ Notes:
 - walks through the list and makes sure that all paths are absolute.
 - it distinguishes between paths like c:\..., \... and ...
 *****************************************************************************/
-VOID MakesPathsAbsolute(lFILEINFO *fileList)
+VOID MakePathsAbsolute(lFILEINFO *fileList)
 {
-	//FILEINFO * pFileinfo;
 	TCHAR szFilenameTemp[MAX_PATH];
 
-	/*pFileinfo = g_fileinfo_list_first_item;
-	while(pFileinfo != NULL){
-		StringCchCopy(szFilenameTemp, MAX_PATH, pFileinfo->szFilename);
-		ReplaceChar(szFilenameTemp, MAX_PATH, TEXT('/'), TEXT('\\'));
-		GetFullPathName(szFilenameTemp, MAX_PATH, pFileinfo->szFilename, NULL);
-		pFileinfo = pFileinfo->nextListItem;
-	}*/
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
 		StringCchCopy(szFilenameTemp, MAX_PATH, (*it).szFilename);
 		ReplaceChar(szFilenameTemp, MAX_PATH, TEXT('/'), TEXT('\\'));
@@ -744,42 +622,48 @@ VOID MakesPathsAbsolute(lFILEINFO *fileList)
 }
 
 /*****************************************************************************
-static VOID SetBasePath()
+static VOID SetBasePath(lFILEINFO *fileList)
+	fileList	: (IN/OUT) pointer to the job structure whose files are to be processed
 
 Return Value:
 returns nothing
 
 Notes:
-- if choose a basepath and if it is a common prefix for all e
+- sets fileLists g_szBasePath based on the first file
+- if this is not a prefix (usually only via cmd line), we set g_szBasePath to nothing
 *****************************************************************************/
 static VOID SetBasePath(lFILEINFO *fileList)
 {
 	BOOL bIsPraefixForAll;
-	//FILEINFO * pFileinfo;
 
 	StringCchCopy(fileList->g_szBasePath, MAX_PATH, fileList->fInfos.front().szFilename);
 	ReduceToPath(fileList->g_szBasePath);
 
-	GetLongPathName(g_szBasePath, g_szBasePath, MAX_PATH);
+	GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH);
 
 	bIsPraefixForAll = TRUE;
-	/*pFileinfo = g_fileinfo_list_first_item->nextListItem;	//g_fileinfo_list_first_item is of course
-	while(pFileinfo != NULL){
-		if(!IsStringPrefix(g_szBasePath, pFileinfo->szFilename))
-			bIsPraefixForAll = FALSE;
-		pFileinfo = pFileinfo->nextListItem;
-	}*/
+
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
 		if(!IsStringPrefix(fileList->g_szBasePath, (*it).szFilename))
 			bIsPraefixForAll = FALSE;
 	}
 
 	if(!bIsPraefixForAll || !IsThisADirectory(fileList->g_szBasePath))
-		StringCchCopy(g_szBasePath, MAX_PATH, TEXT(""));
+		StringCchCopy(fileList->g_szBasePath, MAX_PATH, TEXT(""));
 
 	return;
 }
 
+/*****************************************************************************
+UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
+	fileInfoList	: (IN/OUT) pointer to a list of FILEINFOs
+
+Return Value:
+returns the count of characters that are equal for all items' szFilename
+
+Notes:
+- iterates fileInfoList and checks for a common prefix
+*****************************************************************************/
 UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
 {
 	list<FILEINFO*>::iterator itLast;

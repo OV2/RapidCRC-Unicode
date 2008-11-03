@@ -100,7 +100,7 @@ using namespace std;
 #define MODE_SFV				1
 #define MODE_MD5				2
 
-//CMDLINE Options
+//CMDLINE Options for the shell extension
 #define CMD_NORMAL			0
 #define CMD_SFV				1
 #define CMD_MD5				2
@@ -131,6 +131,7 @@ using namespace std;
 #define ID_PROGRESS_FILE			9
 #define ID_PROGRESS_GLOBAL			10
 
+//the ids here are used to initialize the window order, which equals the tab order
 #define ID_FIRST_TAB_CONTROL		11
 #define ID_BTN_EXIT					2		// 2==IDCANCEL
 #define ID_LISTVIEW					11
@@ -302,11 +303,10 @@ typedef struct{
 //****** global variables *******
 
 extern HINSTANCE g_hInstance;
-extern FILEINFO * g_fileinfo_list_first_item;
-extern TCHAR g_szBasePath[MAX_PATH];
+//extern FILEINFO * g_fileinfo_list_first_item;
+//extern TCHAR g_szBasePath[MAX_PATH];
 extern PROGRAM_OPTIONS g_program_options;
-//extern PROGRAM_STATUS g_program_status;
-extern BOOL gComCtrlv6;
+extern BOOL gComCtrlv6;							//are the common controls v6 available? (os>=winxp)
 
 //****** function prototypes *******
 
@@ -396,7 +396,7 @@ VOID ProcessDirectories(lFILEINFO *fileList);
 //FILEINFO * ExpandDirectory(FILEINFO * pFileinfo_prev);
 list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it);
 VOID ProcessFileProperties(lFILEINFO *fileList);
-VOID MakesPathsAbsolute(lFILEINFO *fileList);
+VOID MakePathsAbsolute(lFILEINFO *fileList);
 UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList);
 
 //pipe communication (pipecomm.cpp)

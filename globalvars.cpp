@@ -1,8 +1,5 @@
 #include "globals.h"
 
 HINSTANCE g_hInstance;
-FILEINFO * g_fileinfo_list_first_item=NULL;
-TCHAR g_szBasePath[MAX_PATH];
 PROGRAM_OPTIONS g_program_options;
-//PROGRAM_STATUS g_program_status = {MODE_NORMAL, FALSE, FALSE, FALSE};
-BOOL gComCtrlv6=CheckOsVersion(5,1);
+BOOL gComCtrlv6=CheckOsVersion(5,1);	//are the common controls v6 available? (os>=winxp)

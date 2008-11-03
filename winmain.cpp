@@ -28,7 +28,7 @@ INT WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInstance, LPSTR szCmdLine, i
 	iCmdShow		: (IN) the state the user wants the window to be in
 
 Return Value:
-returns return value of the main window
+returns value of the main window
 *****************************************************************************/
 INT WINAPI WinMain (HINSTANCE hInst, HINSTANCE /*hPrevInstance*/, LPSTR /*szCmdLine*/, int iCmdShow)
 {

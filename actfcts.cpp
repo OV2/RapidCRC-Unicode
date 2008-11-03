@@ -28,6 +28,17 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 static BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult);
 static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode);
 
+/*****************************************************************************
+VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+	arrHwnd : (IN) window handle array
+
+Return Value:
+	returns nothing
+
+Notes:
+	- wrapper for the three parameter version
+	- calls FillFinalList to get its list
+*****************************************************************************/
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 {
 	list<FILEINFO*> finalList;
@@ -45,15 +56,17 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 }
 
 /*****************************************************************************
-VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
-	arrHwnd : (IN) window handle array
+VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList)
+	arrHwnd		: (IN) window handle array
+	noPrompt	: (IN) determines if confirmation prompt is displayed
+	finalList	: (IN) pointer to list of fileinfo pointers on which the action is to be performed
 
 Return Value:
 	returns nothing
 
 Notes:
-	- Adds the CRC value to the file as a secondary NTFS stream (:CRC32)
-	- Action depends on if files are selected or not
+	- Adds the CRC value to the files as a secondary NTFS stream (:CRC32)
+	- noPrompt is used to suppress the prompt when called by the shell extension
 *****************************************************************************/
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList)
 {
@@ -130,6 +143,17 @@ static BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult) {
 	return TRUE;
 }
 
+/*****************************************************************************
+VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+	arrHwnd : (IN) window handle array
+
+Return Value:
+	returns nothing
+
+Notes:
+	- wrapper for the three parameter version
+	- calls FillFinalList to get its list
+*****************************************************************************/
 VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 {
 	list<FILEINFO*> finalList;
@@ -146,15 +170,17 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 }
 
 /*****************************************************************************
-VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS])
-	arrHwnd : (IN) window handle array
+VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList)
+	arrHwnd		: (IN) window handle array
+	noPrompt	: (IN) determines if confirmation prompt is displayed
+	finalList	: (IN) pointer to list of fileinfo pointers on which the action is to be performed
 
 Return Value:
 	returns nothing
 
 Notes:
 	- Renames the files in the list
-	- Action depends on if files are selected or not
+	- noPrompt is used to suppress the prompt when called by the shell extension
 *****************************************************************************/
 VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList)
 {
@@ -203,17 +229,16 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list
 }
 
 /*****************************************************************************
-BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], QWORD * pqwFilesizeSum, SHOWRESULT_PARAMS * pshowresult_params)
+BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params)
 	arrHwnd				: (IN) window handle array
-	pqwFilesizeSum		: (OUT) Sum of filesizes of the files selected via dialog
 	pshowresult_params	: (IN/OUT) struct for ShowResult
 
 Return Value:
 returns FALSE if the dialog was canceled. Otherwise TRUE
 
 Notes:
-- Displays a open filename dialog, generates a new list from the selected files
-  and calls PostProcessList
+- Displays a open filename dialog, generates a new list from the selected files,
+  calls PostProcessList and adds the generated list to the SyncQueue
 *****************************************************************************/
 BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params)
 {
@@ -252,15 +277,13 @@ BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresu
 	}
 	SetCurrentDirectory(szCurrentPath);
 
-
+	//we clear all lists if not in queue mode
 	if(!g_program_options.bEnableQueue) {
 		ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
 		SyncQueue.clearList();
 	}
 
-	//DeallocateFileinfoMemory(arrHwnd[ID_LISTVIEW]);
-	//g_fileinfo_list_first_item = AllocateFileinfo();
-
+	//new joblist that will be added to the queue
 	pFInfoList = new lFILEINFO;
 	fileinfoTmp.parentList = pFInfoList;
 
@@ -284,15 +307,10 @@ BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresu
 			StringCchLength(szBufferPart, MAX_PATH, & stStringLength);
 			szBufferPart += stStringLength + 1;
 		}
-
-		//we created one Fileinfo too much
-		//free(pFileinfo_previtem->nextListItem);
-		//pFileinfo_previtem->nextListItem = NULL; // to mark the end of our list
 	}
 	else{ // only one file is selected
 		StringCchCopy(fileinfoTmp.szFilename, MAX_PATH, szBuffer);
 		pFInfoList->fInfos.push_back(fileinfoTmp);
-		//g_fileinfo_list_first_item->nextListItem = NULL;
 	}
 
 	// we don't need the buffer anymore
@@ -307,6 +325,19 @@ BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresu
 	return TRUE;
 }
 
+/*****************************************************************************
+DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
+	arrHwnd		: (IN) array with window handles
+	uiMode		: (IN) create MD5 or SFV files
+
+Return Value:
+	returns NOERROR or GetLastError()
+
+Notes:
+	- wrapper for the three parameter version
+	- checks if selected files have the necessary info
+	- calls FillFinalList to get its list
+*****************************************************************************/
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 {
 	list<FILEINFO*> finalList;
@@ -327,9 +358,10 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 }
 
 /*****************************************************************************
-DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
+DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,list<FILEINFO*> *finalList)
 	arrHwnd		: (IN) array with window handles
 	uiMode		: (IN) create MD5 or SFV files
+	finalList	: (IN) pointer to list of fileinfo pointers on which the action is to be performed
 
 Return Value:
 	returns NOERROR or GetLastError()
@@ -381,10 +413,9 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
 }
 
 /*****************************************************************************
-static DWORD CreateChecksumFiles_OnePerFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, CONST UINT uiNumSelected)
-	arrHwnd			: (IN) array with window handles
+static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *finalList)
 	uiMode			: (IN) create MD5 or SFV files
-	uiNumSelected	: (IN) CreateChecksumFiles already counted the number of item selected in list view
+	finalList		: (IN) pointer to list of fileinfo pointers on which the action is to be performed
 
 Return Value:
 returns NOERROR or GetLastError()
@@ -408,55 +439,14 @@ static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *
 				return dwResult;
 		}
 	}
-
-	/*if(uiNumSelected == 0){
-		doneList = SyncQueue.getDoneList();
-		for(list<lFILEINFO*>::iterator it=doneList->begin();it!=doneList->end();it++) {
-			for(list<FILEINFO>::iterator fInfoIt=(*it)->fInfos.begin();fInfoIt!=(*it)->fInfos.end();fInfoIt++) {
-				pFileinfo = &(*fInfoIt);
-				if( pFileinfo->dwError == NO_ERROR ){
-					if(uiMode == MODE_MD5)
-						dwResult = WriteSingleLineMd5File(pFileinfo);
-					else
-						dwResult = WriteSingleLineSfvFile(pFileinfo);
-					if(dwResult != NOERROR)
-						return dwResult;
-				}
-			}
-		}
-		SyncQueue.releaseDoneList();
-	}
-	else{
-		lvitem.iSubItem = 0;
-		lvitem.mask = LVIF_PARAM | LVIF_STATE;
-		lvitem.stateMask = LVIS_SELECTED;
-		for(INT i = 0; i < ListView_GetItemCount(arrHwnd[ID_LISTVIEW]); ++i){
-			lvitem.iItem = i;
-			ListView_GetItem(arrHwnd[ID_LISTVIEW], & lvitem);
-			if( lvitem.state & LVIS_SELECTED ){
-				pFileinfo = (FILEINFO *) lvitem.lParam;
-				if( pFileinfo->dwError == NO_ERROR ){
-					if(uiMode == MODE_MD5)
-						dwResult = WriteSingleLineMd5File(pFileinfo);
-					else
-						dwResult = WriteSingleLineSfvFile(pFileinfo);
-					if(dwResult != NOERROR)
-						return dwResult;
-				}
-			}
-		}
-	}*/
-
 	return NOERROR;
 }
 
 /*****************************************************************************
-static DWORD CreateChecksumFiles_OnePerDir(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
-									CONST UINT uiNumSelected, CONST TCHAR szChkSumFilename[MAX_PATH])
-	arrHwnd			: (IN) array with window handles
+static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSumFilename[MAX_PATH], list<FILEINFO*> *finalList)
 	uiMode			: (IN) create MD5 or SFV files
-	uiNumSelected	: (IN) CreateChecksumFiles already counted the number of item selected in list view
 	szChkSumFilename: (IN) filename without path
+	finalList		: (IN) pointer to list of fileinfo pointers on which the action is to be performed
 
 Return Value:
 returns NOERROR or GetLastError()
@@ -524,16 +514,14 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 	}
 	CloseHandle(hFile);
 
-	//free(arrFileinfo);
-
 	return NOERROR;
 }
 
 /*****************************************************************************
-static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, CONST UINT uiNumSelected)
+static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList)
 	arrHwnd			: (IN) array with window handles
 	uiMode			: (IN) create MD5 or SFV files
-	uiNumSelected	: (IN) CreateChecksumFiles already counted the number of item selected in list view
+	finalList		: (IN) pointer to list of fileinfo pointers on which the action is to be performed
 
 Return Value:
 returns NOERROR or GetLastError()
@@ -547,7 +535,6 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	TCHAR szCurrentPath[MAX_PATH];
 	TCHAR szFileOut[MAX_PATH] = TEXT("");
 	HANDLE hFile;
-	//FILEINFO * pFileinfo;
 	UINT uiSameCharCount;
 	OPENFILENAME ofn;
 	DWORD dwResult;
@@ -556,7 +543,7 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	DWORD NumberOfBytesWritten;
 #endif
 
-	StringCchCopy(szFileOut, MAX_PATH, GetFilenameWithoutPathPointer(g_szBasePath) );
+	StringCchCopy(szFileOut, MAX_PATH, GetFilenameWithoutPathPointer(finalList->front()->parentList->g_szBasePath) );
 
 	ZeroMemory(& ofn, sizeof (OPENFILENAME));
 	ofn.lStructSize       = sizeof (OPENFILENAME) ;
@@ -564,7 +551,7 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	ofn.lpstrFilter       = (uiMode == MODE_MD5) ? TEXT(".md5 files\0*.md5\0All files\0*.*\0\0") : TEXT(".sfv files\0*.sfv\0All files\0*.*\0\0") ;
 	ofn.lpstrFile         = szFileOut ;
 	ofn.nMaxFile          = MAX_PATH ;
-	ofn.lpstrInitialDir   = g_szBasePath ;
+	ofn.lpstrInitialDir   = finalList->front()->parentList->g_szBasePath ;
 	ofn.lpstrTitle        = (uiMode == MODE_MD5) ? TEXT("Please choose a filename for the .md5 file") : TEXT("Please choose a filename for the .sfv file") ;
 	ofn.Flags             = OFN_OVERWRITEPROMPT | OFN_EXPLORER ;
 	ofn.lpstrDefExt       = (uiMode == MODE_MD5) ? TEXT("md5") :  TEXT("sfv");
@@ -621,50 +608,24 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 		}
 	}
 
-	/*if(uiNumSelected == 0){
-		pFileinfo = g_fileinfo_list_first_item;
-		while(pFileinfo != NULL){
-			if( pFileinfo->dwError == NO_ERROR ){
-				if(uiMode == MODE_MD5)
-					dwResult = WriteMd5Line(hFile, pFileinfo->szFilenameShort, pFileinfo->abMd5Result);
-				else
-					dwResult = WriteSfvLine(hFile, pFileinfo->szFilenameShort, pFileinfo->dwCrc32Result);
-				if(dwResult != NOERROR){
-					CloseHandle(hFile);
-					return dwResult;
-				}
-			}
-			pFileinfo = pFileinfo->nextListItem;
-		}
-	}
-	else{
-		lvitem.iSubItem = 0;
-		lvitem.mask = LVIF_PARAM | LVIF_STATE;
-		lvitem.stateMask = LVIS_SELECTED;
-		for(INT i = 0; i < ListView_GetItemCount(arrHwnd[ID_LISTVIEW]); ++i){
-			lvitem.iItem = i;
-			ListView_GetItem(arrHwnd[ID_LISTVIEW], & lvitem);
-			if( lvitem.state & LVIS_SELECTED ){
-				pFileinfo = (FILEINFO *) lvitem.lParam;
-				if( pFileinfo->dwError == NO_ERROR ){
-					if(uiMode == MODE_MD5)
-						dwResult = WriteMd5Line(hFile, pFileinfo->szFilenameShort, pFileinfo->abMd5Result);
-					else
-						dwResult = WriteSfvLine(hFile, pFileinfo->szFilenameShort, pFileinfo->dwCrc32Result);
-					if(dwResult != NOERROR){
-						CloseHandle(hFile);
-						return dwResult;
-					}
-				}
-			}
-		}
-	}*/
-
 	CloseHandle(hFile);
 
 	return NOERROR;
 }
 
+/*****************************************************************************
+VOID FillFinalList(CONST HWND hListView, list<FILEINFO*> *finalList,CONST UINT uiNumSelected)
+	arrHwnd			: (IN) array with window handles
+	finalList		: (IN/OUT) pointer to list of fileinfo pointers to be filled by this function
+
+Return Value:
+	returns nothing
+
+Notes:
+	- determines if something is selected in the listview, and fills finalList with the FILEINFOs
+	  of the selected files
+    - if nothing is selected finalList becomes a flat list of alle FILEINFOs in the doneList
+*****************************************************************************/
 VOID FillFinalList(CONST HWND hListView, list<FILEINFO*> *finalList,CONST UINT uiNumSelected)
 {
 	LVITEM lvitem={0};
@@ -690,6 +651,19 @@ VOID FillFinalList(CONST HWND hListView, list<FILEINFO*> *finalList,CONST UINT u
 	}
 }
 
+/*****************************************************************************
+static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode)
+	arrHwnd			: (IN) array with window handles
+	uiMode			: (IN) create MD5 or SFV files
+
+Return Value:
+	returns true if rehash was/is necessary
+
+Notes:
+	- checks if the necessary hash has been calculated for all selected files
+    - if hashes are missing the user is asked if he wants a rehash of those lists that
+	  are missing the hashes
+*****************************************************************************/
 static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode)
 {
 	LVITEM lvitem={0};
