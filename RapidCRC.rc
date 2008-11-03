@@ -158,12 +158,12 @@ BEGIN
         BLOCK "040704b0"
         BEGIN
             VALUE "FileDescription", "RapidCRC Unicode"
-            VALUE "FileVersion", "0.1.6"
+            VALUE "FileVersion", "0.2.0"
             VALUE "InternalName", "RapidCRC"
             VALUE "LegalCopyright", "Copyright (C) 2004 Sebastian Ewert"
             VALUE "OriginalFilename", "RapidCRC.exe"
             VALUE "ProductName", "RapidCRC Unicode"
-            VALUE "ProductVersion", "0.1.6"
+            VALUE "ProductVersion", "0.2.0"
         END
     END
     BLOCK "VarFileInfo"

@@ -246,14 +246,14 @@ void CreateListViewPopupMenu(HMENU *menu)
 *****************************************************************************/
 void CreateListViewPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
-	HMENU hSubMenu = CreatePopupMenu();
-	InsertMenu(hSubMenu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K_LINK,TEXT("Copy ED2K Link to Clipboard"));
-	InsertMenu(hSubMenu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
-	InsertMenu(hSubMenu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K,TEXT("Copy ED2K to Clipboard"));
-	InsertMenu(hSubMenu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_MD5,TEXT("Copy MD5 to Clipboard"));
-	InsertMenu(hSubMenu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC,TEXT("Copy CRC to Clipboard"));
+	//HMENU hSubMenu = CreatePopupMenu();
+	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K_LINK,TEXT("Copy ED2K Link to Clipboard"));
+	InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
+	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K,TEXT("Copy ED2K to Clipboard"));
+	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_MD5,TEXT("Copy MD5 to Clipboard"));
+	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC,TEXT("Copy CRC to Clipboard"));
 
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_POPUP,(UINT_PTR)hSubMenu,TEXT("Clipboard"));
+	//InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_POPUP,(UINT_PTR)hSubMenu,TEXT("Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_CLEAR_LIST,TEXT("Clear List"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_REMOVE_ITEMS,TEXT("Remove Selected Items"));
