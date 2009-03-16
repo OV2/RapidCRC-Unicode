@@ -375,9 +375,8 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
 	DWORD dwResult;
 	FILECREATION_OPTIONS fco;
 
-	// check if there are any item in our list (without checking an access violation could occur)
 	fco.uiModeSfvOrMd5 = uiMode;
-	fco.uiNumSelected = ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]);
+	fco.uiNumSelected = finalList->size();
 
 	fco.uiCreateFileMode = (uiMode == MODE_MD5) ? g_program_options.uiCreateFileModeMd5 : g_program_options.uiCreateFileModeSfv;
 	if(uiMode == MODE_MD5)
@@ -483,7 +482,7 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 					return GetLastError();
 				}
 #ifdef UNICODE
-                //write the BOM if we are creating a unicode file
+                //write the BOM if we are creating a unicode file (and not in UTF8 mode)
 				if(g_program_options.bCreateUnicodeFiles && g_program_options.iUnicodeSaveType == UTF_16LE) {
                     if(!WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL)) {
 						CloseHandle(hFile);

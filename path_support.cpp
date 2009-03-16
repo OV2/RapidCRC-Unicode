@@ -666,20 +666,31 @@ Notes:
 *****************************************************************************/
 UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
 {
-	list<FILEINFO*>::iterator itLast;
+	list<FILEINFO*>::iterator itFirst;
 	UINT countSameChars=MAXUINT;;
+	TCHAR *firstBasePathPointer;
+	bool sameBaseDir = true;
 
 	if(fileInfoList->empty())
 		return 0;
 
-	for(list<FILEINFO*>::iterator it=fileInfoList->begin(),itLast=it++;it!=fileInfoList->end();it++) {
+	firstBasePathPointer = fileInfoList->front()->parentList->g_szBasePath;
+
+	for(list<FILEINFO*>::iterator it=fileInfoList->begin(),itFirst=it++;it!=fileInfoList->end();it++) {
 		UINT i=0;
-		while(i<countSameChars && (*it)->szFilename[i]!=TEXT('\0') && (*itLast)->szFilename[i]!=TEXT('\0')) {
-			if((*it)->szFilename[i]!=(*itLast)->szFilename[i])
+		if(sameBaseDir && lstrcmp(firstBasePathPointer,(*it)->parentList->g_szBasePath))
+			sameBaseDir = false;
+		while(i<countSameChars && (*it)->szFilename[i]!=TEXT('\0') && (*itFirst)->szFilename[i]!=TEXT('\0')) {
+			if((*it)->szFilename[i]!=(*itFirst)->szFilename[i])
 				countSameChars = i;
 			i++;
 		}
 		if(countSameChars<3) return 0;
+	}
+
+	if(sameBaseDir && *firstBasePathPointer != TEXT('\0')) {
+		StringCchLength(firstBasePathPointer,MAX_PATH,&countSameChars);
+		countSameChars++;
 	}
 
 	while( (countSameChars > 0) && (fileInfoList->front()->szFilename[countSameChars - 1] != TEXT('\\')) )
