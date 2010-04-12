@@ -293,13 +293,13 @@ BOOL GetCrcFromStream(TCHAR *szFileName, DWORD * pdwFoundCrc)
 	BOOL bFound;
 	CHAR szCrc[9];
 	TCHAR szCrcUnicode[9];
-	TCHAR szFileIn[MAX_PATH]=TEXT("");
+	TCHAR szFileIn[MAX_PATH+6]=TEXT("");
 	bFound = FALSE;
 	HANDLE hFile;
 	DWORD NumberOfBytesRead;
 
-	StringCchCopy(szFileIn, MAX_PATH, szFileName);
-	StringCchCat(szFileIn, MAX_PATH, TEXT(":CRC32"));
+	StringCchCopy(szFileIn, MAX_PATH+6, szFileName);
+	StringCchCat(szFileIn, MAX_PATH+6, TEXT(":CRC32"));
 	hFile = CreateFile(szFileIn, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
 	if(hFile == INVALID_HANDLE_VALUE) return FALSE;
 	if(!ReadFile(hFile, &szCrc, 8, &NumberOfBytesRead, NULL)) {
@@ -689,7 +689,7 @@ UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
 	}
 
 	if(sameBaseDir && *firstBasePathPointer != TEXT('\0')) {
-		StringCchLength(firstBasePathPointer,MAX_PATH,&countSameChars);
+		StringCchLength(firstBasePathPointer,MAX_PATH,(size_t *)&countSameChars);
 		countSameChars++;
 	}
 

@@ -904,7 +904,7 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 					if(pFileinfo->parentList->uiRapidCrcMode == MODE_SFV)
 						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX  =>  %08LX found in SFV file"), pFileinfo->dwCrc32Result, pFileinfo->dwCrc32Found );
 					else
-						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX  =>  %08LX found in filename"), pFileinfo->dwCrc32Result, pFileinfo->dwCrc32Found );
+						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX  =>  %08LX found in filename/stream"), pFileinfo->dwCrc32Result, pFileinfo->dwCrc32Found );
 					pshowresult_params->bCrcIsWrong = TRUE;
 				}
 				else

@@ -174,7 +174,7 @@ UINT DetermineFileCP(CONST HANDLE hFile) {
     // init COM and use the IMultiLanguage2 interface
     CoInitialize(NULL);
     CoCreateInstance(__uuidof(CMultiLanguage), NULL, CLSCTX_INPROC_SERVER, __uuidof(IMultiLanguage2), (LPVOID *)&ml2);
-    ml2->DetectInputCodepage(MLDETECTCP_8BIT,0,testbuffer,&bufferFillSize,&deInfo,&scores);
+	ml2->DetectInputCodepage(MLDETECTCP_8BIT,0,testbuffer,&bufferFillSize,&deInfo,&scores);
     ml2->Release();
     CoUninitialize();
 

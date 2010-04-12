@@ -563,6 +563,12 @@ DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam)
 	return 0;
 }
 
+#ifdef _WIN64
+extern "C" void __fastcall crcCalc(DWORD *pdwCrc32,DWORD *ptrCrc32Table,BYTE *bufferAsm,DWORD dwBytesReadAsm);
+#else
+extern "C" void crcCalc(DWORD *pdwCrc32,DWORD *ptrCrc32Table,BYTE *bufferAsm,DWORD dwBytesReadAsm);
+#endif
+
 /*****************************************************************************
 DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam)
 	pParam	: (IN/OUT) THREAD_PARAMS_HASHCALC struct pointer special for this thread
@@ -683,7 +689,9 @@ DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam)
 		//		edi - CRC32 table
 		//
 		// assembly part by Brian Friesen
-		__asm
+		crcCalc(pdwCrc32,(DWORD *)&arrdwCrc32Table,bufferAsm,dwBytesReadAsm);
+
+		/*__asm
 		{
 			// Save the esi and edi registers
 			//push esi
@@ -724,7 +732,7 @@ DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam)
 
 			mov eax, pdwCrc32			// Load the pointer to dwCrc32
 			mov [eax], ecx				// Write the result
-		}
+		}*/
 	} while (!(*bFileDone));
 	*result = ~dwCrc32;
 	SetEvent(hEvtThreadReady);
