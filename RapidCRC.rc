@@ -26,46 +26,48 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 // Dialog
 //
 
-IDD_OPTIONS DIALOGEX 0, 0, 223, 309
+IDD_OPTIONS DIALOGEX 0, 0, 223, 318
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Options"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,110,288,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,169,288,50,14
+    DEFPUSHBUTTON   "OK",IDOK,110,297,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,169,297,50,14
     GROUPBOX        "Algorithms",IDC_STATIC,3,2,216,39
     LTEXT           "When not checking SFV/MD5 files calculate:",IDC_STATIC,9,12,140,8
     CONTROL         "CRC32",IDC_CHECK_CRC_DEFAULT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,24,38,10
     CONTROL         "MD5",IDC_CHECK_MD5_DEFAULT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,48,24,29,10
-    GROUPBOX        "General",IDC_STATIC,3,44,216,78
+    GROUPBOX        "General",IDC_STATIC,3,44,216,89
     CONTROL         "Display calculated CRC in ListView",IDC_CHECK_DISPLAY_CRC_IN_LIST,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,54,123,10
     CONTROL         "Display calculated MD5 in ListView",IDC_CHECK_DISPLAY_MD5_IN_LIST,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,65,123,10
     CONTROL         "Sort filenames on load",IDC_CHECK_SORT_LIST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,87,87,10
-    GROUPBOX        "File Creation",IDC_STATIC,4,126,215,44
+    GROUPBOX        "File Creation",IDC_STATIC,4,135,215,44
     CONTROL         "Create WinSFV-compatible SFV files",IDC_CHECK_WINSFV_COMP,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,135,129,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,144,129,10
     CONTROL         "Create Unix style SFV/MD5 files",IDC_CHECK_CREATE_UNIX_STYLE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,145,117,10
-    GROUPBOX        "How to put the CRC into the filename",IDC_STATIC,3,216,216,69
-    EDITTEXT        IDC_EDIT_FILENAME_PATTERN,8,241,203,14,ES_AUTOHSCROLL
-    LTEXT           "Available variables: %FILENAME, %FILEEXT, %CRC",IDC_STATIC,8,228,169,8
-    LTEXT           "Example:",IDC_STATIC,10,260,30,8
-    LTEXT           "C:\\MyFile.txt =>",IDC_STATIC,9,270,58,8
-    LTEXT           "",IDC_STATIC_FILENAME_EXAMPLE,67,270,147,8
-    PUSHBUTTON      "Default",IDC_BTN_DEFAULT,7,288,50,14
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,154,117,10
+    GROUPBOX        "How to put the CRC into the filename",IDC_STATIC,3,225,216,69
+    EDITTEXT        IDC_EDIT_FILENAME_PATTERN,8,250,203,14,ES_AUTOHSCROLL
+    LTEXT           "Available variables: %FILENAME, %FILEEXT, %CRC",IDC_STATIC,8,237,169,8
+    LTEXT           "Example:",IDC_STATIC,10,269,30,8
+    LTEXT           "C:\\MyFile.txt =>",IDC_STATIC,9,279,58,8
+    LTEXT           "",IDC_STATIC_FILENAME_EXAMPLE,67,279,147,8
+    PUSHBUTTON      "Default",IDC_BTN_DEFAULT,7,297,50,14
     CONTROL         "Create Unicode Files",IDC_CHECK_CREATE_UNICODE_FILES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,156,106,8
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,165,106,8
     CONTROL         "Auto-Scroll ListView",IDC_CHECK_AUTO_SCROLL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,98,78,10
-    GROUPBOX        "Exclude the following Extensions",IDC_STATIC,4,172,215,39
-    EDITTEXT        IDC_EDIT_EXCLUDE_LIST,8,193,203,14,ES_AUTOHSCROLL
-    LTEXT           "Separate extension with "";""",IDC_STATIC,8,182,89,8
+    GROUPBOX        "Exclude the following Extensions",IDC_STATIC,4,181,215,39
+    EDITTEXT        IDC_EDIT_EXCLUDE_LIST,8,202,203,14,ES_AUTOHSCROLL
+    LTEXT           "Separate extension with "";""",IDC_STATIC,8,191,89,8
     CONTROL         "ED2K",IDC_CHECK_ED2K_DEFAULT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,81,24,33,10
     CONTROL         "Display calculated ED2K in ListView",IDC_CHECK_DISPLAY_ED2K_IN_LIST,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,76,126,10
-    COMBOBOX        IDC_UNICODE_TYPE,128,155,81,54,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_UNICODE_TYPE,128,164,81,54,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Enable Job Queueing",IDC_ENABLE_QUEUE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,109,83,10
+    CONTROL         "Default to UTF-8 when opening",IDC_DEFAULT_OPEN_UTF8,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,120,116,10
 END
 
 IDD_DLG_FILE_CREATION DIALOGEX 0, 0, 251, 121
@@ -99,7 +101,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 216
         TOPMARGIN, 7
-        BOTTOMMARGIN, 302
+        BOTTOMMARGIN, 311
     END
 
     IDD_DLG_FILE_CREATION, DIALOG
@@ -141,8 +143,8 @@ IDI_ICON_MODERN_OK2     ICON                    "icons\\ok_green.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,1,6,0
- PRODUCTVERSION 0,1,6,0
+ FILEVERSION 0,2,1,0
+ PRODUCTVERSION 0,2,1,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -158,12 +160,12 @@ BEGIN
         BLOCK "040704b0"
         BEGIN
             VALUE "FileDescription", "RapidCRC Unicode"
-            VALUE "FileVersion", "0.2.0"
+            VALUE "FileVersion", "0.2.1"
             VALUE "InternalName", "RapidCRC"
             VALUE "LegalCopyright", "Copyright (C) 2004 Sebastian Ewert"
             VALUE "OriginalFilename", "RapidCRC.exe"
             VALUE "ProductName", "RapidCRC Unicode"
-            VALUE "ProductVersion", "0.2.0"
+            VALUE "ProductVersion", "0.2.1"
         END
     END
     BLOCK "VarFileInfo"

@@ -21,7 +21,12 @@
 #include "globals.h"
 #include <process.h>
 #include <commctrl.h>
+#ifdef _WIN64
+#include "ed2k_hash_cryptapi.h"
+#else
 #include "ed2k_hash.h"
+#endif
+#include "md5_ossl.h"
 #include "CSyncQueue.h"
 
 // used in UINT __stdcall ThreadProc_Calc(VOID * pParam)

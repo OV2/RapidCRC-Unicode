@@ -1135,6 +1135,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 	CheckDlgButton(hDlg, IDC_CHECK_CREATE_UNICODE_FILES, pprogram_options->bCreateUnicodeFiles ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_MD5_IN_LIST, pprogram_options->bDisplayMd5InListView ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_ENABLE_QUEUE, pprogram_options->bEnableQueue ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(hDlg, IDC_DEFAULT_OPEN_UTF8, pprogram_options->bDefaultOpenUTF8 ? BST_CHECKED : BST_UNCHECKED);
 
     ComboBox_SetCurSel(GetDlgItem(hDlg,IDC_UNICODE_TYPE),pprogram_options->iUnicodeSaveType);
 	

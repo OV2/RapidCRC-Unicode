@@ -38,6 +38,8 @@
 #define IDC_CHECK_CRC_DEFAULT           1031
 #define IDC_CHECK_ED2K_DEFAULT          1032
 #define IDC_RADIO_ONE_PER_FILE          1033
+#define IDC_ENABLE_QUEUE2               1033
+#define IDC_DEFAULT_OPEN_UTF8           1033
 #define IDC_RADIO_ONE_PER_DIR           1034
 #define IDC_RADIO_ONE_FILE              1035
 #define IDC_STATIC_EXPLANATION          1036

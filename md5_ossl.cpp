@@ -1,9 +1,6 @@
-
-
 #include <stdio.h>
-#include "globals.h"	// includes correct md5_ossl.h if USE_MD5_OSSL is defined
-
-#if defined(USE_MD5_OSSL)
+#include "globals.h"
+#include "md5_ossl.h"
 
 #define MD5_LONG_LOG2 2 /*^=log2(sizeof(MD5_LONG)) = log2(4) = 2;  default to 32 bits */
 
@@ -220,5 +217,3 @@ void MD5_Init(MD5_CTX *c)
 	c->Nh=0;
 	c->num=0;
 }
-
-#endif

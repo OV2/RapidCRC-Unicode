@@ -169,7 +169,7 @@ using namespace std;
 
 //****** custom datatypes *******
 
-enum UNICODE_TYPE {UTF_16LE, UTF_8};
+enum UNICODE_TYPE {NO_BOM = -1, UTF_16LE, UTF_8, UTF_8_BOM};
 typedef unsigned __int64 QWORD, *LPQWORD;
 
 //****** some macros *******
@@ -284,6 +284,7 @@ typedef struct{
 	UINT			uiWndLeft;
 	UINT			uiWndTop;
 	BOOL			bEnableQueue;
+	BOOL			bDefaultOpenUTF8;
 }PROGRAM_OPTIONS;
 
 typedef struct{
@@ -356,12 +357,12 @@ VOID ClearAllItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshow
 BOOL IsLegalHexSymbol(CONST TCHAR tcChar);
 DWORD HexToDword(CONST TCHAR * szHex, UINT uiStringSize);
 BOOL GetVersionString(TCHAR *buffer,CONST int buflen);
-BOOL IsUnicodeFile(CONST HANDLE hFile);
+UNICODE_TYPE CheckForBOM(CONST HANDLE hFile);
 UINT DetermineFileCP(CONST HANDLE hFile);
 BOOL CheckExcludeStringMatch(CONST TCHAR *szFilename);
 VOID AnsiFromUnicode(CHAR *szAnsiString,CONST int max_line,TCHAR *szUnicodeString);
 VOID UnicodeFromAnsi(TCHAR *szUnicodeString,CONST int max_line,CHAR *szAnsiString);
-VOID GetNextLine(CONST HANDLE hFile, TCHAR * szLine, CONST UINT uiLengthLine, UINT * puiStringLength, BOOL * pbErrorOccured, BOOL * pbEndOfFile, BOOL bFileIsUnicode);
+VOID GetNextLine(CONST HANDLE hFile, TCHAR * szLine, CONST UINT uiLengthLine, UINT * puiStringLength, BOOL * pbErrorOccured, BOOL * pbEndOfFile, BOOL bFileIsUTF16);
 VOID ReadOptions();
 VOID WriteOptions(CONST HWND hMainWnd, CONST LONG lACW, CONST LONG lACH);
 BOOL IsLegalFilename(CONST TCHAR szFilename[MAX_PATH]);
@@ -410,6 +411,9 @@ DWORD WriteSingleLineSfvFile(CONST FILEINFO * pFileinfo);
 DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abMd5Result[16]);
 DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo);
 BOOL EnterMd5Mode(lFILEINFO *fileList);
+#ifdef UNICODE
+BOOL WriteCurrentBOM(CONST HANDLE hFile);
+#endif
 
 //sort functions (sortfcts.cpp)
 int CALLBACK SortFilename(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
@@ -430,13 +434,5 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam);
 DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam);
 DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam);
-
-#if defined(USE_MD5_REF)
-#  include "md5_ref.h"
-#elif defined(USE_MD5_OSSL)
-#  include "md5_ossl.h"
-#else
-#  error USE_MD5_REF or USE_MD5_OSSL have to be defined
-#endif
 
 #endif

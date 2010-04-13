@@ -356,6 +356,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 	{
 	case WM_INITDIALOG :
 		// copy current options to local copy
+		ComboBox_AddString(GetDlgItem(hDlg,IDC_UNICODE_TYPE),TEXT("UTF-8 with BOM"));
         ComboBox_AddString(GetDlgItem(hDlg,IDC_UNICODE_TYPE),TEXT("UTF-16 LE"));
         ComboBox_AddString(GetDlgItem(hDlg,IDC_UNICODE_TYPE),TEXT("UTF-8"));
 
@@ -447,6 +448,12 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		case IDC_ENABLE_QUEUE:
 			if(HIWORD(wParam) == BN_CLICKED){
 				program_options_temp.bEnableQueue = (IsDlgButtonChecked(hDlg, IDC_ENABLE_QUEUE) == BST_CHECKED);
+				return TRUE;
+			}
+			break;
+		case IDC_DEFAULT_OPEN_UTF8:
+			if(HIWORD(wParam) == BN_CLICKED){
+				program_options_temp.bDefaultOpenUTF8 = (IsDlgButtonChecked(hDlg, IDC_DEFAULT_OPEN_UTF8) == BST_CHECKED);
 				return TRUE;
 			}
 			break;

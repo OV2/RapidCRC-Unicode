@@ -462,10 +462,6 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 	TCHAR szPreviousDir[MAX_PATH] = TEXT("?:><");	// some symbols that are not allowed in filenames to force
 													// the checksum file creation in the for loop
 	HANDLE hFile = NULL;
-#ifdef UNICODE
-	WORD wBOM = 0xFEFF;
-	DWORD NumberOfBytesWritten;
-#endif
 
 
 	//for(UINT uiIndex = 0; uiIndex < uiNumElements; uiIndex++){
@@ -482,13 +478,9 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 					return GetLastError();
 				}
 #ifdef UNICODE
-                //write the BOM if we are creating a unicode file (and not in UTF8 mode)
-				if(g_program_options.bCreateUnicodeFiles && g_program_options.iUnicodeSaveType == UTF_16LE) {
-                    if(!WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL)) {
-						CloseHandle(hFile);
-						return GetLastError();
-                    }
-				}
+				// we need a BOM if we are writing unicode
+				if(!WriteCurrentBOM(hFile))
+					return GetLastError();
 #endif
 				if( (uiMode == MODE_SFV) && g_program_options.bWinsfvComp){
 					dwResult = WriteSfvHeader(hFile);
@@ -537,10 +529,6 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	UINT uiSameCharCount;
 	OPENFILENAME ofn;
 	DWORD dwResult;
-#ifdef UNICODE
-	WORD wBOM = 0xFEFF;
-	DWORD NumberOfBytesWritten;
-#endif
 
 	StringCchCopy(szFileOut, MAX_PATH, GetFilenameWithoutPathPointer(finalList->front()->parentList->g_szBasePath) );
 
@@ -568,13 +556,9 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 		return GetLastError();
 
 #ifdef UNICODE
-    //write the BOM if we are creating a unicode file
-    if(g_program_options.bCreateUnicodeFiles && g_program_options.iUnicodeSaveType == UTF_16LE) {
-        if(!WriteFile(hFile, &wBOM, sizeof(WORD), &NumberOfBytesWritten, NULL)) {
-            CloseHandle(hFile);
-            return GetLastError();
-        }
-	}
+    // we need a BOM if we are writing unicode
+    if(!WriteCurrentBOM(hFile))
+		return GetLastError();
 #endif
 
 	if( (uiMode == MODE_SFV) && g_program_options.bWinsfvComp){

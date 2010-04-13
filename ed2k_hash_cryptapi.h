@@ -4,7 +4,7 @@
 /* wrapper class for md4.h/.cpp to calculate ED2K hashes */
 
 #include <windows.h>
-#include "md4.h"
+#include "Wincrypt.h"
 #pragma warning(disable:4995)
 #include <list>
 #pragma warning(default:4995)
@@ -17,11 +17,17 @@ typedef struct _MD4 {
 } MD4;
 
 class CEd2kHash {
-	CMD4 md4class;	                // class for the md4 calculation
+private:
+	HCRYPTPROV cryptoprov;          // class for the md4 calculation
+	HCRYPTHASH crypthash;
 	list<MD4> md4_hashes;			// list of our hashes, we need to hash across this after the last part
 	BYTE ed2k_hash[16];             // the final ed2k hash
 	unsigned int current_bytes;     // counts how many bytes of the current part have already been passed to md4
 	unsigned int part_count;        // number of parts calculated
+
+	void cryptapi_reset_hash();
+	void cryptapi_getHash(BYTE* hash);
+	void cryptapi_addData(BYTE* data, const unsigned int count);
 public:
 	CEd2kHash();
 	~CEd2kHash();

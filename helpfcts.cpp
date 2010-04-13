@@ -129,20 +129,25 @@ Return Value:
 	returns TRUE if hFile points to a file containing an UTF-16LE BOM,
 	FALSE otherwise
 *****************************************************************************/
-BOOL IsUnicodeFile(CONST HANDLE hFile) {
-	WORD wBOM;
-	BOOL unicode;
+UNICODE_TYPE CheckForBOM(CONST HANDLE hFile) {
+	DWORD bBOM = 0;
 	DWORD dwBytesRead;
+	UNICODE_TYPE detectedBOM = NO_BOM;
 
-	ReadFile(hFile, & wBOM, sizeof(wBOM), &dwBytesRead, NULL);
-	if(dwBytesRead == 0){
-		unicode = FALSE;
-		return unicode;
+	ReadFile(hFile, & bBOM, 3, &dwBytesRead, NULL);
+	if(dwBytesRead < 3){
+		return NO_BOM;
 	}
-	unicode = (wBOM == 0xFEFF);
-	// return the filepointer to the beginning
-	SetFilePointer(hFile, -1 * dwBytesRead, NULL, FILE_CURRENT);
-	return unicode;
+	if(bBOM==0xBFBBEF) {
+		detectedBOM = UTF_8_BOM;
+	} else if((bBOM&0xFFFF)==0xFEFF) {
+		detectedBOM = UTF_16LE;
+		SetFilePointer(hFile, -1 , NULL, FILE_CURRENT);
+	} else {
+		SetFilePointer(hFile, -1 * dwBytesRead, NULL, FILE_CURRENT);
+	}
+	
+	return detectedBOM;
 }
 
 /*****************************************************************************
@@ -271,7 +276,7 @@ Notes:
 	- reads a line from an already opened file
 *****************************************************************************/
 VOID GetNextLine(CONST HANDLE hFile, TCHAR * szLine, CONST UINT uiLengthLine,
-				 UINT * puiStringLength, BOOL * pbErrorOccured, BOOL * pbEndOfFile, BOOL bFileIsUnicode)
+				 UINT * puiStringLength, BOOL * pbErrorOccured, BOOL * pbEndOfFile, BOOL bFileIsUTF16)
 {
 	TCHAR myChar;
 	UINT uiCount;
@@ -285,7 +290,7 @@ VOID GetNextLine(CONST HANDLE hFile, TCHAR * szLine, CONST UINT uiLengthLine,
 		return;
 	}
     // if we are reading ansi, each byte is a character, otherwise every two bytes
-	charSize = bFileIsUnicode ? sizeof(myChar) : sizeof(char);
+	charSize = bFileIsUTF16 ? sizeof(myChar) : sizeof(char);
 
 	ZeroMemory(szLine, uiLengthLine);
 
@@ -507,6 +512,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	pprogram_options->uiWndLeft = 10;
 	pprogram_options->uiWndTop = 10;
 	pprogram_options->bEnableQueue = FALSE;
+	pprogram_options->bDefaultOpenUTF8 = FALSE;
 	return;
 }
 

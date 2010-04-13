@@ -355,7 +355,8 @@ BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH], DWORD * pdwFoundCrc)
 				break;
 			else{
 				bFound = TRUE;
-				if (! ((szFileWithoutPath[iIndex-9] == TEXT('[')) || (szFileWithoutPath[iIndex-9] == TEXT('(')) ) )
+				if (! ((szFileWithoutPath[iIndex-9] == TEXT('[')) || (szFileWithoutPath[iIndex-9] == TEXT('(') ||
+					   (szFileWithoutPath[iIndex-13] == TEXT('[')) || (szFileWithoutPath[iIndex-13] == TEXT('('))) ) )
 					bFound = FALSE;
 				for(int i=1; i <= 8; ++i)
 					if(! IsLegalHexSymbol(szFileWithoutPath[iIndex-i]))

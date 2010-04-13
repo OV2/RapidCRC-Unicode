@@ -157,7 +157,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="comctl32.lib shlwapi.lib Wininet.lib Version.lib"
+				AdditionalDependencies="comctl32.lib shlwapi.lib Wininet.lib Version.lib Advapi32.lib"
 				OutputFile="$(OutDir)/rapidcrc.exe"
 				LinkIncremental="2"
 				GenerateManifest="true"
@@ -236,7 +236,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="comctl32.lib m5_win32.obj shlwapi.lib Wininet.lib Version.lib uxtheme.lib"
+				AdditionalDependencies="comctl32.lib shlwapi.lib Wininet.lib Version.lib uxtheme.lib"
 				OutputFile="$(OutDir)/rapidcrc.exe"
 				LinkIncremental="1"
 				GenerateManifest="true"
@@ -388,6 +388,14 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|x64"
 					>
 					<Tool
@@ -441,6 +449,13 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
 					Name="Release|x64"
 					ExcludedFromBuild="true"
 					>
@@ -450,10 +465,18 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath=".\ed2k_hash_ref.cpp"
+				RelativePath=".\ed2k_hash_cryptapi.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
 					ExcludedFromBuild="true"
 					>
 					<Tool
@@ -476,6 +499,22 @@
 			<File
 				RelativePath=".\m5_win32.asm"
 				>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\MD4.cpp"
@@ -512,9 +551,7 @@
 					Name="Release|Win32"
 					>
 					<Tool
-						Name="VCCustomBuildTool"
-						CommandLine="ml.exe /c /Cx /coff /Fo $(IntDir)\ &quot;$(InputPath)&quot;&#x0D;&#x0A;"
-						Outputs="$(IntDir)\$(InputName).obj"
+						Name="MASM"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
@@ -525,18 +562,6 @@
 						Name="VCCustomBuildTool"
 						CommandLine="ml.exe /c /Cx /coff /Fo $(IntDir)\ &quot;$(InputPath)&quot;&#x0D;&#x0A;"
 						Outputs="$(IntDir)\$(InputName).obj"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\md4_ref.c"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
 					/>
 				</FileConfiguration>
 			</File>
@@ -560,13 +585,26 @@
 						Outputs="$(IntDir)\md5-ms-amd64-v2.obj"
 					/>
 				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="ml64.exe /c  /nologo /Fo&quot;$(IntDir)\md5-ms-amd64-v2.obj&quot; /W3 /Zi /errorReport:prompt  $(InputFileName)&#x0D;&#x0A;"
+						Outputs="$(IntDir)\md5-ms-amd64-v2.obj"
+					/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\md5_ossl.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\md5_ref.cpp"
 				>
 			</File>
 			<File
@@ -608,7 +646,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\ed2k_hash_ref.h"
+				RelativePath=".\ed2k_hash_cryptapi.h"
 				>
 			</File>
 			<File
@@ -620,19 +658,15 @@
 				>
 			</File>
 			<File
-				RelativePath=".\md4_ref.h"
-				>
-			</File>
-			<File
 				RelativePath=".\md5_ossl.h"
 				>
 			</File>
 			<File
-				RelativePath=".\md5_ref.h"
+				RelativePath=".\resource.h"
 				>
 			</File>
 			<File
-				RelativePath=".\resource.h"
+				RelativePath=".\Utility.hpp"
 				>
 			</File>
 		</Filter>
