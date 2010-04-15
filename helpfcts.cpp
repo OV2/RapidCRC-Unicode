@@ -121,13 +121,12 @@ BOOL GetVersionString(TCHAR *buffer,CONST int buflen)
 
 
 /*****************************************************************************
-BOOL IsUnicodeFile(CONST HANDLE hFile)
+UNICODE_TYPE CheckForBOM(CONST HANDLE hFile)
 	hFile	: (IN) handle of the file to check - expects it to point to the
 				   beginning of the file
 
 Return Value:
-	returns TRUE if hFile points to a file containing an UTF-16LE BOM,
-	FALSE otherwise
+	returns detected UNICODE_TYPE, or NO_BOM if no type found
 *****************************************************************************/
 UNICODE_TYPE CheckForBOM(CONST HANDLE hFile) {
 	DWORD bBOM = 0;

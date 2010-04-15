@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+  <Product Name='RapidCRC (x64)' Id='B9B44835-5ECB-459a-91AB-73F492A38C48' UpgradeCode='82B033AA-A311-40dc-BBF6-1544C2AE5480'
+    Language='1033' Codepage='1252' Version='0.2.1' Manufacturer='RapidCRC'>
+
+    <Package Id='*' Keywords='Installer'
+      Description="RapidCRC installer"
+      Manufacturer='RapidCRC'
+      Platform='x64'
+      InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+
+    <Media Id='1' Cabinet='RapidCRC.cab' EmbedCab='yes' DiskPrompt="RCRC (x64) cab 1" />
+    <Property Id='DiskPrompt' Value="RapidCRC (x64) cab 1" />
+
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+      <Directory Id='ProgramFiles64Folder' Name='PFiles'>
+          <Directory Id='INSTALLDIR' Name='RapidCRC'>
+
+            <Component Id='MainExecutable' Guid='11F1180C-346E-47f9-9FD7-400404828284' Win64="yes">
+              <File Id='RapidCRCEXE' Name='RapidCRC.exe' DiskId='1' Source='RapidCRCx64.exe' KeyPath='yes'>
+                <Shortcut Id="startmenuRapidCRC" Directory="ProgramMenuDir" Name="RapidCRC" WorkingDirectory='INSTALLDIR' IconIndex="0" Advertise="no" />
+              </File>
+              <File Id="HashFileIcon" Name='hashfile.ico' DiskId='1' Source='hashfile.ico' />
+            </Component>
+
+            <Component Id='ShellExtDLL64' Guid='5574A251-A073-401b-B72E-B2B48FE16E66' Win64="yes">
+              <File Id='ShellExtDLL64' Name='rcrcshex64.dll' DiskId='1' Source='rcrcshex64.dll' KeyPath='yes'>
+                <Class Id="{625FC2A0-B157-4574-928F-C06F3BC1B127}" Context="InprocServer32" Description="RCRCFile64" ThreadingModel="apartment" />
+              </File>
+            </Component>
+            
+            <Component Id="ShellExtReg64" Guid="6B5AD523-DEE3-4946-9583-0EA1DBDBABEC" Win64="yes">
+                <RegistryKey Root='HKCR' Key='*\shellex\ContextMenuHandlers\RCRCFile64' Action='createAndRemoveOnUninstall'>
+                    <RegistryValue Value="{625FC2A0-B157-4574-928F-C06F3BC1B127}" Type="string" Action="write" />
+                </RegistryKey>
+                <RegistryKey Root='HKCR' Key='Directory\shellex\ContextMenuHandlers\RCRCFile64' Action='createAndRemoveOnUninstall'>
+                    <RegistryValue Value="{625FC2A0-B157-4574-928F-C06F3BC1B127}" Type="string" Action="write" />
+                </RegistryKey>
+                <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Explorer" Name="GlobalAssocChangedCounter" Value="1" Type="integer" Action="write" />
+                <RegistryValue Root="HKLM" Key="Software\Microsoft\Windows\CurrentVersion\Shell Extensions\Approved" Name="{625FC2A0-B157-4574-928F-C06F3BC1B127}" Value="RCRCFile64" Type="string" Action="write" />
+            </Component>
+            
+            <Component Id="FileAssoc" Guid="A88BB0B8-645C-49db-BE0D-80DDDE48400A" Win64="yes" KeyPath="yes">
+                <ProgId Id='RCRC.sfv' Description='RapidCRC sfv File Extension' Icon="HashFileIcon" IconIndex="0">
+                  <Extension Id='sfv' ContentType='application/sfv'>
+                    <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
+                  </Extension>
+                </ProgId>
+                <ProgId Id='RCRC.md5' Description='RapidCRC md5 File Extension' Icon="HashFileIcon" IconIndex="0">
+                <Extension Id='md5' ContentType='application/md5'>
+                    <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
+                </Extension>
+                </ProgId>
+            </Component>
+
+          </Directory>
+      </Directory>
+
+      <Directory Id="ProgramMenuFolder" Name="Programs">
+        <Directory Id="ProgramMenuDir" Name="RapidCRC (x64)">
+          <Component Id="ProgramMenuDir" Guid="91C2AF74-86EF-4748-8A9C-888E94538511">
+            <RemoveFolder Id='ProgramMenuDir' On='uninstall' />
+            <RegistryValue Root='HKCU' Key='Software\[Manufacturer]\[ProductName]' Type='string' Value='' KeyPath='yes' />
+          </Component>
+        </Directory>
+      </Directory>
+      
+      <Component Id="MainExeRegKey32" Guid='472FCD9A-9405-4d08-9280-3A97C15EEDAF'>
+                <RegistryValue Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\rapidcrc.exe" Value='"[INSTALLDIR]RapidCRC.exe"' Type="string" Action="write" />
+      </Component>
+            
+    </Directory>
+
+    <Feature Id='MainProgram' Title='RapidCRC' Description='RapidCRC files.'
+      Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR' AllowAdvertise='no'>
+      <ComponentRef Id='MainExecutable' />
+      <ComponentRef Id='MainExeRegKey32' />
+      <ComponentRef Id='ShellExtDLL64' />
+      <ComponentRef Id='ProgramMenuDir' />
+      <Feature Id='ShellExt' Title='Shell Extension' Description='Enables the Shell extension.' Level='1' AllowAdvertise='no'>
+        <ComponentRef Id='ShellExtReg64' />
+      </Feature>
+      <Feature Id='FileExtAssoc' Title='File Associations' Description='Associates .sfv and .md5 files with RapidCRC.' Level='1' AllowAdvertise='no'>
+        <ComponentRef Id='FileAssoc' />
+      </Feature>
+    </Feature>
+
+    <UIRef Id="WixUI_FeatureTreeNoLic" />
+    <UIRef Id="WixUI_ErrorProgressText" />
+
+  </Product>
+</Wix>

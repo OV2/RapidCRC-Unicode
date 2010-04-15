@@ -537,6 +537,13 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 }
 
 #ifdef UNICODE
+/*****************************************************************************
+BOOL WriteCurrentBOM(CONST HANDLE hFile)
+	hFile	: (IN) handle of the file to write the currently set BOM to
+
+Return Value:
+returns TRUE if everything went fine. FALSE went something went wrong.
+*****************************************************************************/
 BOOL WriteCurrentBOM(CONST HANDLE hFile) {
 	DWORD bBOM;
 	DWORD bomByteCount;

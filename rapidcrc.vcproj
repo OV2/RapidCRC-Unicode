@@ -449,13 +449,6 @@
 					/>
 				</FileConfiguration>
 				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
 					Name="Release|x64"
 					ExcludedFromBuild="true"
 					>
@@ -542,13 +535,6 @@
 				<FileConfiguration
 					Name="Debug|x64"
 					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="MASM"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
 					>
 					<Tool
 						Name="MASM"
@@ -689,6 +675,10 @@
 			</File>
 			<File
 				RelativePath=".\icons\hash.ico"
+				>
+			</File>
+			<File
+				RelativePath=".\icons\icon1.ico"
 				>
 			</File>
 			<File
