@@ -41,12 +41,12 @@
             </Component>
             
             <Component Id="FileAssoc" Guid="A88BB0B8-645C-49db-BE0D-80DDDE48400A" Win64="yes" KeyPath="yes">
-                <ProgId Id='RCRC.sfv' Description='RapidCRC sfv File Extension' Icon="HashFileIcon" IconIndex="0">
+                <ProgId Id='RCRC.sfv' Description='SFV File (RapidCRC)' Icon="HashFileIcon" IconIndex="0">
                   <Extension Id='sfv' ContentType='application/sfv'>
                     <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
                   </Extension>
                 </ProgId>
-                <ProgId Id='RCRC.md5' Description='RapidCRC md5 File Extension' Icon="HashFileIcon" IconIndex="0">
+                <ProgId Id='RCRC.md5' Description='MD5 File (RapidCRC)' Icon="HashFileIcon" IconIndex="0">
                 <Extension Id='md5' ContentType='application/md5'>
                     <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
                 </Extension>
