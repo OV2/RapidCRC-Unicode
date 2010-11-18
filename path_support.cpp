@@ -349,22 +349,16 @@ BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH], DWORD * pdwFoundCrc)
 	bFound = FALSE;
 	do{
 		--iIndex;
-		if((szFileWithoutPath[iIndex] == TEXT(']')) || (szFileWithoutPath[iIndex] == TEXT(')')) )
-		{
-			if ((iIndex - 9) < 0)
-				break;
-			else{
-				bFound = TRUE;
-				if (! ((szFileWithoutPath[iIndex-9] == TEXT('[')) || (szFileWithoutPath[iIndex-9] == TEXT('(') ||
-					   (szFileWithoutPath[iIndex-13] == TEXT('[')) || (szFileWithoutPath[iIndex-13] == TEXT('('))) ) )
+		if ((iIndex - 7) < 0)
+			break;
+		if(IsLegalHexSymbol(szFileWithoutPath[iIndex])) {
+			bFound = TRUE;
+			for(int i=1; i < 8; ++i)
+				if(! IsLegalHexSymbol(szFileWithoutPath[iIndex-i]))
 					bFound = FALSE;
-				for(int i=1; i <= 8; ++i)
-					if(! IsLegalHexSymbol(szFileWithoutPath[iIndex-i]))
-						bFound = FALSE;
-				if(bFound)
-					iIndex -= 8;
-			}
 		}
+		if(bFound)
+			iIndex -= 7;
 	}
 	while((iIndex > 0) && (!bFound));
 
@@ -431,6 +425,7 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 	fileList->bCalculateMd5	= ((fileList->uiRapidCrcMode == MODE_NORMAL) &&	(g_program_options.bCalcMd5PerDefault))
 								|| (fileList->uiRapidCrcMode == MODE_MD5);
 	fileList->bCalculateEd2k  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcEd2kPerDefault));
+	fileList->bCalculateSha1  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcSha1PerDefault));
 
 	switch(fileList->uiCmdOpts) {
 		case CMD_SFV:
