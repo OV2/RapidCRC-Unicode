@@ -26,6 +26,7 @@
 #else
 #include "ed2k_hash.h"
 #endif
+#include "sha1_ossl.h"
 #include "md5_ossl.h"
 #include "CSyncQueue.h"
 
@@ -62,6 +63,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 	BOOL bCalculateCrc;
 	BOOL bCalculateMd5;
+	BOOL bCalculateSha1;
 	BOOL bCalculateEd2k;
 
 	QWORD qwStart, qwStop, wqFreq;
@@ -78,9 +80,11 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	BOOL bAsync;
 
 	HANDLE hEvtThreadMd5Go;
+	HANDLE hEvtThreadSha1Go;
 	HANDLE hEvtThreadEd2kGo;
 	HANDLE hEvtThreadCrcGo;
 	HANDLE hEvtThreadMd5Ready;
+	HANDLE hEvtThreadSha1Ready;
 	HANDLE hEvtThreadEd2kReady;
 	HANDLE hEvtThreadCrcReady;
 
@@ -89,13 +93,15 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	ZeroMemory(&olp,sizeof(olp));
 
 	HANDLE hThreadMd5;
+	HANDLE hThreadSha1;
 	HANDLE hThreadEd2k;
 	HANDLE hThreadCrc;
 	
-	HANDLE hEvtReadyHandles[3];
+	HANDLE hEvtReadyHandles[4];
 	DWORD cEvtReadyHandles;
 
 	THREAD_PARAMS_HASHCALC md5CalcParams;
+	THREAD_PARAMS_HASHCALC sha1CalcParams;
 	THREAD_PARAMS_HASHCALC ed2kCalcParams;
 	THREAD_PARAMS_HASHCALC crcCalcParams;
 
@@ -118,6 +124,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 		bCalculateCrc	= !fileList->bCrcCalculated && fileList->bCalculateCrc;
 		bCalculateMd5	= !fileList->bMd5Calculated && fileList->bCalculateMd5;
+		bCalculateSha1	= !fileList->bSha1Calculated && fileList->bCalculateSha1;
 		bCalculateEd2k  = !fileList->bEd2kCalculated && fileList->bCalculateEd2k;
 
 		cEvtReadyHandles = 0;
@@ -154,6 +161,23 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			md5CalcParams.hHandleReady = hEvtThreadMd5Ready;
 			md5CalcParams.buffer = &calcBuffer;
 			md5CalcParams.dwBytesRead = &dwBytesReadCb;
+		}
+
+		if(bCalculateSha1) {
+			fileList->bSha1Calculated = TRUE;
+			hEvtThreadSha1Go = CreateEvent(NULL,FALSE,FALSE,NULL);
+			hEvtThreadSha1Ready = CreateEvent(NULL,FALSE,FALSE,NULL);
+			if(hEvtThreadSha1Go == NULL || hEvtThreadSha1Ready == NULL) {
+				ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+				ExitProcess(1);
+			}
+			hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadSha1Ready;
+			cEvtReadyHandles++;
+			sha1CalcParams.bFileDone = &bFileDone;
+			sha1CalcParams.hHandleGo = hEvtThreadSha1Go;
+			sha1CalcParams.hHandleReady = hEvtThreadSha1Ready;
+			sha1CalcParams.buffer = &calcBuffer;
+			sha1CalcParams.dwBytesRead = &dwBytesReadCb;
 		}
 
 		if(bCalculateEd2k) {
@@ -230,6 +254,16 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 						ExitProcess(1);
 					}
 				}
+				if(bCalculateSha1) {
+					ResetEvent(hEvtThreadSha1Go);
+					ResetEvent(hEvtThreadSha1Ready);
+					sha1CalcParams.result = &curFileInfo.abSha1Result;
+					hThreadSha1 = CreateThread(NULL,0,ThreadProc_Sha1Calc,&sha1CalcParams,0,NULL);
+					if(hThreadSha1 == NULL) {
+						ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+						ExitProcess(1);
+					}
+				}
 				if(bCalculateEd2k) {
 					ResetEvent(hEvtThreadEd2kGo);
 					ResetEvent(hEvtThreadEd2kReady);
@@ -280,6 +314,9 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 					if(bCalculateMd5)
 						SetEvent(hEvtThreadMd5Go);
+
+					if(bCalculateSha1)
+						SetEvent(hEvtThreadSha1Go);
 					
 					if(bCalculateEd2k)
 						SetEvent(hEvtThreadEd2kGo);
@@ -293,6 +330,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 				if(bCalculateMd5)
 					CloseHandle(hThreadMd5);
+				if(bCalculateSha1)
+					CloseHandle(hThreadSha1);
 				if(bCalculateEd2k)
 					CloseHandle(hThreadEd2k);
 				if(bCalculateCrc)
@@ -315,6 +354,10 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 		if(bCalculateMd5) {
 			CloseHandle(hEvtThreadMd5Go);
 			CloseHandle(hEvtThreadMd5Ready);
+		}
+		if(bCalculateSha1) {
+			CloseHandle(hEvtThreadSha1Go);
+			CloseHandle(hEvtThreadSha1Ready);
 		}
 		if(bCalculateEd2k) {
 			CloseHandle(hEvtThreadEd2kGo);
@@ -531,6 +574,38 @@ DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam)
 		MD5_Update(&context, *buffer, **dwBytesRead);
 	} while (!(*bFileDone));
 	MD5_Final(result,&context);
+	SetEvent(hEvtThreadReady);
+	return 0;
+}
+
+/*****************************************************************************
+DWORD WINAPI ThreadProc_Sha1Calc(VOID * pParam)
+	pParam	: (IN/OUT) THREAD_PARAMS_HASHCALC struct pointer special for this thread
+
+Return Value:
+	returns 0
+
+Notes:
+- initializes the sha1 hash calculation and loops through the calculation until
+  ThreadProc_Calc signalizes the end of the file
+- buffer synchronization is done through hEvtThreadReady and hEvtThreadGo
+*****************************************************************************/
+DWORD WINAPI ThreadProc_Sha1Calc(VOID * pParam)
+{
+	BYTE ** CONST buffer=((THREAD_PARAMS_HASHCALC *)pParam)->buffer;
+	DWORD ** CONST dwBytesRead=((THREAD_PARAMS_HASHCALC *)pParam)->dwBytesRead;
+	CONST HANDLE hEvtThreadReady=((THREAD_PARAMS_HASHCALC *)pParam)->hHandleReady;
+	CONST HANDLE hEvtThreadGo=((THREAD_PARAMS_HASHCALC *)pParam)->hHandleGo;
+	BYTE * CONST result=(BYTE *)((THREAD_PARAMS_HASHCALC *)pParam)->result;
+	BOOL * CONST bFileDone=((THREAD_PARAMS_HASHCALC *)pParam)->bFileDone;
+
+	SHA_CTX context;
+	SHA1_Init(&context);
+	do {
+		SignalObjectAndWait(hEvtThreadReady,hEvtThreadGo,INFINITE,FALSE);
+		SHA1_Update(&context, *buffer, **dwBytesRead);
+	} while (!(*bFileDone));
+	SHA1_Final(result,&context);
 	SetEvent(hEvtThreadReady);
 	return 0;
 }

@@ -250,6 +250,7 @@ void CreateListViewPopupMenu(HMENU *menu) {
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K_LINK,TEXT("Copy ED2K Link to Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K,TEXT("Copy ED2K to Clipboard"));
+	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_SHA1,TEXT("Copy SHA1 to Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_MD5,TEXT("Copy MD5 to Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC,TEXT("Copy CRC to Clipboard"));
 
@@ -287,6 +288,8 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 		case IDM_COPY_MD5:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((MD5_AS_STRING_LENGHT + 1) * finalList->size() + 1) * sizeof(TCHAR));
 									break;
 		case IDM_COPY_ED2K:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((ED2K_AS_STRING_LENGHT + 1) * finalList->size() + 1) * sizeof(TCHAR));
+									break;
+		case IDM_COPY_SHA1:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((SHA1_AS_STRING_LENGHT + 1) * finalList->size() + 1) * sizeof(TCHAR));
 									break;
 		case IDM_COPY_ED2K_LINK:	bLink = true;
 									break;
@@ -358,6 +361,11 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 									curpos[ED2K_AS_STRING_LENGHT-1] = TEXT('\r');
 									curpos[ED2K_AS_STRING_LENGHT] = TEXT('\n');
 									curpos += ED2K_AS_STRING_LENGHT+1;
+									break;
+				case IDM_COPY_SHA1: memcpy(curpos,(*it)->szSha1Result,SHA1_AS_STRING_LENGHT * sizeof(TCHAR));
+									curpos[SHA1_AS_STRING_LENGHT-1] = TEXT('\r');
+									curpos[SHA1_AS_STRING_LENGHT] = TEXT('\n');
+									curpos += SHA1_AS_STRING_LENGHT+1;
 									break;
 			}
 		}
@@ -436,7 +444,7 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 	int ret;
 	UINT uiSelected = 0;	
 	list<FILEINFO*> finalList;
-	bool bCrc=true,bMd5=true,bEd2k=true;
+	bool bCrc=true,bMd5=true,bSha1=true,bEd2k=true;
 
 	uiSelected = ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]);
 
@@ -445,11 +453,13 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 	for(list<FILEINFO*>::iterator it=finalList.begin();it!=finalList.end();it++) {
 		if(!(*it)->parentList->bCrcCalculated) bCrc = false;
 		if(!(*it)->parentList->bMd5Calculated) bMd5 = false;
+		if(!(*it)->parentList->bSha1Calculated) bSha1 = false;
 		if(!(*it)->parentList->bEd2kCalculated) bEd2k = false;
 	}
 	if(finalList.empty()) {
 		bCrc = false;
 		bMd5 = false;
+		bSha1 = false;
 		bEd2k = false;
 	}
 
@@ -457,13 +467,15 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 	EnableMenuItem(popup,IDM_REMOVE_ITEMS,MF_BYCOMMAND | ((uiSelected>0) ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_CRC,MF_BYCOMMAND | (bCrc ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_MD5,MF_BYCOMMAND | (bMd5 ? MF_ENABLED : MF_GRAYED));
+	EnableMenuItem(popup,IDM_COPY_SHA1,MF_BYCOMMAND | (bSha1 ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_ED2K,MF_BYCOMMAND | (bEd2k ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_ED2K_LINK,MF_BYCOMMAND | (bEd2k ? MF_ENABLED : MF_GRAYED));
 
     ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,arrHwnd[ID_LISTVIEW],NULL);
 	switch(ret) {
 		case IDM_COPY_CRC:			
-		case IDM_COPY_MD5:			
+		case IDM_COPY_MD5:
+		case IDM_COPY_SHA1:
 		case IDM_COPY_ED2K:			
 		case IDM_COPY_ED2K_LINK:	HandleClipboard(arrHwnd[ID_LISTVIEW],ret,&finalList);
 									break;
@@ -484,6 +496,7 @@ void CreateListViewHeaderPopupMenu(HMENU *menu)
 *****************************************************************************/
 void CreateListViewHeaderPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
+	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_CHECKED,IDM_SHA1_COLUMN,TEXT("SHA1"));
     InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_CHECKED,IDM_ED2K_COLUMN,TEXT("ED2K"));
     InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_CHECKED,IDM_MD5_COLUMN,TEXT("MD5"));
     InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_CHECKED,IDM_CRC_COLUMN,TEXT("CRC32"));
@@ -509,6 +522,7 @@ BOOL ListViewHeaderPopup(HWND pHwnd,HMENU popup,int x,int y) {
     CheckMenuItem(popup,IDM_CRC_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayCrcInListView ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(popup,IDM_MD5_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayMd5InListView ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(popup,IDM_ED2K_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayEd2kInListView ? MF_CHECKED : MF_UNCHECKED));
+	CheckMenuItem(popup,IDM_SHA1_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplaySha1InListView ? MF_CHECKED : MF_UNCHECKED));
 	
     ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,pHwnd,NULL);
 	switch(ret) {
@@ -520,6 +534,9 @@ BOOL ListViewHeaderPopup(HWND pHwnd,HMENU popup,int x,int y) {
     		return TRUE;
 		case IDM_ED2K_COLUMN:
             g_program_options.bDisplayEd2kInListView = !g_program_options.bDisplayEd2kInListView;
+			return TRUE;
+		case IDM_SHA1_COLUMN:
+			g_program_options.bDisplaySha1InListView = !g_program_options.bDisplaySha1InListView;
 			return TRUE;
 		default:
             break;
@@ -749,6 +766,7 @@ VOID UpdateListViewColumns(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LONG lACW)
 
 	//ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
 
+	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 5);
 	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 4);
 	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 3);
 	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 2);
@@ -820,6 +838,19 @@ BOOL SetSubItemColumns(CONST HWND hWndListView)
 		lvcolumn.fmt = LVCFMT_LEFT;
 		lvcolumn.cx = 0;
 		lvcolumn.pszText = TEXT("ED2K");
+		lvcolumn.iSubItem = iCurrentSubItem;
+
+		if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
+			return FALSE;
+
+		iCurrentSubItem++;
+	}
+
+	if(g_program_options.bDisplaySha1InListView){
+		lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+		lvcolumn.fmt = LVCFMT_LEFT;
+		lvcolumn.cx = 0;
+		lvcolumn.pszText = TEXT("SHA1");
 		lvcolumn.iSubItem = iCurrentSubItem;
 
 		if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
@@ -1136,6 +1167,8 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_MD5_IN_LIST, pprogram_options->bDisplayMd5InListView ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_ENABLE_QUEUE, pprogram_options->bEnableQueue ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_DEFAULT_OPEN_UTF8, pprogram_options->bDefaultOpenUTF8 ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(hDlg, IDC_CHECK_SHA1_DEFAULT, pprogram_options->bCalcSha1PerDefault ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_SHA1_IN_LIST, pprogram_options->bDisplaySha1InListView ? BST_CHECKED : BST_UNCHECKED);
 
     ComboBox_SetCurSel(GetDlgItem(hDlg,IDC_UNICODE_TYPE),pprogram_options->iUnicodeSaveType);
 	

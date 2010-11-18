@@ -236,7 +236,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="comctl32.lib shlwapi.lib Wininet.lib Version.lib uxtheme.lib"
+				AdditionalDependencies="comctl32.lib shlwapi.lib Wininet.lib Version.lib"
 				OutputFile="$(OutDir)/rapidcrc.exe"
 				LinkIncremental="1"
 				GenerateManifest="true"
@@ -606,6 +606,68 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sha1-586.asm"
+				>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\sha1-x86_64.asm"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="ml64.exe /c  /nologo /Fo&quot;$(IntDir)\sha1-x86_64.obj&quot; /W3 /Zi /errorReport:prompt  $(InputFileName)&#x0D;&#x0A;"
+						Outputs="$(IntDir)\sha1-x86_64.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="ml64.exe /c  /nologo /Fo&quot;$(IntDir)\sha1-x86_64.obj&quot; /W3 /Zi /errorReport:prompt  $(InputFileName)"
+						Outputs="$(IntDir)\sha1-x86_64.obj"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\sha1_ossl.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\sortfcts.cpp"
 				>
 			</File>
@@ -649,6 +711,10 @@
 			</File>
 			<File
 				RelativePath=".\resource.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sha1_ossl.h"
 				>
 			</File>
 			<File

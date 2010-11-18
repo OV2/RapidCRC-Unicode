@@ -65,6 +65,7 @@ using namespace std;
 #define MAX_RESULT_LINE 200
 #define CRC_AS_STRING_LENGHT 9
 #define MD5_AS_STRING_LENGHT 33
+#define SHA1_AS_STRING_LENGHT 41
 #define ED2K_AS_STRING_LENGHT 33
 #define INFOTEXT_STRING_LENGHT 30
 
@@ -84,6 +85,7 @@ using namespace std;
 #define SORT_FLAG_CRC			0x0010
 #define SORT_FLAG_MD5			0x0020
 #define SORT_FLAG_ED2K			0x0030
+#define SORT_FLAG_SHA1			0x0040
 
 // these correlate to the indexes in the priority combo box
 #define PRIORITY_IDLE	0
@@ -162,10 +164,12 @@ using namespace std;
 #define IDM_COPY_ED2K_LINK			43
 #define IDM_REMOVE_ITEMS			44
 #define IDM_CLEAR_LIST				45
+#define IDM_COPY_SHA1				46
 
 #define IDM_CRC_COLUMN              50
 #define IDM_MD5_COLUMN              51
 #define IDM_ED2K_COLUMN             52
+#define IDM_SHA1_COLUMN             53
 
 //****** custom datatypes *******
 
@@ -194,9 +198,11 @@ typedef struct _FILEINFO{
 	TCHAR *	szFilenameShort;
 	TCHAR	szCrcResult[CRC_AS_STRING_LENGHT];
 	TCHAR	szMd5Result[MD5_AS_STRING_LENGHT];
+	TCHAR	szSha1Result[SHA1_AS_STRING_LENGHT];
 	TCHAR	szInfo[INFOTEXT_STRING_LENGHT];
 	BYTE	abMd5Result[16];
 	BYTE	abMd5Found[16];
+	BYTE	abSha1Result[20];
 	BYTE	abEd2kResult[16];
 	TCHAR	szEd2kResult[ED2K_AS_STRING_LENGHT];
 }FILEINFO;
@@ -206,16 +212,19 @@ typedef struct _lFILEINFO {
 	QWORD qwFilesizeSum;
 	bool bCrcCalculated;
 	bool bMd5Calculated;
+	bool bSha1Calculated;
 	bool bEd2kCalculated;
 	bool bCalculateCrc;
 	bool bCalculateMd5;
+	bool bCalculateSha1;
 	bool bCalculateEd2k;
 	UINT uiCmdOpts;
 	UINT uiRapidCrcMode;
 	int iGroupId;
 	TCHAR g_szBasePath[MAX_PATH];
-	_lFILEINFO() {qwFilesizeSum=0;bCrcCalculated=false;bMd5Calculated=false;bEd2kCalculated=false;
-				  bCalculateCrc=false;bCalculateMd5=false;bCalculateEd2k=false;uiCmdOpts=CMD_NORMAL;
+	_lFILEINFO() {qwFilesizeSum=0;bCrcCalculated=false;bMd5Calculated=false;bSha1Calculated=false;
+				  bEd2kCalculated=false;bCalculateCrc=false;bCalculateMd5=false;bCalculateSha1=false;
+				  bCalculateEd2k=false;uiCmdOpts=CMD_NORMAL;
 				  uiRapidCrcMode=MODE_NORMAL;iGroupId=0;g_szBasePath[0]=TEXT('\0');}
 }lFILEINFO;
 
@@ -285,12 +294,15 @@ typedef struct{
 	UINT			uiWndTop;
 	BOOL			bEnableQueue;
 	BOOL			bDefaultOpenUTF8;
+	BOOL			bCalcSha1PerDefault;
+	BOOL			bDisplaySha1InListView;
 }PROGRAM_OPTIONS;
 
 typedef struct{
 	UINT			uiRapidCrcMode;
 	BOOL			bCrcCalculated;
 	BOOL			bMd5Calculated;
+	BOOL			bSha1Calculated;
 	BOOL			bEd2kCalculated;
 }PROGRAM_STATUS;
 
@@ -421,6 +433,7 @@ int CALLBACK SortInfo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortCrc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortMd5(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortEd2k(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+int CALLBACK SortSha1(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 INT InfoToIntValue(CONST FILEINFO * pFileinfo);
 bool ListCompFunction(const FILEINFO& pFileinfo1, const FILEINFO& pFileinfo2);
 bool ListPointerCompFunction(const FILEINFO *pFileinfo1, const FILEINFO *pFileinfo2);
@@ -432,6 +445,7 @@ INT QuickCompFunction(const void * pFileinfo1, const void * pFileinfo2);
 UINT __stdcall ThreadProc_Calc(VOID * pParam);
 UINT __stdcall ThreadProc_FileInfo(VOID * pParam);
 DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha1Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam);
 DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam);
 

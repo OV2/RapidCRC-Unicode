@@ -507,11 +507,13 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	StringCchCopy(pprogram_options->szFilenameSfv, MAX_PATH, TEXT("checksum.sfv"));
 	pprogram_options->bCreateUnixStyle = FALSE;
 	pprogram_options->bCreateUnicodeFiles = TRUE;
-    pprogram_options->iUnicodeSaveType = UTF_16LE;
+	pprogram_options->iUnicodeSaveType = UTF_8;
 	pprogram_options->uiWndLeft = 10;
 	pprogram_options->uiWndTop = 10;
 	pprogram_options->bEnableQueue = FALSE;
 	pprogram_options->bDefaultOpenUTF8 = FALSE;
+	pprogram_options->bCalcSha1PerDefault= FALSE;
+	pprogram_options->bDisplaySha1InListView = FALSE;
 	return;
 }
 
@@ -711,6 +713,16 @@ VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
 		pFileinfo->abMd5Result[12], pFileinfo->abMd5Result[13], pFileinfo->abMd5Result[14], pFileinfo->abMd5Result[15]);
 	else
 		StringCchPrintf(pFileinfo->szMd5Result, MD5_AS_STRING_LENGHT, TEXT(""));
+
+	if(fileList->bSha1Calculated && pFileinfo->dwError == NOERROR)
+		StringCchPrintf(pFileinfo->szSha1Result, SHA1_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
+		pFileinfo->abSha1Result[0], pFileinfo->abSha1Result[1], pFileinfo->abSha1Result[2], pFileinfo->abSha1Result[3], 
+		pFileinfo->abSha1Result[4], pFileinfo->abSha1Result[5], pFileinfo->abSha1Result[6], pFileinfo->abSha1Result[7], 
+		pFileinfo->abSha1Result[8], pFileinfo->abSha1Result[9], pFileinfo->abSha1Result[10], pFileinfo->abSha1Result[11], 
+		pFileinfo->abSha1Result[12], pFileinfo->abSha1Result[13], pFileinfo->abSha1Result[14], pFileinfo->abSha1Result[15],
+		pFileinfo->abSha1Result[16], pFileinfo->abSha1Result[17], pFileinfo->abSha1Result[18], pFileinfo->abSha1Result[19]);
+	else
+		StringCchPrintf(pFileinfo->szSha1Result, SHA1_AS_STRING_LENGHT, TEXT(""));
 
 	if(fileList->bEd2kCalculated && pFileinfo->dwError == NOERROR)
 		StringCchPrintf(pFileinfo->szEd2kResult, ED2K_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),

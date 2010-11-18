@@ -150,6 +150,31 @@ int CALLBACK SortEd2k(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 }
 
 /*****************************************************************************
+int CALLBACK SortSha1(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+lParam1		: (IN) lparam of the first list view item to be compared
+lParam2		: (IN) lparam of the second list view item to be compared
+lParamSort	: (IN) lParamSort. Application dependend value
+
+Return Value:
+returns a value comparing the two items
+
+Notes:
+- lParamSort is from DlgProc and stores info if we have to sort ascending or
+descending
+*****************************************************************************/
+int CALLBACK SortSha1(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+	int iResult;
+
+    iResult = memcmp( ((FILEINFO *)lParam1)->abSha1Result, ((FILEINFO *)lParam2)->abSha1Result, 20);
+	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
+		return iResult;
+	else
+		return iResult * (-1);
+	return 0;
+}
+
+/*****************************************************************************
 INT InfoToIntValue(CONST FILEINFO * Fileinfo)
 Fileinfo	: (IN) item with the needed info
 
