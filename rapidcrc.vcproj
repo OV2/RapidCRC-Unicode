@@ -658,7 +658,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="ml64.exe /c  /nologo /Fo&quot;$(IntDir)\sha1-x86_64.obj&quot; /W3 /Zi /errorReport:prompt  $(InputFileName)"
+						CommandLine="ml64.exe /c  /nologo /Fo&quot;$(IntDir)\sha1-x86_64.obj&quot; /W3 /Zi /errorReport:prompt  $(InputFileName)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\sha1-x86_64.obj"
 					/>
 				</FileConfiguration>

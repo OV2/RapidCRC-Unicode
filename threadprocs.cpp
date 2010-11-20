@@ -452,15 +452,9 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	fileList = new lFILEINFO;
 	fileinfoTmp.parentList = fileList;
 
-#ifdef UNICODE
 	LPTSTR* argv;
 	INT argc;
-	argv = CommandLineToArgvW(GetCommandLine(), &argc);
-#else
-	// There is no ANSI Version of CommandLineToArgvW, so we have to do it this way
-	#define argc __argc
-	#define argv __argv
-#endif
+	argv = CommandLineToArgv(GetCommandLine(), &argc);
 
 
 	if(!g_program_options.bEnableQueue) {
@@ -522,6 +516,26 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 		// get number of files
 		iNumFiles = argc - 1; // -1 because 1st element is the path to the executable itself
 
+		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH)) {
+			prevInst = NULL;
+			do {
+				prevInst = FindWindowEx(NULL,prevInst,TEXT("RapidCrcMainWindow"),prevInstTitle);
+			} while(prevInst == arrHwnd[ID_MAIN_WND]);
+			if(prevInst) {
+				TCHAR *cmdLine = GetCommandLine();
+				COPYDATASTRUCT cdata;
+				cdata.dwData = CMDDATA;
+				cdata.lpData = cmdLine;
+				cdata.cbData = (lstrlen(GetCommandLine()) + 1) * sizeof(TCHAR);
+
+				SendMessage(prevInst,WM_COPYDATA,(WPARAM)arrHwnd[ID_MAIN_WND],(LPARAM)&cdata);
+				delete fileList;
+				LocalFree(argv);
+				PostMessage(arrHwnd[ID_MAIN_WND], WM_CLOSE, 0, 0);
+				return 0;
+			}
+		}
+
 		for(INT i = 0; i < iNumFiles; ++i){
 			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
 			StringCchCopy(fileinfoTmp.szFilename, MAX_PATH, argv[i+1]);
@@ -529,10 +543,7 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 		}
 	}
 
-#ifdef UNICODE
-	// in ANSI mode there is nothing to clean up
 	LocalFree(argv);
-#endif
 
 	PostProcessList(arrHwnd, pshowresult_params, fileList);
 

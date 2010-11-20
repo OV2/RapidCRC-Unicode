@@ -36,6 +36,15 @@ using namespace std;
     "language='*'\"")
 # pragma comment(lib, "comctl32.lib")
 
+#ifdef UNICODE
+#define CommandLineToArgv CommandLineToArgvW
+#else
+#define CommandLineToArgv CommandLineToArgvA
+PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
+#endif
+
+#define CMDDATA 0
+
 //****** some defines *******
 // conditional compilation
 //#define USE_MD5_REF			// use reference implementation from rfc

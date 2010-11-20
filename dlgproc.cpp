@@ -211,6 +211,24 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		SyncQueue.pushQueue(fileList);
 		SendMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL,NULL);
 		return 0;
+	case WM_COPYDATA:
+		fileList = new lFILEINFO;
+		FILEINFO fileinfoTmp;
+		LPTSTR* argv;
+		INT argc;
+		argv = CommandLineToArgv((TCHAR *)((PCOPYDATASTRUCT) lParam)->lpData, &argc);
+		fileList->uiCmdOpts = CMD_NORMAL;
+		fileinfoTmp.parentList = fileList;
+		for(INT i = 0; i < argc - 1; ++i){
+			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
+			StringCchCopy(fileinfoTmp.szFilename, MAX_PATH, argv[i+1]);
+			fileList->fInfos.push_back(fileinfoTmp);
+		}
+		LocalFree(argv);
+		PostProcessList(arrHwnd,&showresult_params,fileList);
+		SyncQueue.pushQueue(fileList);
+		SendMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL,NULL);
+		return 0;
 	case WM_TIMER:
 		if(!SyncQueue.bThreadDone && thread_params_calc.pFileinfo_cur != NULL){
 			if(thread_params_calc.pFileinfo_cur->qwFilesize != 0){
