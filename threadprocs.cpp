@@ -420,130 +420,28 @@ Return Value:
 returns 1 if something went wrong. Otherwise 0
 
 Notes:
-1) It checks that there are command line parameters
-2) If there are, it reads the parameter either from the shell extension via Named Pipe
-or it uses command line parameter as Input
-   If queueing is enabled and there is a previous instance it sends a window message to
-   this instance and terminates. The previous instance is then responsible for accepting
-   the pipe data.
-3) In this step directories are expanded and filesizes, found CRC (from filename) are
+1) In this step directories are expanded and filesizes, found CRC (from filename) are
 collected
-4) At last it is checked if the first file is an SFV/MD5 file. If so EnterSfvMode/EnterMd5Mode
+2) At last it is checked if the first file is an SFV/MD5 file. If so EnterSfvMode/EnterMd5Mode
    is called
-5) It sends an application defined window message to signal that is has done its job and
+3) It sends an application defined window message to signal that is has done its job and
 the CRC Thread can start
 *****************************************************************************/
 UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 {
-	THREAD_PARAMS_FILEINFO * CONST thread_params_fileinfo = (THREAD_PARAMS_FILEINFO *)pParam;
-	INT iNumFiles;
-	//FILEINFO * pFileinfo;
-	//BOOL bCalculateCrc32, bCalculateMd5;
+	THREAD_PARAMS_FILEINFO * thread_params_fileinfo = (THREAD_PARAMS_FILEINFO *)pParam;
 	// put thread parameter into (const) locale variable. This might be a bit faster
 	CONST HWND * CONST arrHwnd = thread_params_fileinfo->arrHwnd;
-	//QWORD * CONST pqwFilesizeSum = thread_params_fileinfo->pqwFilesizeSum;
 	SHOWRESULT_PARAMS * CONST pshowresult_params = thread_params_fileinfo->pshowresult_params;
-	HWND prevInst;
-	TCHAR prevInstTitle[MAX_PATH];
+	lFILEINFO * fileList = thread_params_fileinfo->fileList;
 
-	lFILEINFO *fileList;
-	FILEINFO fileinfoTmp={0};
+	delete thread_params_fileinfo;
 
-	fileList = new lFILEINFO;
-	fileinfoTmp.parentList = fileList;
-
-	LPTSTR* argv;
-	INT argc;
-	argv = CommandLineToArgv(GetCommandLine(), &argc);
-
+	EnterCriticalSection(&thread_fileinfo_crit);
 
 	if(!g_program_options.bEnableQueue) {
 		ClearAllItems(arrHwnd,pshowresult_params);
 	}
-    
-	// is there anything to do? (< 2, because 1st element is the path to the executable itself)
-	if(argc < 2){
-		LocalFree(argv);
-		PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);
-		return 0;
-	}
-	// use pipe input?
-	if( lstrcmpi(argv[1], TEXT("-UsePipeCommunication")) == 0)
-	{
-		// pipe switches used by the shell extension
-		if(argc > 2)
-		{
-			if(lstrcmpi(argv[2], TEXT("-CreateSFV")) == 0)
-			{
-				fileList->uiCmdOpts = CMD_SFV;
-			}
-			else if(lstrcmpi(argv[2], TEXT("-CreateMD5")) == 0)
-			{
-				fileList->uiCmdOpts = CMD_MD5;
-			}
-			else if(lstrcmpi(argv[2], TEXT("-PutNAME")) == 0)
-			{
-				fileList->uiCmdOpts = CMD_NAME;
-			}
-			else if(lstrcmpi(argv[2], TEXT("-PutNTFS")) == 0)
-			{
-				fileList->uiCmdOpts = CMD_NTFS;
-			}
-		}
-		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH)) {
-			prevInst = NULL;
-			do {
-				prevInst = FindWindowEx(NULL,prevInst,TEXT("RapidCrcMainWindow"),prevInstTitle);
-			} while(prevInst == arrHwnd[ID_MAIN_WND]);
-			if(prevInst) {
-				PostMessage(prevInst,WM_ACCEPT_PIPE,(WPARAM)fileList->uiCmdOpts,NULL);
-				delete fileList;
-				LocalFree(argv);
-				PostMessage(arrHwnd[ID_MAIN_WND], WM_CLOSE, 0, 0);
-				return 0;
-			}
-		}
-
-		if(!GetDataViaPipe(arrHwnd,fileList)){
-			delete fileList;
-			LocalFree(argv);
-			PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);
-			return 1;
-		}
-	}
-	else // not using pipe input => command line parameter are files and folders
-	{
-		// get number of files
-		iNumFiles = argc - 1; // -1 because 1st element is the path to the executable itself
-
-		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH)) {
-			prevInst = NULL;
-			do {
-				prevInst = FindWindowEx(NULL,prevInst,TEXT("RapidCrcMainWindow"),prevInstTitle);
-			} while(prevInst == arrHwnd[ID_MAIN_WND]);
-			if(prevInst) {
-				TCHAR *cmdLine = GetCommandLine();
-				COPYDATASTRUCT cdata;
-				cdata.dwData = CMDDATA;
-				cdata.lpData = cmdLine;
-				cdata.cbData = (lstrlen(GetCommandLine()) + 1) * sizeof(TCHAR);
-
-				SendMessage(prevInst,WM_COPYDATA,(WPARAM)arrHwnd[ID_MAIN_WND],(LPARAM)&cdata);
-				delete fileList;
-				LocalFree(argv);
-				PostMessage(arrHwnd[ID_MAIN_WND], WM_CLOSE, 0, 0);
-				return 0;
-			}
-		}
-
-		for(INT i = 0; i < iNumFiles; ++i){
-			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
-			StringCchCopy(fileinfoTmp.szFilename, MAX_PATH, argv[i+1]);
-			fileList->fInfos.push_back(fileinfoTmp);
-		}
-	}
-
-	LocalFree(argv);
 
 	PostProcessList(arrHwnd, pshowresult_params, fileList);
 
@@ -552,10 +450,79 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	// tell Window Proc that we are done...
 	PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);
 
+	LeaveCriticalSection(&thread_fileinfo_crit);
+
 	_endthreadex( 0 );
 	return 0;
 }
 
+/*****************************************************************************
+void StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_params, lFILEINFO * fileList)
+	arrHwnd				: (IN)	   
+	pshowresult_params	: (IN/OUT) struct for ShowResult
+	fileList			: (IN/OUT) pointer to the job structure that should be processed
+
+Notes:
+Helper function to start a fileinfo thread
+*****************************************************************************/
+void StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_params, lFILEINFO * fileList) {
+	HANDLE hThread;
+	UINT uiThreadID;
+	THREAD_PARAMS_FILEINFO *thread_params_fileinfo = new THREAD_PARAMS_FILEINFO;
+	thread_params_fileinfo->arrHwnd	= arrHwnd;
+	thread_params_fileinfo->pshowresult_params	= pshowresult_params;
+	thread_params_fileinfo->fileList = fileList;
+	hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc_FileInfo, thread_params_fileinfo, 0, &uiThreadID);
+	CloseHandle(hThread);
+}
+
+/*****************************************************************************
+UINT __stdcall ThreadProc_AcceptPipe(VOID * pParam)
+	pParam	: (IN/OUT) THREAD_PARAMS_PIPE struct pointer special for this thread
+
+Return Value:
+returns 1 if something went wrong. Otherwise 0
+
+Notes:
+reads filenames from the shell extension via Named Pipe, then signals the main
+window
+*****************************************************************************/
+UINT __stdcall ThreadProc_AcceptPipe(VOID * pParam)
+{
+	THREAD_PARAMS_PIPE * thread_params_pipe = (THREAD_PARAMS_PIPE *)pParam;
+	CONST HWND * CONST arrHwnd = thread_params_pipe->arrHwnd;
+	lFILEINFO * fileList = thread_params_pipe->fileList;
+	delete thread_params_pipe;
+
+	if(!GetDataViaPipe(arrHwnd,fileList)) {
+		delete fileList;
+		_endthreadex( 0 );
+	}
+
+	// tell Window Proc that we are done...
+	PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_START, (WPARAM)fileList, 0);
+
+	_endthreadex( 0 );
+	return 0;
+}
+
+/*****************************************************************************
+void StartAcceptPipeThread(CONST HWND *arrHwnd, lFILEINFO * fileList)
+	arrHwnd				: (IN)	   
+	fileList			: (IN/OUT) pointer to the job structure that should be processed
+
+Notes:
+Helper function to start a pipe thread
+*****************************************************************************/
+void StartAcceptPipeThread(CONST HWND *arrHwnd, lFILEINFO * fileList) {
+	HANDLE hThread;
+	UINT uiThreadID;
+	THREAD_PARAMS_PIPE *thread_params_pipe = new THREAD_PARAMS_PIPE;
+	thread_params_pipe->arrHwnd	= arrHwnd;
+	thread_params_pipe->fileList = fileList;
+	hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc_AcceptPipe, thread_params_pipe, 0, &uiThreadID);
+	CloseHandle(hThread);
+}
 
 /*****************************************************************************
 DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam)

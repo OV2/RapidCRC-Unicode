@@ -33,15 +33,10 @@ Return Value:
 Notes:
 	- does the pipe communication if the program is called with -UsePipeCommunication
 	  on the command line
-	- because blocking functions are used here, the fileinfo procedure has to be a thread.
+	- because blocking functions are used here, the pipe procedure has to be a thread.
 	  This makes things easier for programming (otherwise you have to used Overlapped IO to
 	  implement timeouts. But in these timeouts the program is blocking. In a second thread
 	  the program can be canceled at every time)
-	- There were considerations to call ThreadProc_FileInfo as a normal function instead of
-	  a thread to make it aquivalent to the calls to DropData() and OpenFiles() which are not
-	  threaded and blocking. But because the only practical reason why any of these info-getting 
-	  functions can block, is a malfunction in the pipe comm. So ThreadProc_FileInfo remains
-	  threaded and remain normal calls
 *****************************************************************************/
 BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList)
 {
@@ -113,7 +108,7 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList)
 	SetEvent(hEventReadDone);
 
 	#ifdef _DEBUG
-	StringCchPrintf(szTemp, 100, TEXT("RapidCRC: %u Dateien über Pipe signalisiert"), uiNumFiles);
+	StringCchPrintf(szTemp, 100, TEXT("RapidCRC: %u Dateien ï¿½ber Pipe signalisiert"), uiNumFiles);
 	OutputDebugString(szTemp);
 	#endif
 

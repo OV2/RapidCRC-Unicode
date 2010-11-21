@@ -59,6 +59,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define WM_INIT_WNDPROCTABINTERFACE	(WM_USER + 6)
 #define WM_SET_CTRLS_STATE			(WM_USER + 7)
 #define WM_ACCEPT_PIPE				(WM_USER + 8)
+#define WM_THREAD_FILEINFO_START	(WM_USER + 9)
 
 // indexes for the icons in the image list (that is inserted into the listview)
 #define ICON_OK		0
@@ -246,10 +247,15 @@ typedef struct{
 }SHOWRESULT_PARAMS;
 
 typedef struct{
-	//QWORD *				pqwFilesizeSum;
-	HWND *				arrHwnd;		// array
+	CONST HWND			* arrHwnd;		// array
 	SHOWRESULT_PARAMS	* pshowresult_params;
+	lFILEINFO			* fileList;
 }THREAD_PARAMS_FILEINFO;
+
+typedef struct{
+	CONST HWND			* arrHwnd;		// array
+	lFILEINFO			* fileList;
+}THREAD_PARAMS_PIPE;
 
 typedef struct{
 	QWORD				qwBytesReadCurFile;				// out
@@ -329,6 +335,7 @@ extern HINSTANCE g_hInstance;
 //extern TCHAR g_szBasePath[MAX_PATH];
 extern PROGRAM_OPTIONS g_program_options;
 extern BOOL gComCtrlv6;							//are the common controls v6 available? (os>=winxp)
+extern CRITICAL_SECTION thread_fileinfo_crit;
 
 //****** function prototypes *******
 
@@ -337,7 +344,7 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
 VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList);
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList);
-BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params);
+BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode);
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,list<FILEINFO*> *finalList);
 VOID FillFinalList(CONST HWND hListView, list<FILEINFO*> *finalList,CONST UINT uiNumSelected);
@@ -349,7 +356,7 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 LRESULT CALLBACK WndProcTabInterface(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 //drag and drop support (droptarget.cpp)
-VOID RegisterDropWindow(HWND arrHwnd[ID_NUM_WINDOWS], IDropTarget **ppDropTarget, SHOWRESULT_PARAMS * pshowresult_params);
+VOID RegisterDropWindow(HWND arrHwnd[ID_NUM_WINDOWS], IDropTarget **ppDropTarget);
 VOID UnregisterDropWindow(HWND hWndListview, IDropTarget *pDropTarget);
 
 //GUI related functions (guirelated.cpp)
@@ -452,10 +459,11 @@ INT QuickCompFunction(const void * pFileinfo1, const void * pFileinfo2);
 
 //Thread procedures (threadprocs.cpp)
 UINT __stdcall ThreadProc_Calc(VOID * pParam);
-UINT __stdcall ThreadProc_FileInfo(VOID * pParam);
 DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Sha1Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam);
 DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam);
+void StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_params, lFILEINFO * fileList);
+void StartAcceptPipeThread(CONST HWND *arrHwnd, lFILEINFO * fileList);
 
 #endif

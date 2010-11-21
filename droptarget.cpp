@@ -27,7 +27,7 @@
 #include <commctrl.h>
 #include "CSyncQueue.h"
 
-static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, SHOWRESULT_PARAMS * pshowresult_params);
+static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject);
 
 //
 //	This is our definition of a class which implements
@@ -48,7 +48,7 @@ public:
 	HRESULT __stdcall Drop (IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect);
 
 	// Constructor
-	CDropTarget(HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS	* pshowresult_params);
+	CDropTarget(HWND arrHwnd[ID_NUM_WINDOWS]);
 	~CDropTarget();
 
 private:
@@ -64,7 +64,6 @@ private:
 	BOOL				 m_fAllowDrop;
 	//BOOL				* m_pbThreadDone;
 	//QWORD				* m_pqwFilesizeSum;
-	SHOWRESULT_PARAMS	* m_pshowresult_params;
 
 	IDataObject *m_pDataObject;
 };
@@ -72,14 +71,13 @@ private:
 //
 //	Constructor for the CDropTarget class
 //
-CDropTarget::CDropTarget(HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS	* pshowresult_params)
+CDropTarget::CDropTarget(HWND arrHwnd[ID_NUM_WINDOWS])
 {
 	m_lRefCount			= 1;
 	m_arrHwnd				= arrHwnd;
 	m_fAllowDrop		= FALSE;
 	//m_pbThreadDone		= pbThreadDone;
 	//m_pqwFilesizeSum	= pqwFilesizeSum;
-	m_pshowresult_params= pshowresult_params;
 }
 
 //
@@ -195,7 +193,7 @@ HRESULT __stdcall CDropTarget::Drop(IDataObject * pDataObject, DWORD grfKeyState
 {
 	if(m_fAllowDrop && (SyncQueue.bThreadDone || g_program_options.bEnableQueue))
 	{
-		DropData(m_arrHwnd, pDataObject, m_pshowresult_params);
+		DropData(m_arrHwnd, pDataObject);
 
 		*pdwEffect = DROPEFFECT_COPY;;
 	}
@@ -207,7 +205,7 @@ HRESULT __stdcall CDropTarget::Drop(IDataObject * pDataObject, DWORD grfKeyState
 	return S_OK;
 }
 
-static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, SHOWRESULT_PARAMS * pshowresult_params)
+static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject)
 {
 	// construct a FORMATETC object
 	FORMATETC fmtetc = { CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
@@ -233,10 +231,6 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, SHO
 			pFInfoList = new lFILEINFO;
 			fileinfoTmp.parentList = pFInfoList;
 
-			if(!g_program_options.bEnableQueue) {
-				ClearAllItems(arrHwnd,pshowresult_params);
-			}
-
 			for (UINT i=0; i < uiCount; i++)
 			{
 				ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
@@ -249,19 +243,14 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject, SHO
 			// release the data using the COM API
 			ReleaseStgMedium(&stgmed);
 
-			PostProcessList(arrHwnd, pshowresult_params,pFInfoList);
-
-			SyncQueue.pushQueue(pFInfoList);
-
-			PostMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL,NULL);
+			PostMessage(arrHwnd[ID_MAIN_WND],WM_THREAD_FILEINFO_START,(WPARAM)pFInfoList,NULL);
 		}
 	}
 }
 
-VOID RegisterDropWindow(HWND arrHwnd[ID_NUM_WINDOWS], IDropTarget **ppDropTarget,
-						 SHOWRESULT_PARAMS * pshowresult_params)
+VOID RegisterDropWindow(HWND arrHwnd[ID_NUM_WINDOWS], IDropTarget **ppDropTarget)
 {
-	CDropTarget *pDropTarget = new CDropTarget(arrHwnd, pshowresult_params);
+	CDropTarget *pDropTarget = new CDropTarget(arrHwnd);
 
 	// acquire a strong lock
 	CoLockObjectExternal(pDropTarget, TRUE, FALSE);

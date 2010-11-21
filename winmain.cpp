@@ -21,6 +21,117 @@
 #include "resource.h"
 
 /*****************************************************************************
+lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary)
+	bPipeNecessary	: (OUT) true if we were called from the shell extension and
+							need to accept pipe input
+
+Return Value:
+a filelist to start processing, or NULL if this has been deferred to another instance
+
+Notes:
+1) It checks that there are command line parameters
+2) If there are, it reads either reads the file names from the command line or signals
+   that pipe input from the shell extension neets to be parsed
+
+   If queueing is enabled and there is a previous instance it sends a window message to
+   this instance and terminates. The previous instance is then responsible for accepting
+   the pipe data/command line
+*****************************************************************************/
+lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
+	INT iNumFiles;
+	HWND prevInst;
+	TCHAR prevInstTitle[MAX_PATH];
+
+	lFILEINFO *fileList;
+	FILEINFO fileinfoTmp={0};
+
+	fileList = new lFILEINFO;
+	fileinfoTmp.parentList = fileList;
+
+	LPTSTR* argv;
+	INT argc;
+	argv = CommandLineToArgv(GetCommandLine(), &argc);
+
+	*bPipeNecessary = FALSE;
+    
+	// is there anything to do? (< 2, because 1st element is the path to the executable itself)
+	if(argc < 2){
+		LocalFree(argv);
+		return fileList;
+	}
+	// use pipe input?
+	if( lstrcmpi(argv[1], TEXT("-UsePipeCommunication")) == 0)
+	{
+		// pipe switches used by the shell extension
+		if(argc > 2)
+		{
+			if(lstrcmpi(argv[2], TEXT("-CreateSFV")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_SFV;
+			}
+			else if(lstrcmpi(argv[2], TEXT("-CreateMD5")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_MD5;
+			}
+			else if(lstrcmpi(argv[2], TEXT("-PutNAME")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_NAME;
+			}
+			else if(lstrcmpi(argv[2], TEXT("-PutNTFS")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_NTFS;
+			}
+		}
+		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH)) {
+			prevInst = NULL;
+			prevInst = FindWindowEx(NULL,prevInst,TEXT("RapidCrcMainWindow"),prevInstTitle);
+			if(prevInst) {
+				PostMessage(prevInst,WM_ACCEPT_PIPE,(WPARAM)fileList->uiCmdOpts,NULL);
+				delete fileList;
+				LocalFree(argv);
+
+				return NULL;
+			}
+		}
+
+		*bPipeNecessary = TRUE;
+	}
+	else // not using pipe input => command line parameter are files and folders
+	{
+		// get number of files
+		iNumFiles = argc - 1; // -1 because 1st element is the path to the executable itself
+
+		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH)) {
+			prevInst = NULL;
+			prevInst = FindWindowEx(NULL,prevInst,TEXT("RapidCrcMainWindow"),prevInstTitle);
+			if(prevInst) {
+				TCHAR *cmdLine = GetCommandLine();
+				COPYDATASTRUCT cdata;
+				cdata.dwData = CMDDATA;
+				cdata.lpData = cmdLine;
+				cdata.cbData = (lstrlen(GetCommandLine()) + 1) * sizeof(TCHAR);
+
+				SendMessage(prevInst,WM_COPYDATA,(WPARAM)0,(LPARAM)&cdata);
+				delete fileList;
+				LocalFree(argv);
+				return NULL;
+			}
+		}
+
+		for(INT i = 0; i < iNumFiles; ++i){
+			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
+			StringCchCopy(fileinfoTmp.szFilename, MAX_PATH, argv[i+1]);
+			fileList->fInfos.push_back(fileinfoTmp);
+		}
+	}
+
+	LocalFree(argv);
+
+	return fileList;
+}
+
+
+/*****************************************************************************
 INT WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInstance, LPSTR szCmdLine, int iCmdShow)
 	hInst			: (IN) Instance handle
 	hPrevInstance	: not used
@@ -34,8 +145,26 @@ INT WINAPI WinMain (HINSTANCE hInst, HINSTANCE /*hPrevInstance*/, LPSTR /*szCmdL
 {
 	MSG msg;
 	HWND mainHwnd;
+	BOOL bPipeNecessary;
+	lFILEINFO *fileList;
+	HANDLE hMutex;
 
 	g_hInstance = hInst;
+
+	InitializeCriticalSection(&thread_fileinfo_crit);
+
+	hMutex = CreateMutex(NULL,FALSE,TEXT("Local\\RapidCRCUMutex"));
+	if(!hMutex) {
+		return 0;
+	}
+	WaitForSingleObject(hMutex,INFINITE);
+
+	ReadOptions();
+
+	fileList = ParseCommandLine(&bPipeNecessary);
+	if(fileList==NULL) {
+		return 0;
+	}
 
 	RegisterMainWindowClass();
 
@@ -45,6 +174,16 @@ INT WINAPI WinMain (HINSTANCE hInst, HINSTANCE /*hPrevInstance*/, LPSTR /*szCmdL
 		return 0;
 	}
 
+	if(bPipeNecessary) {
+		PostMessage(mainHwnd,WM_ACCEPT_PIPE,(WPARAM)fileList->uiCmdOpts,NULL);
+		delete fileList;
+	} else {
+		PostMessage(mainHwnd,WM_THREAD_FILEINFO_START,(WPARAM)fileList,NULL);
+		fileList=NULL;
+	}
+
+	ReleaseMutex(hMutex);
+
 	while(GetMessage(&msg, NULL, 0, 0))
 	{
 		if (!IsDialogMessage(mainHwnd, &msg)) {
@@ -52,6 +191,8 @@ INT WINAPI WinMain (HINSTANCE hInst, HINSTANCE /*hPrevInstance*/, LPSTR /*szCmdL
 			DispatchMessage(&msg);
 		}
 	}
+
+	DeleteCriticalSection(&thread_fileinfo_crit);
 
 	return (INT) msg.wParam;
 }

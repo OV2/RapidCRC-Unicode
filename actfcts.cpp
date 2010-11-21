@@ -229,18 +229,17 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list
 }
 
 /*****************************************************************************
-BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params)
+BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 	arrHwnd				: (IN) window handle array
-	pshowresult_params	: (IN/OUT) struct for ShowResult
 
 Return Value:
 returns FALSE if the dialog was canceled. Otherwise TRUE
 
 Notes:
 - Displays a open filename dialog, generates a new list from the selected files,
-  calls PostProcessList and adds the generated list to the SyncQueue
+  then instructs the main window to start the file info thread
 *****************************************************************************/
-BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params)
+BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 {
 	OPENFILENAME ofn;
 	TCHAR * szBuffer, * szBufferPart;
@@ -316,11 +315,7 @@ BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresu
 	// we don't need the buffer anymore
 	free(szBuffer);
 
-	PostProcessList(arrHwnd, pshowresult_params,pFInfoList);
-
-	SyncQueue.pushQueue(pFInfoList);
-
-	PostMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL,NULL);
+	PostMessage(arrHwnd[ID_MAIN_WND],WM_THREAD_FILEINFO_START,(WPARAM)pFInfoList,NULL);
 
 	return TRUE;
 }

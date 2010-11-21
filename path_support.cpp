@@ -375,7 +375,7 @@ BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH], DWORD * pdwFoundCrc)
 VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 					 SHOWRESULT_PARAMS * pshowresult_params,
 					 lFILEINFO *fileList)
-	pqwFilesizeSum		: (OUT) pointer to the QWORD that sums up all filesizes
+	arrHwnd				: (IN)	   
 	pshowresult_params	: (IN/OUT) struct for ShowResult
 	fileList			: (IN/OUT) pointer to the job structure that should be processed
 
