@@ -1,13 +1,23 @@
 <?xml version='1.0' encoding='windows-1252'?>
+<?define rcrcv = "0.3.0" ?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-  <Product Name='RapidCRC (x64)' Id='B9B44835-5ECB-459a-91AB-73F492A38C48' UpgradeCode='82B033AA-A311-40dc-BBF6-1544C2AE5480'
-    Language='1033' Codepage='1252' Version='0.2.1' Manufacturer='RapidCRC'>
+  <Product Name='RapidCRC (x64) $(var.rcrcv)' Id='18F6CBF9-1A6B-4106-90E9-BED32D3108C1' UpgradeCode='82B033AA-A311-40dc-BBF6-1544C2AE5480'
+    Language='1033' Codepage='1252' Version='$(var.rcrcv)' Manufacturer='RapidCRC'>
 
     <Package Id='*' Keywords='Installer'
       Description="RapidCRC installer"
       Manufacturer='RapidCRC'
       Platform='x64'
       InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
+
+    <Upgrade Id="82B033AA-A311-40dc-BBF6-1544C2AE5480">
+        <UpgradeVersion OnlyDetect="yes" Minimum="$(var.rcrcv)" Property="NEWERVERSIONDETECTED" IncludeMinimum="no" />
+        <UpgradeVersion OnlyDetect="no" Maximum="$(var.rcrcv)" Property="OLDERVERSIONBEINGUPGRADED" IncludeMaximum="no" />
+    </Upgrade>
+
+    <InstallExecuteSequence>
+        <RemoveExistingProducts After="InstallInitialize" />
+    </InstallExecuteSequence>
 
     <Media Id='1' Cabinet='RapidCRC.cab' EmbedCab='yes' DiskPrompt="RCRC (x64) cab 1" />
     <Property Id='DiskPrompt' Value="RapidCRC (x64) cab 1" />
@@ -71,7 +81,7 @@
             
     </Directory>
 
-    <Feature Id='MainProgram' Title='RapidCRC' Description='RapidCRC files.'
+    <Feature Id='MainProgram' Title='RapidCRC (x64) $(var.rcrcv)' Description='RapidCRC files.'
       Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR' AllowAdvertise='no'>
       <ComponentRef Id='MainExecutable' />
       <ComponentRef Id='MainExeRegKey32' />
