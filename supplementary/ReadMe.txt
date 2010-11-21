@@ -4,3 +4,6 @@ For more info please visit:
 http://rapidcrc.sourceforge.net
 
 (c) 2004 Sebastian Ewert
+
+RapidCRC Unicode:
+http://overfiend.sessionclan.de/drupal/programs/rapidcrc
