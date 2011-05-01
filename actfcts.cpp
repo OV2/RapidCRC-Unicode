@@ -336,6 +336,8 @@ Notes:
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 {
 	list<FILEINFO*> finalList;
+	DWORD checkReturn;
+	TCHAR szErrorMessage[MAX_PATH];
 
 	// check if there are any item in our list (without checking an access violation could occur)
 	if(ListView_GetItemCount(arrHwnd[ID_LISTVIEW]) == 0)
@@ -349,7 +351,15 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 		finalList.sort(ListPointerCompFunction);
 		finalList.unique(ListPointerUniqFunction);
 	}
-	return CreateChecksumFiles(arrHwnd,uiMode,&finalList);
+
+	if((checkReturn = CreateChecksumFiles(arrHwnd,uiMode,&finalList)) != NOERROR) {
+		StringCchPrintf(szErrorMessage, MAX_PATH,
+							TEXT("Error %u occured during checksum file creation"),
+							checkReturn);
+		MessageBox(arrHwnd[ID_MAIN_WND], szErrorMessage, TEXT("Error"), MB_OK);
+	}
+
+	return checkReturn;
 }
 
 /*****************************************************************************

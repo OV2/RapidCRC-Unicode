@@ -205,9 +205,9 @@ Return Value:
 DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST DWORD dwCrc)
 {
 	TCHAR szFilenameTemp[MAX_PATH];
-	CHAR szFilenameAnsi[MAX_PATH];
 	TCHAR szLine[MAX_LINE_LENGTH];
 #ifdef UNICODE
+	CHAR szFilenameAnsi[MAX_UTF8_PATH];
 	CHAR szLineAnsi[MAX_LINE_LENGTH];
 #endif
 	DWORD dwNumberOfBytesWritten;
@@ -221,13 +221,13 @@ DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST D
 #ifdef UNICODE
     // we only need the conversion if we don't write unicode data
 	if(!g_program_options.bCreateUnicodeFiles) {
-		if(!WideCharToMultiByte(CP_ACP, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_PATH, NULL, NULL) )
+		if(!WideCharToMultiByte(CP_ACP, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_UTF8_PATH, NULL, NULL) )
 			return GetLastError();
 		StringCbPrintfA(szLineAnsi, MAX_LINE_LENGTH, "%s %08LX%s", szFilenameAnsi, dwCrc, g_program_options.bCreateUnixStyle ? "\n" : "\r\n" );
 		StringCbLengthA(szLineAnsi, MAX_LINE_LENGTH, & stStringLength);
 		szOutLine=szLineAnsi;
 	} else if(g_program_options.iUnicodeSaveType==UTF_8 || g_program_options.iUnicodeSaveType==UTF_8_BOM) {
-        if(!WideCharToMultiByte(CP_UTF8, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_PATH, NULL, NULL) )
+        if(!WideCharToMultiByte(CP_UTF8, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_UTF8_PATH, NULL, NULL) )
 		    return GetLastError();
 	    StringCbPrintfA(szLineAnsi, MAX_LINE_LENGTH, "%s %08LX%s", szFilenameAnsi, dwCrc, g_program_options.bCreateUnixStyle ? "\n" : "\r\n" );
 	    StringCbLengthA(szLineAnsi, MAX_LINE_LENGTH, & stStringLength);
@@ -303,9 +303,9 @@ Return Value:
 DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abMd5Result[16])
 {
 	TCHAR szFilenameTemp[MAX_PATH];
-	CHAR szFilenameAnsi[MAX_PATH];
 	TCHAR szLine[MAX_LINE_LENGTH];
 #ifdef UNICODE
+	CHAR szFilenameAnsi[MAX_UTF8_PATH];
 	CHAR szLineAnsi[MAX_LINE_LENGTH];
 #endif
 	DWORD dwNumberOfBytesWritten;
@@ -319,7 +319,7 @@ DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST B
 #ifdef UNICODE
     // we only need the conversion if we don't write unicode data
 	if(!g_program_options.bCreateUnicodeFiles) {
-		if(!WideCharToMultiByte(CP_ACP, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_PATH, NULL, NULL) )
+		if(!WideCharToMultiByte(CP_ACP, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_UTF8_PATH, NULL, NULL) )
 			return GetLastError();
 		StringCchPrintfA(szLineAnsi, MAX_LINE_LENGTH, "%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx *%s%s",
 			abMd5Result[0], abMd5Result[1], abMd5Result[2], abMd5Result[3], 
@@ -331,7 +331,7 @@ DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST B
 		StringCbLengthA(szLineAnsi, MAX_LINE_LENGTH, & stStringLength);
 		szOutLine=szLineAnsi;
     } else if(g_program_options.iUnicodeSaveType == UTF_8 || g_program_options.iUnicodeSaveType==UTF_8_BOM) {
-		if(!WideCharToMultiByte(CP_UTF8, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_PATH, NULL, NULL) )
+		if(!WideCharToMultiByte(CP_UTF8, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_UTF8_PATH, NULL, NULL) )
 			return GetLastError();
 		StringCchPrintfA(szLineAnsi, MAX_LINE_LENGTH, "%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx *%s%s",
 			abMd5Result[0], abMd5Result[1], abMd5Result[2], abMd5Result[3], 

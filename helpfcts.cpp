@@ -24,7 +24,7 @@
 #include <mlang.h>
 
 // used in UINT DetermineFileCP(CONST HANDLE hFile)
-#define TESTBUFFER_SIZE 4096
+#define TESTBUFFER_SIZE 524288
 
 /*****************************************************************************
 BOOL IsLegalHexSymbol(CONST TCHAR tcChar)
