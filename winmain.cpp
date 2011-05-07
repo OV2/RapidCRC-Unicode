@@ -81,6 +81,10 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 			{
 				fileList->uiCmdOpts = CMD_NTFS;
 			}
+			else if(lstrcmpi(argv[2], TEXT("-Reparent")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_REPARENT;
+			}
 		}
 		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH)) {
 			prevInst = NULL;

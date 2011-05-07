@@ -19,6 +19,7 @@
 
 #include "resource.h"
 #include "globals.h"
+#include <shlobj.h>
 
 /*****************************************************************************
 BOOL EnterSfvMode(lFILEINFO *fileList)
@@ -55,6 +56,21 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 	StringCchCopy(fileList->g_szBasePath, MAX_PATH, szFilenameSfv);
 	ReduceToPath(fileList->g_szBasePath);
 	GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH);
+
+	if(fileList->uiCmdOpts==CMD_REPARENT) {
+		TCHAR	szReparentPath[MAX_PATH];
+		LPITEMIDLIST iidl=NULL;
+		BROWSEINFO bInfo = {0};
+		bInfo.lpszTitle = TEXT("Select folder for sfv reparenting");
+		bInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
+		bInfo.lpfn = BrowseFolderSetSelProc;
+		bInfo.lParam = (LPARAM)fileList->g_szBasePath;
+		if(iidl=SHBrowseForFolder(&bInfo)) {
+			SHGetPathFromIDList(iidl,szReparentPath);
+			CoTaskMemFree(iidl);
+			StringCchCopy(fileList->g_szBasePath, MAX_PATH, szReparentPath);
+		}
+	}
 
 	// This is(should be) the ONLY place where a persistent change of the current directory is done
 	// (for GetFullPathName())
@@ -437,6 +453,21 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 	StringCchCopy(fileList->g_szBasePath, MAX_PATH, szFilenameMd5);
 	ReduceToPath(fileList->g_szBasePath);
 	GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH);
+
+	if(fileList->uiCmdOpts==CMD_REPARENT) {
+		TCHAR	szReparentPath[MAX_PATH];
+		LPITEMIDLIST iidl=NULL;
+		BROWSEINFO bInfo = {0};
+		bInfo.lpszTitle = TEXT("Select folder for md5 reparenting");
+		bInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
+		bInfo.lpfn = BrowseFolderSetSelProc;
+		bInfo.lParam = (LPARAM)fileList->g_szBasePath;
+		if(iidl=SHBrowseForFolder(&bInfo)) {
+			SHGetPathFromIDList(iidl,szReparentPath);
+			CoTaskMemFree(iidl);
+			StringCchCopy(fileList->g_szBasePath, MAX_PATH, szReparentPath);
+		}
+	}
 
 	// This is(should be) the ONLY place where a persistent change of the current directory is done
 	// (for GetFullPathName())

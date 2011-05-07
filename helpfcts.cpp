@@ -980,3 +980,11 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc)
     return argv;
 }
 #endif
+
+int CALLBACK BrowseFolderSetSelProc (HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+   if (uMsg==BFFM_INITIALIZED) {
+      SendMessage(hWnd, BFFM_SETSELECTION, TRUE, lpData );
+   }
+   return 0;
+}

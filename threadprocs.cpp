@@ -445,7 +445,11 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 
 	PostProcessList(arrHwnd, pshowresult_params, fileList);
 
-	SyncQueue.pushQueue(fileList);
+	if(fileList->fInfos.empty()) {
+		delete fileList;
+	} else {
+		SyncQueue.pushQueue(fileList);
+	}
 
 	// tell Window Proc that we are done...
 	PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);

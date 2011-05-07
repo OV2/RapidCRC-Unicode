@@ -669,7 +669,7 @@ BOOL InsertGroupIntoListView(CONST HWND hListView, lFILEINFO *fileList)
 	lvGroup.cbSize = sizeof(LVGROUP);
 	lvGroup.iGroupId=fileList->iGroupId;
 	StringCchPrintf(szGroupHeader,MAX_PATH + 6,TEXT("Job %02d - %s"),fileList->iGroupId,fileList->g_szBasePath);
-	lvGroup.pszHeader=szGroupHeader;//fileList->g_szBasePath;
+	lvGroup.pszHeader=(LPWSTR)szGroupHeader;//fileList->g_szBasePath;
 	if(ListView_InsertGroup(hListView,-1,&lvGroup)==-1)
 		return FALSE;
 	return TRUE;

@@ -119,6 +119,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_MD5				2
 #define CMD_NAME			3
 #define CMD_NTFS			4
+#define CMD_REPARENT		5
 
 // these are the different possibilities for how to create SFV and MD5 files
 #define CREATE_ONE_PER_FILE		0
@@ -181,6 +182,12 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_MD5_COLUMN              51
 #define IDM_ED2K_COLUMN             52
 #define IDM_SHA1_COLUMN             53
+
+//****** file open dialog *******
+#define FDIALOG_OPENCHOICES 0
+#define FDIALOG_CHOICE_OPEN 0
+#define FDIALOG_CHOICE_REPARENT 1
+
 
 //****** custom datatypes *******
 
@@ -336,6 +343,7 @@ extern HINSTANCE g_hInstance;
 //extern TCHAR g_szBasePath[MAX_PATH];
 extern PROGRAM_OPTIONS g_program_options;
 extern BOOL gComCtrlv6;							//are the common controls v6 available? (os>=winxp)
+extern BOOL gIsVista;
 extern CRITICAL_SECTION thread_fileinfo_crit;
 
 //****** function prototypes *******
@@ -411,6 +419,7 @@ VOID ReplaceChar(TCHAR * szString, CONST size_t stBufferLength, CONST TCHAR tcIn
 #ifdef USE_TIME_MEASUREMENT
 	VOID StartTimeMeasure(CONST BOOL bStart);
 #endif
+int CALLBACK BrowseFolderSetSelProc (HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
 
 //path support functions (path_support.cpp)
 BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH]);

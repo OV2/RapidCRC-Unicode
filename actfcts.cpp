@@ -19,8 +19,10 @@
 
 #include "globals.h"
 #include <commctrl.h>
+#include <Shobjidl.h>
 #include "resource.h"
 #include "CSyncQueue.h"
+#include "COpenFileListener.h"
 
 static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *finalList);
 static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode, CONST TCHAR szChkSumFilename[MAX_PATH], list<FILEINFO*> *finalList);
@@ -228,62 +230,126 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list
 	return;
 }
 
-/*****************************************************************************
-BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS])
-	arrHwnd				: (IN) window handle array
+#ifdef UNICODE
+BOOL OpenFilesVistaUp(HWND hwnd, lFILEINFO *pFInfoList)
+{
+    IFileOpenDialog *pfd;
+	IFileDialogCustomize *pfdc;
+	FILEOPENDIALOGOPTIONS dwOptions;
+	TCHAR szCurrentPath[MAX_PATH];
+	DWORD dwCookie = 0;
 
-Return Value:
-returns FALSE if the dialog was canceled. Otherwise TRUE
+	GetCurrentDirectory(MAX_PATH, szCurrentPath);
+    
+	CoInitialize(NULL);
+    
+    // CoCreate the dialog object.
+    HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, 
+                                  NULL, 
+                                  CLSCTX_INPROC_SERVER, 
+                                  IID_PPV_ARGS(&pfd));
 
-Notes:
-- Displays a open filename dialog, generates a new list from the selected files,
-  then instructs the main window to start the file info thread
-*****************************************************************************/
-BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+    if (SUCCEEDED(hr)) {
+
+		hr = pfd->QueryInterface(IID_PPV_ARGS(&pfdc));
+
+		if(SUCCEEDED(hr)) {
+
+			hr = pfdc->EnableOpenDropDown(FDIALOG_OPENCHOICES);
+			if (SUCCEEDED(hr))
+			{
+				hr = pfdc->AddControlItem(FDIALOG_OPENCHOICES, FDIALOG_CHOICE_OPEN, L"&Open");
+				if (SUCCEEDED(hr))
+				{
+					hr = pfdc->AddControlItem(FDIALOG_OPENCHOICES, 
+											  FDIALOG_CHOICE_REPARENT, 
+											  L"&Reparent SFV/MD5");
+				}
+			}
+		}
+
+		pfdc->Release();
+
+        hr = pfd->GetOptions(&dwOptions);
+        
+        if (SUCCEEDED(hr)) {
+            hr = pfd->SetOptions(dwOptions | FOS_ALLOWMULTISELECT | FOS_FORCEFILESYSTEM);
+
+			if (SUCCEEDED(hr)) {
+				COpenFileListener *ofl = new COpenFileListener(pFInfoList);
+				hr = pfd->Advise(ofl,&dwCookie);
+
+				if (SUCCEEDED(hr)) {
+					hr = pfd->Show(hwnd);
+
+					if (SUCCEEDED(hr)) {
+						
+					}
+
+					pfd->Unadvise(dwCookie);
+				}
+			}
+        }
+		
+        pfd->Release();
+    }
+
+	CoUninitialize();
+
+	SetCurrentDirectory(szCurrentPath);
+
+    return SUCCEEDED(hr);
+}
+#endif
+
+UINT_PTR CALLBACK OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+{
+	LPOFNOTIFY notify;
+	if(uiMsg==WM_NOTIFY) {
+		notify = (LPOFNOTIFY)lParam;
+		if(notify->hdr.code==CDN_INITDONE) {
+			CommDlg_OpenSave_SetControlText(GetParent(hdlg),chx1,TEXT("Reparent SFV/MD5"));
+		}
+	}
+	return 0;
+}
+
+BOOL OpenFilesXPPrev(HWND hwnd, lFILEINFO *pFInfoList)
 {
 	OPENFILENAME ofn;
 	TCHAR * szBuffer, * szBufferPart;
 	TCHAR szCurrentPath[MAX_PATH];
-	//FILEINFO * pFileinfo, * pFileinfo_previtem;
 	size_t stStringLength;
-	lFILEINFO *pFInfoList;
 	FILEINFO fileinfoTmp={0};
 
 	szBuffer = (TCHAR *) malloc(MAX_BUFFER_SIZE_OFN * sizeof(TCHAR)); 
 	if(szBuffer == NULL){
-		MessageBox(arrHwnd[ID_MAIN_WND], TEXT("Error allocating buffer"), TEXT("Buffer error"), MB_OK);
+		MessageBox(hwnd, TEXT("Error allocating buffer"), TEXT("Buffer error"), MB_OK);
 		return FALSE;
 	}
 	StringCchCopy(szBuffer, MAX_BUFFER_SIZE_OFN, TEXT(""));
-	
+
 	ZeroMemory(& ofn, sizeof (OPENFILENAME));
 	ofn.lStructSize       = sizeof (OPENFILENAME) ;
-	ofn.hwndOwner         = arrHwnd[ID_MAIN_WND] ;
+	ofn.hwndOwner         = hwnd ;
 	ofn.lpstrFilter       = TEXT("All files\0*.*\0\0") ;
 	ofn.lpstrFile         = szBuffer ;
 	ofn.nMaxFile          = MAX_BUFFER_SIZE_OFN ;
-	ofn.Flags             = OFN_ALLOWMULTISELECT | OFN_EXPLORER | OFN_ENABLESIZING;
+	ofn.Flags             = OFN_ALLOWMULTISELECT | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLEHOOK;
+	ofn.lpfnHook		  = OFNHookProc;
 
 	GetCurrentDirectory(MAX_PATH, szCurrentPath);
 	if(!GetOpenFileName( & ofn )){
 		if(CommDlgExtendedError() == FNERR_BUFFERTOOSMALL){
-			MessageBox(arrHwnd[ID_MAIN_WND], TEXT("You selected too many files. The buffers was too small. You can select as many files as you want, if you use the rightclick shell extension of RapidCRC!"),
+			MessageBox(hwnd, TEXT("You selected too many files. The buffers was too small. You can select as many files as you want, if you use the rightclick shell extension of RapidCRC!"),
 						TEXT("Buffer too small error"), MB_OK);
 		}
 		free(szBuffer);
 		SetCurrentDirectory(szCurrentPath);
 		return FALSE;
 	}
-	SetCurrentDirectory(szCurrentPath);
+	SetCurrentDirectory(szCurrentPath);	
 
-	//we clear all lists if not in queue mode
-	if(!g_program_options.bEnableQueue) {
-		ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
-		SyncQueue.clearList();
-	}
-
-	//new joblist that will be added to the queue
-	pFInfoList = new lFILEINFO;
 	fileinfoTmp.parentList = pFInfoList;
 
 	// if first part of szBuffer is a directory the user selected multiple files
@@ -312,9 +378,51 @@ BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 		pFInfoList->fInfos.push_back(fileinfoTmp);
 	}
 
+	if(ofn.Flags & OFN_READONLY) {
+		pFInfoList->uiCmdOpts = CMD_REPARENT;
+	}
+
 	// we don't need the buffer anymore
 	free(szBuffer);
 
+	return true;
+}
+
+/*****************************************************************************
+BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+	arrHwnd				: (IN) window handle array
+
+Return Value:
+returns FALSE if the dialog was canceled. Otherwise TRUE
+
+Notes:
+- Displays a open filename dialog, generates a new list from the selected files,
+  then instructs the main window to start the file info thread
+*****************************************************************************/
+BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+{
+	lFILEINFO *pFInfoList;
+	BOOL dialogReturn;
+	
+	//new joblist that will be added to the queue
+	pFInfoList = new lFILEINFO;
+	
+#ifdef UNICODE
+	if(gIsVista)
+		dialogReturn = OpenFilesVistaUp(arrHwnd[ID_MAIN_WND],pFInfoList);
+	else
+#endif
+		dialogReturn = OpenFilesXPPrev(arrHwnd[ID_MAIN_WND],pFInfoList);
+
+	if(!dialogReturn)
+		return FALSE;
+
+	//we clear all lists if not in queue mode
+	if(!g_program_options.bEnableQueue) {
+		ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
+		SyncQueue.clearList();
+	}
+	
 	PostMessage(arrHwnd[ID_MAIN_WND],WM_THREAD_FILEINFO_START,(WPARAM)pFInfoList,NULL);
 
 	return TRUE;
