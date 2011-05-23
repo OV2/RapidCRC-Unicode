@@ -422,6 +422,13 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 			break;
+		case IDC_CRC_DELIM_LIST:
+			if(HIWORD(wParam) == EN_CHANGE){
+				GetWindowText(GetDlgItem(hDlg, IDC_CRC_DELIM_LIST), szFilenamePattern, MAX_PATH);
+				StringCchCopy(program_options_temp.szCRCStringDelims, MAX_PATH, szFilenamePattern);
+				return TRUE;
+			}
+			break;
 		case IDC_BTN_DEFAULT:
 			if(HIWORD(wParam) == BN_CLICKED){
 				SetDefaultOptions(& program_options_temp);

@@ -45,6 +45,23 @@ BOOL IsLegalHexSymbol(CONST TCHAR tcChar)
 }
 
 /*****************************************************************************
+BOOL IsValidCRCDelim(CONST TCHAR tcChar)
+	tcChar	: (IN) char representing a possible CRC in filename delimiter
+
+Return Value:
+	returns TRUE if tcChar is a valid delimiter, FALSE otherwise
+*****************************************************************************/
+BOOL IsValidCRCDelim(CONST TCHAR tcChar)
+{
+	size_t delimStrLen;
+	StringCchLength(g_program_options.szCRCStringDelims,MAX_PATH,&delimStrLen);
+	for(size_t i=0;i<delimStrLen;i++)
+		if(tcChar==g_program_options.szCRCStringDelims[i])
+			return TRUE;
+	return FALSE;
+}
+
+/*****************************************************************************
 DWORD HexToDword(CONST TCHAR * szHex, UINT uiStringSize)
 	szHex			: (IN) string representing hex value. Leftmost 2 chars represent the
 						most sigificant byte of the CRC
@@ -514,6 +531,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	pprogram_options->bDefaultOpenUTF8 = FALSE;
 	pprogram_options->bCalcSha1PerDefault= FALSE;
 	pprogram_options->bDisplaySha1InListView = FALSE;
+	StringCchCopy(pprogram_options->szCRCStringDelims, MAX_PATH, TEXT("{[(_)]}") );
 	return;
 }
 

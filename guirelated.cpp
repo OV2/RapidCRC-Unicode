@@ -1178,6 +1178,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 	if(bUpdateAll) {
 		SetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_PATTERN), pprogram_options->szFilenamePattern);
 		SetWindowText(GetDlgItem(hDlg, IDC_EDIT_EXCLUDE_LIST), pprogram_options->szExcludeString);
+		SetWindowText(GetDlgItem(hDlg, IDC_CRC_DELIM_LIST), pprogram_options->szCRCStringDelims);
 	}
 
 	return;

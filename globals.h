@@ -319,6 +319,7 @@ typedef struct{
 	BOOL			bDefaultOpenUTF8;
 	BOOL			bCalcSha1PerDefault;
 	BOOL			bDisplaySha1InListView;
+	TCHAR			szCRCStringDelims[MAX_PATH];
 }PROGRAM_OPTIONS;
 
 typedef struct{
@@ -392,6 +393,7 @@ VOID ClearAllItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshow
 
 //helper functions (helpfcts.cpp)
 BOOL IsLegalHexSymbol(CONST TCHAR tcChar);
+BOOL IsValidCRCDelim(CONST TCHAR tcChar);
 DWORD HexToDword(CONST TCHAR * szHex, UINT uiStringSize);
 BOOL GetVersionString(TCHAR *buffer,CONST int buflen);
 UNICODE_TYPE CheckForBOM(CONST HANDLE hFile);

@@ -349,16 +349,21 @@ BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH], DWORD * pdwFoundCrc)
 	bFound = FALSE;
 	do{
 		--iIndex;
-		if ((iIndex - 7) < 0)
-			break;
-		if(IsLegalHexSymbol(szFileWithoutPath[iIndex])) {
-			bFound = TRUE;
-			for(int i=1; i < 8; ++i)
-				if(! IsLegalHexSymbol(szFileWithoutPath[iIndex-i]))
+		if(IsValidCRCDelim(szFileWithoutPath[iIndex]) )
+		{
+			if ((iIndex - 9) < 0)
+				break;
+			else{
+				bFound = TRUE;
+				if (! (IsValidCRCDelim(szFileWithoutPath[iIndex-9])) )
 					bFound = FALSE;
+				for(int i=1; i <= 8; ++i)
+					if(! IsLegalHexSymbol(szFileWithoutPath[iIndex-i]))
+						bFound = FALSE;
+				if(bFound)
+					iIndex -= 8;
+			}
 		}
-		if(bFound)
-			iIndex -= 7;
 	}
 	while((iIndex > 0) && (!bFound));
 
