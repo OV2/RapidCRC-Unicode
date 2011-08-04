@@ -963,14 +963,15 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 
 	const float leftMargin = 15/10.0f;
 	const float rightMargin = 3;
-	const float actButtonY = 150/10.0f;
-	const float resultGroupY = 1265/100.0f;
+
+	const float resultGroupY = 1415/100.0f;
+	const float actButtonY = resultGroupY + 235/100.0f;
 
 #pragma warning(disable: 4244) //disable float cut-off warnings
 
-	MoveWindow(arrHwnd[ID_LISTVIEW], lACW * leftMargin, lACH * 65/100.0, wWidth - lACW * rightMargin, wHeight - lACH * 160/10.0, TRUE);
+	MoveWindow(arrHwnd[ID_LISTVIEW], lACW * leftMargin, lACH * 65/100.0, wWidth - lACW * rightMargin, wHeight - lACH * (actButtonY + 1), TRUE);
 
-	MoveWindow(arrHwnd[ID_GROUP_RESULT], lACW * leftMargin, wHeight - lACH * resultGroupY, wWidth - lACW * rightMargin, lACH * 75/10.0, TRUE);
+	MoveWindow(arrHwnd[ID_GROUP_RESULT], lACW * leftMargin, wHeight - lACH * resultGroupY, wWidth - lACW * rightMargin, lACH * 90/10.0, TRUE);
 
 	MoveWindow(arrHwnd[ID_STATIC_FILENAME], lACW * 3, wHeight - lACH * (resultGroupY - 15/10.0), lACW * 5, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_EDIT_FILENAME], lACW * 9, wHeight - lACH * (resultGroupY - 15/10.0), wWidth - lACW * 12, lACH, TRUE);
@@ -978,9 +979,13 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 30/10.0), wWidth - lACW * 12, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_STATIC_MD5_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 45/10.0), lACW * 5, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_EDIT_MD5_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 45/10.0), wWidth - lACW * 12, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_STATIC_INFO], lACW * 3, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 5, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_INFO], lACW * 9, wHeight - lACH * (resultGroupY - 60/10.0), wWidth - lACW * 20, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_BTN_ERROR_DESCR], wWidth - lACW * 105/10.0, wHeight - lACH * (resultGroupY - 58/10.0), lACW * 75/10.0, lACH * 15/10.0, TRUE);
+	MoveWindow(arrHwnd[ID_STATIC_ED2K_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 5, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_EDIT_ED2K_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 42, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_STATIC_SHA1_VALUE], lACW * 51, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 5, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_EDIT_SHA1_VALUE], lACW * 57, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 42, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_STATIC_INFO], lACW * 3, wHeight - lACH * (resultGroupY - 75/10.0), lACW * 5, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_EDIT_INFO], lACW * 9, wHeight - lACH * (resultGroupY - 75/10.0), wWidth - lACW * 20, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_BTN_ERROR_DESCR], wWidth - lACW * 105/10.0, wHeight - lACH * (resultGroupY - 73/10.0), lACW * 75/10.0, lACH * 15/10.0, TRUE);
 
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * leftMargin, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, TRUE);
 	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 16 + 1) + 16, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, TRUE);

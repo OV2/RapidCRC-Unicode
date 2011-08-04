@@ -167,6 +167,10 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	arrHwnd[ID_EDIT_CRC_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_CRC_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_STATIC_MD5_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("MD5:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_MD5_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_MD5_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_MD5_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_STATIC_ED2K_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("ED2K:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_CRC_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_ED2K_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_CRC_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_STATIC_SHA1_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("SHA1:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_MD5_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_SHA1_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_MD5_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_STATIC_INFO]				= CreateWindow(TEXT("STATIC"), TEXT("Info:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_INFO, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_INFO]				= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_INFO, g_hInstance, NULL);
 	arrHwnd[ID_BTN_ERROR_DESCR]			= CreateWindow(TEXT("BUTTON"), TEXT("Descr."), BS_PUSHBUTTON | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_ERROR_DESCR, g_hInstance, NULL);
@@ -902,6 +906,8 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 		SetWindowText(arrHwnd[ID_EDIT_FILENAME], TEXT(""));
 		SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE], TEXT(""));
 		SetWindowText(arrHwnd[ID_EDIT_MD5_VALUE], TEXT(""));
+		SetWindowText(arrHwnd[ID_EDIT_ED2K_VALUE], TEXT(""));
+		SetWindowText(arrHwnd[ID_EDIT_SHA1_VALUE], TEXT(""));
 		SetWindowText(arrHwnd[ID_EDIT_INFO], TEXT(""));
 		ShowWindow(arrHwnd[ID_BTN_ERROR_DESCR], SW_HIDE);
 		pshowresult_params->pFileinfo_cur_displayed = NULL ;
@@ -915,6 +921,8 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 			SetWindowText(arrHwnd[ID_EDIT_FILENAME], pFileinfo->szFilenameShort);
 			SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE], TEXT(""));
 			SetWindowText(arrHwnd[ID_EDIT_MD5_VALUE], TEXT(""));
+			SetWindowText(arrHwnd[ID_EDIT_ED2K_VALUE], TEXT(""));
+			SetWindowText(arrHwnd[ID_EDIT_SHA1_VALUE], TEXT(""));
 			if(pFileinfo->dwError == APPL_ERROR_ILLEGAL_CRC)
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("The found checksum for this file was not valid"), pFileinfo->dwError);
 			else if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND)
@@ -946,11 +954,7 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 			SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE], szTemp1);
 
 			if(pFileinfo->parentList->bMd5Calculated){
-				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
-					pFileinfo->abMd5Result[0], pFileinfo->abMd5Result[1], pFileinfo->abMd5Result[2], pFileinfo->abMd5Result[3], 
-					pFileinfo->abMd5Result[4], pFileinfo->abMd5Result[5], pFileinfo->abMd5Result[6], pFileinfo->abMd5Result[7], 
-					pFileinfo->abMd5Result[8], pFileinfo->abMd5Result[9], pFileinfo->abMd5Result[10], pFileinfo->abMd5Result[11], 
-					pFileinfo->abMd5Result[12], pFileinfo->abMd5Result[13], pFileinfo->abMd5Result[14], pFileinfo->abMd5Result[15]);
+				StringCchCopy(szTemp1,MAX_RESULT_LINE,pFileinfo->szMd5Result);
 				if(pFileinfo->bMd5Found){
 					bAreMd5Equal = TRUE;
 					for(INT i = 0; i < 16; ++i)
@@ -972,6 +976,20 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 			else
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
 			SetWindowText(arrHwnd[ID_EDIT_MD5_VALUE], szTemp1);
+
+			if(pFileinfo->parentList->bEd2kCalculated){
+				StringCchCopy(szTemp1,MAX_RESULT_LINE,pFileinfo->szEd2kResult);
+			}
+			else
+				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
+			SetWindowText(arrHwnd[ID_EDIT_ED2K_VALUE], szTemp1);
+
+			if(pFileinfo->parentList->bSha1Calculated){
+				StringCchCopy(szTemp1,MAX_RESULT_LINE,pFileinfo->szSha1Result);
+			}
+			else
+				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
+			SetWindowText(arrHwnd[ID_EDIT_SHA1_VALUE], szTemp1);
 
 			fSize = (double)pFileinfo->qwFilesize;
 			StringCchCopy(szTemp2, MAX_RESULT_LINE, TEXT("B"));

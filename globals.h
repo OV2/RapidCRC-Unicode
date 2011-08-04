@@ -159,15 +159,21 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_EDIT_FILENAME			18
 #define ID_EDIT_CRC_VALUE			19
 #define ID_EDIT_MD5_VALUE			20
-#define ID_EDIT_INFO				21
-#define ID_EDIT_STATUS				22
-#define ID_BTN_ERROR_DESCR			23
+#define ID_EDIT_ED2K_VALUE			21
+#define ID_EDIT_SHA1_VALUE			22
+#define ID_EDIT_INFO				23
+#define ID_EDIT_STATUS				24
+#define ID_BTN_ERROR_DESCR			25
 
-#define ID_COMBO_PRIORITY			24
-#define ID_BTN_OPENFILES_PAUSE		25
-#define ID_LAST_TAB_CONTROL			25
+#define ID_COMBO_PRIORITY			26
+#define ID_BTN_OPENFILES_PAUSE		27
+#define ID_LAST_TAB_CONTROL			27
 
-#define ID_NUM_WINDOWS				26
+//further ids whithout tab
+#define ID_STATIC_ED2K_VALUE		28
+#define ID_STATIC_SHA1_VALUE		29
+
+#define ID_NUM_WINDOWS				30
 
 #define IDM_COPY_CRC				40
 #define IDM_COPY_MD5				41
