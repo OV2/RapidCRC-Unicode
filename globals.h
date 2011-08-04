@@ -68,8 +68,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ICON_ERROR	3
 
 // some sizes for variables
-//#define MAX_BUFFER_SIZE_CALC	0x10000
-#define MAX_BUFFER_SIZE_CALC	0x100000
+#define MAX_BUFFER_SIZE_CALC	0x10000
 #define MAX_BUFFER_SIZE_OFN 0xFFFFF // Win9x has a problem with values where just the first bit is set like 0x20000 for OFN buffer:
 #define MAX_LINE_LENGTH 1200
 #define MAX_UTF8_PATH (MAX_PATH * 4)
