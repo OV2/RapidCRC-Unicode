@@ -320,6 +320,7 @@ typedef struct{
 	BOOL			bCalcSha1PerDefault;
 	BOOL			bDisplaySha1InListView;
 	TCHAR			szCRCStringDelims[MAX_PATH];
+	BOOL			bAllowCrcAnywhere;
 }PROGRAM_OPTIONS;
 
 typedef struct{

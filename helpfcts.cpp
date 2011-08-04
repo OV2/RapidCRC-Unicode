@@ -386,12 +386,20 @@ VOID ReadOptions()
 //	ReduceToPath(szOptionsFilename);
 //	StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\options.bin"));
 	SHGetSpecialFolderPath(NULL, szOptionsFilename, CSIDL_APPDATA, TRUE);
-	StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\RapidCRC\\options.bin"));
+	StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\RapidCRC\\options_unicode.bin"));
 
 	SetDefaultOptions(& g_program_options);
 
 	hFile = CreateFile(szOptionsFilename, GENERIC_READ, FILE_SHARE_READ, NULL,
 					OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, 0);
+
+	if(hFile == INVALID_HANDLE_VALUE) {
+		SHGetSpecialFolderPath(NULL, szOptionsFilename, CSIDL_APPDATA, TRUE);
+		StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\RapidCRC\\options.bin"));
+		hFile = CreateFile(szOptionsFilename, GENERIC_READ, FILE_SHARE_READ, NULL,
+					OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, 0);
+	}
+
 	if(hFile != INVALID_HANDLE_VALUE){
 		ReadFile(hFile, & g_program_options, sizeof(PROGRAM_OPTIONS), &dwBytesRead, NULL);
 		CloseHandle(hFile);
@@ -442,7 +450,7 @@ VOID WriteOptions(CONST HWND hMainWnd, CONST LONG lACW, CONST LONG lACH)
 	StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\RapidCRC"));
 	if(!IsThisADirectory(szOptionsFilename))
 		CreateDirectory(szOptionsFilename, NULL);
-	StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\options.bin"));
+	StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\options_unicode.bin"));
 
 	hFile = CreateFile(szOptionsFilename, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, 0);
 	if(hFile != INVALID_HANDLE_VALUE){
@@ -532,6 +540,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	pprogram_options->bCalcSha1PerDefault= FALSE;
 	pprogram_options->bDisplaySha1InListView = FALSE;
 	StringCchCopy(pprogram_options->szCRCStringDelims, MAX_PATH, TEXT("{[(_)]}") );
+	pprogram_options->bAllowCrcAnywhere = false;
 	return;
 }
 

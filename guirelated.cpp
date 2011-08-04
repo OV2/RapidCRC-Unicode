@@ -1169,6 +1169,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 	CheckDlgButton(hDlg, IDC_DEFAULT_OPEN_UTF8, pprogram_options->bDefaultOpenUTF8 ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_SHA1_DEFAULT, pprogram_options->bCalcSha1PerDefault ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_SHA1_IN_LIST, pprogram_options->bDisplaySha1InListView ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(hDlg, IDC_ALLOW_CRC_ANYWHERE, pprogram_options->bAllowCrcAnywhere ? BST_CHECKED : BST_UNCHECKED);
 
     ComboBox_SetCurSel(GetDlgItem(hDlg,IDC_UNICODE_TYPE),pprogram_options->iUnicodeSaveType);
 	
