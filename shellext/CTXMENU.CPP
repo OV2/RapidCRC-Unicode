@@ -82,6 +82,7 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 	
 	HBITMAP hBmp;
 	HMENU hSubMenu;
+	MENUITEMINFO mii = {0};
     if(!(CMF_DEFAULTONLY & uFlags))
     {
 		hSubMenu = CreateMenu();
@@ -92,32 +93,36 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 		InsertMenu(hSubMenu,4,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_MD5,TEXT("Create MD5"));
 		InsertMenu(hSubMenu,5,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NAME,TEXT("Put CRC in Filename"));
 		InsertMenu(hSubMenu,6,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NTFS,TEXT("Put CRC in NTFS Stream"));
-		InsertMenu(hMenu, 
-                   indexMenu, 
-                   MF_STRING | MF_BYPOSITION | MF_POPUP, 
-                   (UINT_PTR)hSubMenu,
-				   TEXT("RapidCRC"));
+
+		mii.fMask = MIIM_SUBMENU | MIIM_STRING | MIIM_ID;
+		mii.cbSize = sizeof(mii);
+		mii.wID = idCmdFirst + IDM_SUBMENU;
+		mii.hSubMenu = hSubMenu;
+		mii.dwTypeData = TEXT("RapidCRC");
+
+		InsertMenuItem(hMenu,indexMenu,TRUE,&mii);
+
         InsertMenu(hMenu, 
                    indexMenu + 1, 
 				   MF_SEPARATOR | MF_BYPOSITION, 
                    NULL,
 				   NULL);
 		if(SysInfo::Instance().IsVistaOrLater()) {
-			MENUITEMINFO menuiteminfo = {0};
-			menuiteminfo.cbSize = sizeof(menuiteminfo);
-			menuiteminfo.fMask = MIIM_BITMAP;
-			menuiteminfo.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_RAPIDCRC);
-			SetMenuItemInfo(hMenu, indexMenu, TRUE, &menuiteminfo);
+			ZeroMemory(&mii,sizeof(mii));
+			mii.cbSize = sizeof(mii);
+			mii.fMask = MIIM_BITMAP;
+			mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_RAPIDCRC);
+			SetMenuItemInfo(hMenu, indexMenu, TRUE, &mii);
 			
-			menuiteminfo.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_OPEN_FOLDER);
-			SetMenuItemInfo(hSubMenu, 0, TRUE, &menuiteminfo);
-			SetMenuItemInfo(hSubMenu, 1, TRUE, &menuiteminfo);
+			mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_OPEN_FOLDER);
+			SetMenuItemInfo(hSubMenu, 0, TRUE, &mii);
+			SetMenuItemInfo(hSubMenu, 1, TRUE, &mii);
 
-			menuiteminfo.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_HASH_FILE);
-			SetMenuItemInfo(hSubMenu, 3, TRUE, &menuiteminfo);
-			SetMenuItemInfo(hSubMenu, 4, TRUE, &menuiteminfo);
-			SetMenuItemInfo(hSubMenu, 5, TRUE, &menuiteminfo);
-			SetMenuItemInfo(hSubMenu, 6, TRUE, &menuiteminfo);
+			mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_HASH_FILE);
+			SetMenuItemInfo(hSubMenu, 3, TRUE, &mii);
+			SetMenuItemInfo(hSubMenu, 4, TRUE, &mii);
+			SetMenuItemInfo(hSubMenu, 5, TRUE, &mii);
+			SetMenuItemInfo(hSubMenu, 6, TRUE, &mii);
 		} else {
 			hBmp = LoadIconAsBitmap(g_hmodThisDll, IDI_RAPIDCRC);
 			SetMenuItemBitmaps(hMenu,indexMenu,MF_BYPOSITION,hBmp,hBmp);
@@ -133,7 +138,7 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 			SetMenuItemBitmaps(hSubMenu,6,MF_BYPOSITION,hBmp,hBmp);
 		}
 
-        return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(IDM_RAPIDCRC + 5));
+		return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(IDM_SUBMENU));
     }
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(0));

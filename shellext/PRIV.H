@@ -45,6 +45,7 @@
 #define IDM_MD5 3
 #define IDM_NAME 4
 #define IDM_NTFS 5
+#define IDM_SUBMENU 6
 #define ResultFromShort(i)  ResultFromScode(MAKE_SCODE(SEVERITY_SUCCESS, 0, (USHORT)(i)))
 
 //***************************
