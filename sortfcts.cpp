@@ -175,7 +175,7 @@ int CALLBACK SortSha1(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 }
 
 /*****************************************************************************
-INT InfoToIntValue(CONST FILEINFO * Fileinfo)
+INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 Fileinfo	: (IN) item with the needed info
 
 Return Value:
@@ -190,14 +190,22 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 	int iResult;
 	//BOOL bEqual;
 
-	// ATTENTION: the same logic is implemented in InsertItemIntoList, InfoToIntValue, DisplayStatusOverview.
-	// Any changes here have to be transfered there
 	if(pFileinfo->dwError != NO_ERROR)
 		iResult = 4;
 	else{
 		if(pFileinfo->parentList->uiRapidCrcMode == MODE_MD5){
 			if( (pFileinfo->parentList->bMd5Calculated) && (pFileinfo->bMd5Found) ){
 				if(memcmp( pFileinfo->abMd5Result, pFileinfo->abMd5Found, 16) == 0)
+					iResult = 1;
+				else
+					iResult = 2;
+			}
+			else
+				iResult = 3;
+		}
+		else if(pFileinfo->parentList->uiRapidCrcMode == MODE_SHA1){
+			if( (pFileinfo->parentList->bSha1Calculated) && (pFileinfo->bSha1Found) ){
+				if(memcmp( pFileinfo->abSha1Result, pFileinfo->abSha1Found, 20) == 0)
 					iResult = 1;
 				else
 					iResult = 2;

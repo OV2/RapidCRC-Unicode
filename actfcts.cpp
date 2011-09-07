@@ -431,7 +431,7 @@ BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 /*****************************************************************************
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 	arrHwnd		: (IN) array with window handles
-	uiMode		: (IN) create MD5 or SFV files
+	uiMode		: (IN) create MD5/SFV/SHA1 files
 
 Return Value:
 	returns NOERROR or GetLastError()
@@ -473,7 +473,7 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 /*****************************************************************************
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,list<FILEINFO*> *finalList)
 	arrHwnd		: (IN) array with window handles
-	uiMode		: (IN) create MD5 or SFV files
+	uiMode		: (IN) create MD5/SFV/SHA1 files
 	finalList	: (IN) pointer to list of fileinfo pointers on which the action is to be performed
 
 Return Value:
@@ -488,37 +488,53 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
 	DWORD dwResult;
 	FILECREATION_OPTIONS fco;
 
-	fco.uiModeSfvOrMd5 = uiMode;
+	fco.uiMode = uiMode;
 	fco.uiNumSelected = finalList->size();
 
-	fco.uiCreateFileMode = (uiMode == MODE_MD5) ? g_program_options.uiCreateFileModeMd5 : g_program_options.uiCreateFileModeSfv;
-	if(uiMode == MODE_MD5)
-		StringCchCopy(fco.szFilename, MAX_PATH, g_program_options.szFilenameMd5);
-	else
-		StringCchCopy(fco.szFilename, MAX_PATH, g_program_options.szFilenameSfv);
+	switch(uiMode) {
+		case MODE_MD5:
+			fco.uiCreateFileMode = g_program_options.uiCreateFileModeMd5;
+			StringCchCopy(fco.szFilename, MAX_PATH, g_program_options.szFilenameMd5);
+			break;
+		case MODE_SHA1:
+			fco.uiCreateFileMode = g_program_options.uiCreateFileModeSha1;
+			StringCchCopy(fco.szFilename, MAX_PATH, g_program_options.szFilenameSha1);
+			break;
+		default:
+			fco.uiCreateFileMode = g_program_options.uiCreateFileModeSfv;
+			StringCchCopy(fco.szFilename, MAX_PATH, g_program_options.szFilenameSfv);
+			break;
+	}
+
 	if(DialogBoxParam(g_hInstance, MAKEINTRESOURCE(IDD_DLG_FILE_CREATION), arrHwnd[ID_MAIN_WND],
 														DlgProcFileCreation, (LPARAM) & fco) != IDOK)
 		return NOERROR;
 
-	if(uiMode == MODE_MD5){
-		g_program_options.uiCreateFileModeMd5 = fco.uiCreateFileMode;
-		StringCchCopy(g_program_options.szFilenameMd5, MAX_PATH, fco.szFilename);
-	}
-	else{
-		g_program_options.uiCreateFileModeSfv = fco.uiCreateFileMode;
-		StringCchCopy(g_program_options.szFilenameSfv, MAX_PATH, fco.szFilename);
+	switch(uiMode) {
+		case MODE_MD5:
+			g_program_options.uiCreateFileModeMd5 = fco.uiCreateFileMode;
+			StringCchCopy(g_program_options.szFilenameMd5, MAX_PATH, fco.szFilename);
+			break;
+		case MODE_SHA1:
+			g_program_options.uiCreateFileModeSha1 = fco.uiCreateFileMode;
+			StringCchCopy(g_program_options.szFilenameSha1, MAX_PATH, fco.szFilename);
+			break;
+		default:
+			g_program_options.uiCreateFileModeSfv = fco.uiCreateFileMode;
+			StringCchCopy(g_program_options.szFilenameSfv, MAX_PATH, fco.szFilename);
+			break;
 	}
 
 	switch(fco.uiCreateFileMode){
-	case CREATE_ONE_PER_FILE:
-		dwResult = CreateChecksumFiles_OnePerFile(uiMode, finalList);
-		break;
-	case CREATE_ONE_PER_DIR:
-		dwResult = CreateChecksumFiles_OnePerDir(uiMode, fco.szFilename, finalList);
-		break;
-	case CREATE_ONE_FILE:
-		dwResult = CreateChecksumFiles_OneFile(arrHwnd, uiMode, finalList);
-		break;
+		case CREATE_ONE_PER_FILE:
+			dwResult = CreateChecksumFiles_OnePerFile(uiMode, finalList);
+			break;
+		case CREATE_ONE_PER_DIR:
+			dwResult = CreateChecksumFiles_OnePerDir(uiMode, fco.szFilename, finalList);
+			break;
+		case CREATE_ONE_FILE:
+			dwResult = CreateChecksumFiles_OneFile(arrHwnd, uiMode, finalList);
+			break;
 	}
 	
 	return dwResult;
@@ -526,7 +542,7 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
 
 /*****************************************************************************
 static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *finalList)
-	uiMode			: (IN) create MD5 or SFV files
+	uiMode			: (IN) create MD5/SFV/SHA1 files
 	finalList		: (IN) pointer to list of fileinfo pointers on which the action is to be performed
 
 Return Value:
@@ -543,10 +559,17 @@ static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 		pFileinfo = (*it);
 		if( pFileinfo->dwError == NO_ERROR ){
-			if(uiMode == MODE_MD5)
-				dwResult = WriteSingleLineMd5File(pFileinfo);
-			else
-				dwResult = WriteSingleLineSfvFile(pFileinfo);
+			switch(uiMode) {
+				case MODE_MD5:
+					dwResult = WriteSingleLineMd5File(pFileinfo);
+					break;
+				case MODE_SHA1:
+					dwResult = WriteSingleLineSha1File(pFileinfo);
+					break;
+				default:
+					dwResult = WriteSingleLineSfvFile(pFileinfo);
+					break;
+			}
 			if(dwResult != NOERROR)
 				return dwResult;
 		}
@@ -604,12 +627,22 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 				}
 			}
 
-			if(uiMode == MODE_MD5)
-				dwResult = WriteMd5Line(hFile, GetFilenameWithoutPathPointer((*it)->szFilenameShort),
+			switch(uiMode) {
+				case MODE_MD5:
+					dwResult = WriteMd5Line(hFile, GetFilenameWithoutPathPointer((*it)->szFilenameShort),
 										(*it)->abMd5Result);
-			else
-				dwResult = WriteSfvLine(hFile, GetFilenameWithoutPathPointer((*it)->szFilenameShort),
+					break;
+				case MODE_SHA1:
+					dwResult = WriteSha1Line(hFile, GetFilenameWithoutPathPointer((*it)->szFilenameShort),
+										(*it)->abSha1Result);
+					break;
+				default:
+					dwResult = WriteSfvLine(hFile, GetFilenameWithoutPathPointer((*it)->szFilenameShort),
 										(*it)->dwCrc32Result);
+					break;
+
+			}
+
 			if(dwResult != NOERROR){
 				CloseHandle(hFile);
 				return dwResult;
@@ -645,16 +678,27 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 
 	StringCchCopy(szFileOut, MAX_PATH, GetFilenameWithoutPathPointer(finalList->front()->parentList->g_szBasePath) );
 
+	TCHAR hashExt[10];
+	TCHAR msgString[MAX_PATH];
+	TCHAR filterString[MAX_PATH];
+	switch(uiMode) {
+		case MODE_MD5: StringCchCopy(hashExt,10,TEXT("md5"));break;
+		case MODE_SHA1: StringCchCopy(hashExt,10,TEXT("sha1"));break;
+		default: StringCchCopy(hashExt,10,TEXT("sfv"));break;
+	}
+	StringCchPrintf(filterString,MAX_PATH,TEXT(".%s files%c*.%s%cAll files%c*.*%c"),hashExt,TEXT('\0'),hashExt,TEXT('\0'),TEXT('\0'),TEXT('\0'));
+	StringCchPrintf(msgString,MAX_PATH,TEXT("Please choose a filename for the .%s file"),hashExt);
+
 	ZeroMemory(& ofn, sizeof (OPENFILENAME));
 	ofn.lStructSize       = sizeof (OPENFILENAME) ;
 	ofn.hwndOwner         = arrHwnd[ID_MAIN_WND] ;
-	ofn.lpstrFilter       = (uiMode == MODE_MD5) ? TEXT(".md5 files\0*.md5\0All files\0*.*\0\0") : TEXT(".sfv files\0*.sfv\0All files\0*.*\0\0") ;
+	ofn.lpstrFilter       = filterString ;
 	ofn.lpstrFile         = szFileOut ;
 	ofn.nMaxFile          = MAX_PATH ;
 	ofn.lpstrInitialDir   = finalList->front()->parentList->g_szBasePath ;
-	ofn.lpstrTitle        = (uiMode == MODE_MD5) ? TEXT("Please choose a filename for the .md5 file") : TEXT("Please choose a filename for the .sfv file") ;
+	ofn.lpstrTitle        = msgString;
 	ofn.Flags             = OFN_OVERWRITEPROMPT | OFN_EXPLORER ;
-	ofn.lpstrDefExt       = (uiMode == MODE_MD5) ? TEXT("md5") :  TEXT("sfv");
+	ofn.lpstrDefExt       = hashExt;
 
 	GetCurrentDirectory(MAX_PATH, szCurrentPath);
 	if(! GetSaveFileName(& ofn) ){
@@ -683,10 +727,18 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	}
 
 	if(finalList->size()==1) {
-		if(uiMode == MODE_MD5)
-			dwResult = WriteMd5Line(hFile, finalList->front()->szFilenameShort, finalList->front()->abMd5Result);
-		else
-			dwResult = WriteSfvLine(hFile, finalList->front()->szFilenameShort, finalList->front()->dwCrc32Result);
+		switch(uiMode) {
+			case MODE_MD5:
+				dwResult = WriteMd5Line(hFile, finalList->front()->szFilenameShort, finalList->front()->abMd5Result);
+				break;
+			case MODE_SHA1:
+				dwResult = WriteSha1Line(hFile, finalList->front()->szFilenameShort, finalList->front()->abSha1Result);
+				break;
+			default:
+				dwResult = WriteSfvLine(hFile, finalList->front()->szFilenameShort, finalList->front()->dwCrc32Result);
+				break;
+		}
+
 		CloseHandle(hFile);
 		return dwResult;
 	}
@@ -694,10 +746,18 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	uiSameCharCount = FindCommonPrefix(finalList);
 
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
-		if(uiMode == MODE_MD5)
-			dwResult = WriteMd5Line(hFile, (*it)->szFilename + uiSameCharCount, (*it)->abMd5Result);
-		else
-			dwResult = WriteSfvLine(hFile, (*it)->szFilename + uiSameCharCount, (*it)->dwCrc32Result);
+		switch(uiMode) {
+			case MODE_MD5:
+				dwResult = WriteMd5Line(hFile, (*it)->szFilename + uiSameCharCount, (*it)->abMd5Result);
+				break;
+			case MODE_SHA1:
+				dwResult = WriteSha1Line(hFile, (*it)->szFilename + uiSameCharCount, (*it)->abSha1Result);
+				break;
+			default:
+				dwResult = WriteSfvLine(hFile, (*it)->szFilename + uiSameCharCount, (*it)->dwCrc32Result);
+				break;
+		}
+		
 		if(dwResult != NOERROR){
 			CloseHandle(hFile);
 			return dwResult;
@@ -770,39 +830,44 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 	list<lFILEINFO*> rehashList;
 	lFILEINFO *pList;
 
-	if(ListView_GetSelectedCount(arrHwnd[ID_MAIN_WND])==0) {
+	if(ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW])==0) {
 		doneList = SyncQueue.getDoneList();
 		for(list<lFILEINFO*>::iterator it=doneList->begin();it!=doneList->end();it++) {
-			if((uiMode == MODE_SFV) && !(*it)->bCrcCalculated || (uiMode == MODE_MD5) && !(*it)->bMd5Calculated)
+			if( (uiMode == MODE_SFV) && !(*it)->bCrcCalculated ||
+			    (uiMode == MODE_MD5) && !(*it)->bMd5Calculated ||
+			    (uiMode == MODE_SHA1) && !(*it)->bSha1Calculated )
 				rehashList.push_back(*it);
 		}
 		SyncQueue.releaseDoneList();
 	} else {
-		uiIndex = ListView_GetNextItem(arrHwnd[ID_MAIN_WND],-1,LVNI_SELECTED);
+		uiIndex = ListView_GetNextItem(arrHwnd[ID_LISTVIEW],-1,LVNI_SELECTED);
 		lvitem.mask = LVIF_PARAM;
 		do {
 			lvitem.iItem = uiIndex;
-			ListView_GetItem(arrHwnd[ID_MAIN_WND],&lvitem);
+			ListView_GetItem(arrHwnd[ID_LISTVIEW],&lvitem);
 			pList = ((FILEINFO *)lvitem.lParam)->parentList;
-			if((uiMode == MODE_SFV) && !pList->bCrcCalculated || (uiMode == MODE_MD5) && !pList->bMd5Calculated)
-				rehashList.push_back(pList);				
-		} while((uiIndex = ListView_GetNextItem(arrHwnd[ID_MAIN_WND],uiIndex,LVNI_SELECTED))!=-1);
+			if( (uiMode == MODE_SFV) && !pList->bCrcCalculated ||
+				(uiMode == MODE_MD5) && !pList->bMd5Calculated ||
+				(uiMode == MODE_SHA1) && !pList->bSha1Calculated )
+				rehashList.push_back(pList);
+		} while((uiIndex = ListView_GetNextItem(arrHwnd[ID_LISTVIEW],uiIndex,LVNI_SELECTED))!=-1);
 		rehashList.sort();
 		rehashList.unique();
 	}
 	if(!rehashList.empty())
 		needRehash=true;
-
-	if( (uiMode == MODE_SFV) && needRehash ){
+	
+	if( needRehash ){
+		TCHAR hashExt[10];
+		TCHAR msgString[MAX_PATH];
+		switch(uiMode) {
+			case MODE_MD5: StringCchCopy(hashExt,10,TEXT("MD5"));break;
+			case MODE_SHA1: StringCchCopy(hashExt,10,TEXT("SHA1"));break;
+			default: StringCchCopy(hashExt,10,TEXT("CRC"));break;
+		}
+		StringCchPrintf(msgString,MAX_PATH,TEXT("You have to calculate the %s checksums first. Click OK to do that now."),hashExt);
 		if( MessageBox(arrHwnd[ID_MAIN_WND],
-			TEXT("You have to calculate the CRC checksums first. Click OK to do that now."),
-			TEXT("Question"),MB_OKCANCEL | MB_ICONQUESTION | MB_APPLMODAL | MB_SETFOREGROUND) == IDCANCEL)
-			return NOERROR;
-		doRehash = true;
-	}
-	else if( (uiMode == MODE_MD5) && needRehash ){
-		if( MessageBox(arrHwnd[ID_MAIN_WND],
-			TEXT("You have to calculate the MD5 checksums first. Click OK to do that now."),
+			msgString,
 			TEXT("Question"),MB_OKCANCEL | MB_ICONQUESTION | MB_APPLMODAL | MB_SETFOREGROUND) == IDCANCEL)
 			return NOERROR;
 		doRehash = true;
@@ -810,10 +875,18 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 	if(doRehash) {
 		for(list<lFILEINFO*>::iterator it=rehashList.begin();it!=rehashList.end();it++) {
 			SyncQueue.deleteFromList(*it);
-			if(uiMode == MODE_SFV)
-				(*it)->bCalculateCrc = true;
-			else
-				(*it)->bCalculateMd5 = true;
+			switch(uiMode) {
+				case MODE_MD5:
+					(*it)->bCalculateMd5 = true;
+					break;
+				case MODE_SHA1:
+					(*it)->bCalculateSha1 = true;
+					break;
+				default:
+					(*it)->bCalculateCrc = true;
+					break;
+			}
+				
 			SyncQueue.pushQueue(*it);
 		}
 		PostMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL, NULL);

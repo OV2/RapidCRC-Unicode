@@ -788,7 +788,7 @@ VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList, CONST INT iImag
 			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, TEXT("Error"));
 	}
 	else{
-		if(fileList->bCrcCalculated || fileList->bMd5Calculated)
+		if(fileList->bCrcCalculated || fileList->bMd5Calculated || fileList->bSha1Calculated)
 		{
 			if(iImageIndex == ICON_OK)
 				StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, TEXT("File OK"));

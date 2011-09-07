@@ -360,7 +360,6 @@ DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST B
 		szOutLine=szLineAnsi;
 	} else {
 #endif
-	// we could also used szMd5Result use but then we have to do a another Unicode -> ANSI transform
 	StringCchPrintf(szLine, MAX_LINE_LENGTH, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx *%s%s"),
 		abMd5Result[0], abMd5Result[1], abMd5Result[2], abMd5Result[3], 
 		abMd5Result[4], abMd5Result[5], abMd5Result[6], abMd5Result[7], 
@@ -558,6 +557,266 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 		GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUTF16);
 		if(bErrorOccured){
 			MessageBox(NULL, TEXT("MD5 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
+			fileList->fInfos.clear();
+			return FALSE;
+		}
+	}
+	CloseHandle(hFile);
+
+	return TRUE;
+}
+
+/*****************************************************************************
+DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abSha1Result[20])
+	hFile		: (IN) handle to an open file
+	szFilename	: (IN) string of the filename that we want to write into the sha1 file
+	abMd5Result	: (IN) Array with sha1 values
+
+Return Value:
+- returns NOERROR or GetLastError()
+*****************************************************************************/
+DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abSha1Result[20])
+{
+	TCHAR szFilenameTemp[MAX_PATH];
+	TCHAR szLine[MAX_LINE_LENGTH];
+#ifdef UNICODE
+	CHAR szFilenameAnsi[MAX_UTF8_PATH];
+	CHAR szLineAnsi[MAX_LINE_LENGTH];
+#endif
+	DWORD dwNumberOfBytesWritten;
+	size_t stStringLength;
+	VOID *szOutLine=szLine;
+
+	StringCchCopy(szFilenameTemp, MAX_PATH, szFilename);
+	if(g_program_options.bCreateUnixStyle)
+		ReplaceChar(szFilenameTemp, MAX_PATH, TEXT('\\'), TEXT('/'));
+
+#ifdef UNICODE
+    // we only need the conversion if we don't write unicode data
+	if(!g_program_options.bCreateUnicodeFiles) {
+		if(!WideCharToMultiByte(CP_ACP, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_UTF8_PATH, NULL, NULL) )
+			return GetLastError();
+		StringCchPrintfA(szLineAnsi, MAX_LINE_LENGTH, "%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx *%s%s",
+			abSha1Result[0], abSha1Result[1], abSha1Result[2], abSha1Result[3], 
+			abSha1Result[4], abSha1Result[5], abSha1Result[6], abSha1Result[7], 
+			abSha1Result[8], abSha1Result[9], abSha1Result[10], abSha1Result[11], 
+			abSha1Result[12], abSha1Result[13], abSha1Result[14], abSha1Result[15],
+			abSha1Result[16], abSha1Result[17], abSha1Result[18], abSha1Result[19],
+			szFilenameAnsi, g_program_options.bCreateUnixStyle ? "\n" : "\r\n");
+
+		StringCbLengthA(szLineAnsi, MAX_LINE_LENGTH, & stStringLength);
+		szOutLine=szLineAnsi;
+    } else if(g_program_options.iUnicodeSaveType == UTF_8 || g_program_options.iUnicodeSaveType==UTF_8_BOM) {
+		if(!WideCharToMultiByte(CP_UTF8, 0, szFilenameTemp, -1, szFilenameAnsi, MAX_UTF8_PATH, NULL, NULL) )
+			return GetLastError();
+		StringCchPrintfA(szLineAnsi, MAX_LINE_LENGTH, "%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx *%s%s",
+			abSha1Result[0], abSha1Result[1], abSha1Result[2], abSha1Result[3], 
+			abSha1Result[4], abSha1Result[5], abSha1Result[6], abSha1Result[7], 
+			abSha1Result[8], abSha1Result[9], abSha1Result[10], abSha1Result[11], 
+			abSha1Result[12], abSha1Result[13], abSha1Result[14], abSha1Result[15],
+			abSha1Result[16], abSha1Result[17], abSha1Result[18], abSha1Result[19],
+			szFilenameAnsi, g_program_options.bCreateUnixStyle ? "\n" : "\r\n");
+
+		StringCbLengthA(szLineAnsi, MAX_LINE_LENGTH, & stStringLength);
+		szOutLine=szLineAnsi;
+	} else {
+#endif
+	StringCchPrintf(szLine, MAX_LINE_LENGTH, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx *%s%s"),
+		abSha1Result[0], abSha1Result[1], abSha1Result[2], abSha1Result[3], 
+		abSha1Result[4], abSha1Result[5], abSha1Result[6], abSha1Result[7], 
+		abSha1Result[8], abSha1Result[9], abSha1Result[10], abSha1Result[11], 
+		abSha1Result[12], abSha1Result[13], abSha1Result[14], abSha1Result[15],
+		abSha1Result[16], abSha1Result[17], abSha1Result[18], abSha1Result[19],
+		szFilenameTemp, g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
+
+	StringCbLength(szLine, MAX_LINE_LENGTH, & stStringLength);
+#ifdef UNICODE
+	}
+#endif
+	if(!WriteFile(hFile, szOutLine, (DWORD)stStringLength, & dwNumberOfBytesWritten, NULL) )
+		return GetLastError();
+
+	return NOERROR;
+}
+
+/*****************************************************************************
+DWORD WriteSingleLineSha1File(CONST FILEINFO * pFileinfo)
+	pFileinfo	: (IN) FILEINFO that includes the info we want to write
+
+Return Value:
+- returns NOERROR or GetLastError()
+
+Notes:
+- overwrites existing files
+- takes pFileinfo->szFilename (that is always the full pathname), appends 
+a ".sha1" and writes just pFileinfo->szFilename and abSha1Result into that file
+*****************************************************************************/
+DWORD WriteSingleLineSha1File(CONST FILEINFO * pFileinfo)
+{
+	TCHAR szFileSfvOut[MAX_PATH];
+	HANDLE hFile;
+	DWORD dwResult;
+
+	StringCchCopy(szFileSfvOut, MAX_PATH, pFileinfo->szFilename);
+	StringCchCat(szFileSfvOut, MAX_PATH, TEXT(".sha1"));
+
+	hFile = CreateFile(szFileSfvOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
+	if(hFile == INVALID_HANDLE_VALUE)
+		return GetLastError();
+
+#ifdef UNICODE
+	// we need a BOM if we are writing unicode
+    if(!WriteCurrentBOM(hFile))
+		return GetLastError();
+#endif
+
+	dwResult = WriteSha1Line(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), pFileinfo->abSha1Result);
+
+	CloseHandle(hFile);
+	return dwResult;
+}
+
+/*****************************************************************************
+BOOL EnterSha1Mode(lFILEINFO *fileList)
+	fileList	: (IN/OUT) pointer to the job structure whose files are to be processed
+
+Return Value:
+returns TRUE if everything went fine. FALSE went something went wrong.
+
+Notes:
+- takes fileList->fInfos.front().szFilename as .sha1 file and creates new list entries
+  based on that
+*****************************************************************************/
+BOOL EnterSha1Mode(lFILEINFO *fileList)
+{
+#ifdef UNICODE
+	CHAR	szLineAnsi[MAX_LINE_LENGTH];
+#endif
+	TCHAR	szLine[MAX_LINE_LENGTH];
+	TCHAR	szFilenameSha1[MAX_PATH];
+	HANDLE	hFile;
+	UINT	uiStringLength;
+	BOOL	bErrorOccured, bEndOfFile;
+	UINT	uiIndex;
+
+	BOOL	bSha1OK;
+	BOOL	fileIsUTF16;
+    UINT    codePage;
+	UNICODE_TYPE detectedBOM;
+
+	FILEINFO fileinfoTmp;
+
+	// save SHA1 filename and path
+	// => g_szBasePath in SHA1-mode is the path part of the complete filename of the .md5 file
+	StringCchCopy(szFilenameSha1, MAX_PATH, fileList->fInfos.front().szFilename);
+	StringCchCopy(fileList->g_szBasePath, MAX_PATH, szFilenameSha1);
+	ReduceToPath(fileList->g_szBasePath);
+	GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH);
+
+	if(fileList->uiCmdOpts==CMD_REPARENT) {
+		TCHAR	szReparentPath[MAX_PATH];
+		LPITEMIDLIST iidl=NULL;
+		BROWSEINFO bInfo = {0};
+		bInfo.lpszTitle = TEXT("Select folder for sha1 reparenting");
+		bInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
+		bInfo.lpfn = BrowseFolderSetSelProc;
+		bInfo.lParam = (LPARAM)fileList->g_szBasePath;
+		if(iidl=SHBrowseForFolder(&bInfo)) {
+			SHGetPathFromIDList(iidl,szReparentPath);
+			CoTaskMemFree(iidl);
+			StringCchCopy(fileList->g_szBasePath, MAX_PATH, szReparentPath);
+		}
+	}
+
+	// This is(should be) the ONLY place where a persistent change of the current directory is done
+	// (for GetFullPathName())
+	if(!SetCurrentDirectory(fileList->g_szBasePath))
+		return FALSE;
+
+	// set sha1 mode
+	fileList->uiRapidCrcMode = MODE_SHA1;
+
+	// free everything we did so far
+	fileList->fInfos.clear();
+
+	hFile = CreateFile(szFilenameSha1, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
+	if(hFile == INVALID_HANDLE_VALUE){
+		MessageBox(NULL, TEXT("SHA1 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
+		return FALSE;
+	}
+
+    // check for the BOM and read accordingly
+	detectedBOM = CheckForBOM(hFile);
+	fileIsUTF16 = (detectedBOM == UTF_16LE);
+	if(!fileIsUTF16) {
+		if(detectedBOM==UTF_8_BOM || g_program_options.bDefaultOpenUTF8)
+			codePage = CP_UTF8;
+		else
+			codePage = DetermineFileCP(hFile);
+	}
+
+	GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUTF16);
+
+	if(bErrorOccured){
+		MessageBox(NULL, TEXT("SHA1 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
+		return FALSE;
+	}
+
+	while( !(bEndOfFile && uiStringLength == 0) ){
+
+		if(uiStringLength > 42){ // a valid line has 32 hex values for the md5 value and then either "  " or " *"
+
+			ZeroMemory(&fileinfoTmp,sizeof(FILEINFO));
+			fileinfoTmp.parentList=fileList;
+
+#ifdef UNICODE
+            // if we already read unicode characters we don't need the conversion here
+			if(!fileIsUTF16) {
+				AnsiFromUnicode(szLineAnsi,MAX_LINE_LENGTH,szLine);
+				MultiByteToWideChar(codePage,	// ANSI Codepage
+					0,						    // we use no flags; ANSI isn't a 'real' MBCC
+					szLineAnsi,			    	// the ANSI String
+					-1,						    // ANSI String is 0 terminated
+					szLine,					    // the UNICODE destination string
+					MAX_LINE_LENGTH );		    // size of the UNICODE String in chars
+                uiStringLength = lstrlen(szLine);
+			}
+#endif
+
+			if( IsLegalHexSymbol(szLine[0]) ){
+				bSha1OK = TRUE;
+				for(uiIndex=0; uiIndex < 40; ++uiIndex)
+					if(! IsLegalHexSymbol(szLine[uiIndex]))
+						bSha1OK = FALSE;
+				if(bSha1OK){
+					fileinfoTmp.bSha1Found = TRUE;
+					for(uiIndex=0; uiIndex < 20; ++uiIndex)
+						fileinfoTmp.abSha1Found[uiIndex] = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
+					fileinfoTmp.dwError = NOERROR;
+				}
+				else
+					fileinfoTmp.dwError = APPL_ERROR_ILLEGAL_CRC;
+
+				//delete trailing spaces
+				while(szLine[uiStringLength - 1] == TEXT(' ')){
+					szLine[uiStringLength - 1] = NULL;
+					uiStringLength--;
+				}
+
+				//find leading spaces and '*'
+				uiIndex = 40; // szLine[40] is the first char after the sha1
+				while( (uiIndex < uiStringLength) && ((szLine[uiIndex] == TEXT(' ')) || (szLine[uiIndex] == TEXT('*'))) )
+					uiIndex++;
+
+				GetFullPathName(szLine + uiIndex, MAX_PATH, fileinfoTmp.szFilename, NULL);
+
+				fileList->fInfos.push_back(fileinfoTmp);
+			}
+		}
+
+		GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUTF16);
+		if(bErrorOccured){
+			MessageBox(NULL, TEXT("SHA1 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
 			fileList->fInfos.clear();
 			return FALSE;
 		}

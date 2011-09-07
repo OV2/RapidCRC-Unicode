@@ -141,9 +141,17 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				return (LRESULT)GetSysColorBrush(COLOR_HIGHLIGHT);
 			}
 		}
+		if(showresult_params.bSha1IsWrong){
+			if((HWND)lParam == arrHwnd[ID_EDIT_SHA1_VALUE]){
+				SetTextColor((HDC)wParam, GetSysColor(COLOR_HIGHLIGHTTEXT));
+				SetBkColor((HDC)wParam, GetSysColor(COLOR_HIGHLIGHT));
+
+				return (LRESULT)GetSysColorBrush(COLOR_HIGHLIGHT);
+			}
+		}
 		break;
 	case WM_GETMINMAXINFO:
-		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 120;
+		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 127;
 		((MINMAXINFO *)lParam)->ptMinTrackSize.y = lAveCharHeight * 25;
 		return 0;
 	case WM_SIZE:
@@ -268,6 +276,12 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		case ID_BTN_MD5_IN_MD5:
 			if(HIWORD(wParam) == BN_CLICKED){
 				CreateChecksumFiles(arrHwnd, MODE_MD5);
+				return 0;
+			}
+			break;
+		case ID_BTN_SHA1_IN_SHA1:
+			if(HIWORD(wParam) == BN_CLICKED){
+				CreateChecksumFiles(arrHwnd, MODE_SHA1);
 				return 0;
 			}
 			break;
@@ -568,28 +582,34 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 		pfco = (FILECREATION_OPTIONS *)lParam;
 		StringCchCopy(szFilenameChecksumTemp, MAX_PATH, pfco->szFilename);
 	case WM_SET_CTRLS_STATE:
-		StringCchPrintf(szString, MAX_PATH, TEXT("How to create the .%s file(s)?"),
-			pfco->uiModeSfvOrMd5 == MODE_MD5 ? TEXT("MD5") : TEXT("SFV"));
+		TCHAR hashExt[10];
+		switch(pfco->uiMode) {
+			case MODE_MD5: StringCchCopy(hashExt,10,TEXT("MD5")); break;
+			case MODE_SHA1: StringCchCopy(hashExt,10,TEXT("SHA1")); break;
+			default:
+				StringCchCopy(hashExt,10,TEXT("SFV")); break;
+		}
+		StringCchPrintf(szString, MAX_PATH, TEXT("How to create the .%s file(s)?"), hashExt);
 		SetWindowText(hDlg, szString);
 
 		StringCchPrintf(szString, MAX_PATH, TEXT("Please choose how you want to write %s files into the .%s file:"),
-			 pfco->uiNumSelected == 0 ? TEXT("all") : TEXT("the selected"), pfco->uiModeSfvOrMd5 == MODE_MD5 ? TEXT("MD5") : TEXT("SFV"));
+			 pfco->uiNumSelected == 0 ? TEXT("all") : TEXT("the selected"), hashExt);
 		SetWindowText(GetDlgItem(hDlg, IDC_STATIC_INTRO_TEXT), szString);
 
 		StringCchPrintf(szString, MAX_PATH, TEXT("Create a .%s file for every single file%s"),
-			pfco->uiModeSfvOrMd5 == MODE_MD5 ? TEXT("MD5") : TEXT("SFV"),  pfco->uiModeSfvOrMd5 == MODE_MD5 ? TEXT(" (md5sum compatible)") : TEXT("") );
+			hashExt,  pfco->uiMode == MODE_MD5 ? TEXT(" (md5sum compatible)") : TEXT("") );
 		SetWindowText(GetDlgItem(hDlg, IDC_RADIO_ONE_PER_FILE), szString);
 
 		StringCchPrintf(szString, MAX_PATH, TEXT("Create a .%s file for every directory%s"),
-			pfco->uiModeSfvOrMd5 == MODE_MD5 ? TEXT("MD5") : TEXT("SFV"),  pfco->uiModeSfvOrMd5 == MODE_MD5 ? TEXT(" (md5sum compatible)") : TEXT("") );
+			hashExt,  pfco->uiMode == MODE_MD5 ? TEXT(" (md5sum compatible)") : TEXT("") );
 		SetWindowText(GetDlgItem(hDlg, IDC_RADIO_ONE_PER_DIR), szString);
 
 		StringCchPrintf(szString, MAX_PATH, TEXT("Create one .%s file for all files%s"),
-			pfco->uiModeSfvOrMd5 == MODE_MD5 ? TEXT("MD5") : TEXT("SFV"),  pfco->uiModeSfvOrMd5 == MODE_MD5 ? TEXT(" (potentially not md5sum compatible *)") : TEXT("") );
+			hashExt,  pfco->uiMode == MODE_MD5 ? TEXT(" (potentially not md5sum compatible *)") : TEXT("") );
 		SetWindowText(GetDlgItem(hDlg, IDC_RADIO_ONE_FILE), szString);
 
 		SetWindowText(GetDlgItem(hDlg, IDC_STATIC_EXPLANATION),
-			pfco->uiModeSfvOrMd5 == MODE_MD5 ? TEXT("* : md5sum compatible .MD5 files cannot hold directory information") : TEXT(""));
+			pfco->uiMode == MODE_MD5 ? TEXT("* : md5sum compatible .MD5 files cannot hold directory information") : TEXT(""));
 
 		switch(pfco->uiCreateFileMode){
 		case CREATE_ONE_PER_FILE:
@@ -660,7 +680,7 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 			if(HIWORD(wParam) == BN_CLICKED){
 				PROGRAM_OPTIONS po;
 				SetDefaultOptions(& po);
-				if(pfco->uiModeSfvOrMd5 == MODE_MD5){
+				if(pfco->uiMode == MODE_MD5){
 					StringCchCopy(szFilenameChecksumTemp, MAX_PATH, po.szFilenameMd5);
 					pfco->uiCreateFileMode = po.uiCreateFileModeMd5;
 				}
@@ -976,21 +996,22 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_STATIC_FILENAME], lACW * 3, wHeight - lACH * (resultGroupY - 15/10.0), lACW * 5, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_EDIT_FILENAME], lACW * 9, wHeight - lACH * (resultGroupY - 15/10.0), wWidth - lACW * 12, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_STATIC_CRC_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 30/10.0), wWidth - lACW * 12, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 52, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_STATIC_ED2K_VALUE], lACW * 61, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_EDIT_ED2K_VALUE], lACW * 67, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 42, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_STATIC_MD5_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 45/10.0), lACW * 5, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_EDIT_MD5_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 45/10.0), wWidth - lACW * 12, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_STATIC_ED2K_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 5, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_ED2K_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 42, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_STATIC_SHA1_VALUE], lACW * 51, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 5, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_SHA1_VALUE], lACW * 57, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 42, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_STATIC_SHA1_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 5, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_EDIT_SHA1_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 60/10.0), wWidth - lACW * 12, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_STATIC_INFO], lACW * 3, wHeight - lACH * (resultGroupY - 75/10.0), lACW * 5, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_EDIT_INFO], lACW * 9, wHeight - lACH * (resultGroupY - 75/10.0), wWidth - lACW * 20, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_BTN_ERROR_DESCR], wWidth - lACW * 105/10.0, wHeight - lACH * (resultGroupY - 73/10.0), lACW * 75/10.0, lACH * 15/10.0, TRUE);
 
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * leftMargin, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, TRUE);
 	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 16 + 1) + 16, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, TRUE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 32 + 2) + 32, wHeight - lACH * actButtonY, lACW * 28, lACH * 19/10.0, TRUE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 60 + 3) + 32, wHeight - lACH * actButtonY, lACW * 28, lACH * 19/10.0, TRUE);
+	MoveWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], lACW * (leftMargin + 32 + 2) + 32, wHeight - lACH * actButtonY, lACW * 17 + 16, lACH * 19/10.0, TRUE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 49 + 3) + 48, wHeight - lACH * actButtonY, lACW * 22, lACH * 19/10.0, TRUE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 71 + 4) + 48, wHeight - lACH * actButtonY, lACW * 26, lACH * 19/10.0, TRUE);
 	//MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - lACW * 125/10.0/*lACW * (leftMargin + 88 + 4) + 32*/, wHeight - lACH * actButtonY, 32, lACH * 19/10.0, TRUE);
 	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, TRUE);
 	

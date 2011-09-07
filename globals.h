@@ -111,6 +111,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MODE_NORMAL				0
 #define MODE_SFV				1
 #define MODE_MD5				2
+#define MODE_SHA1				3
 
 //CMDLINE Options for the shell extension
 #define CMD_NORMAL			0
@@ -151,29 +152,30 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 
 #define ID_BTN_CRC_IN_SFV			12
 #define ID_BTN_MD5_IN_MD5			13
-#define ID_BTN_CRC_IN_FILENAME		14
-#define ID_BTN_CRC_IN_STREAM		15
-#define ID_BTN_PLAY_PAUSE			16
-#define ID_BTN_OPTIONS				17
+#define ID_BTN_SHA1_IN_SHA1			14
+#define ID_BTN_CRC_IN_FILENAME		15
+#define ID_BTN_CRC_IN_STREAM		16
+#define ID_BTN_PLAY_PAUSE			17
+#define ID_BTN_OPTIONS				18
 
-#define ID_EDIT_FILENAME			18
-#define ID_EDIT_CRC_VALUE			19
-#define ID_EDIT_MD5_VALUE			20
-#define ID_EDIT_ED2K_VALUE			21
-#define ID_EDIT_SHA1_VALUE			22
-#define ID_EDIT_INFO				23
-#define ID_EDIT_STATUS				24
-#define ID_BTN_ERROR_DESCR			25
+#define ID_EDIT_FILENAME			19
+#define ID_EDIT_CRC_VALUE			20
+#define ID_EDIT_MD5_VALUE			21
+#define ID_EDIT_ED2K_VALUE			22
+#define ID_EDIT_SHA1_VALUE			23
+#define ID_EDIT_INFO				24
+#define ID_EDIT_STATUS				25
+#define ID_BTN_ERROR_DESCR			26
 
-#define ID_COMBO_PRIORITY			26
-#define ID_BTN_OPENFILES_PAUSE		27
-#define ID_LAST_TAB_CONTROL			27
+#define ID_COMBO_PRIORITY			27
+#define ID_BTN_OPENFILES_PAUSE		28
+#define ID_LAST_TAB_CONTROL			28
 
 //further ids whithout tab
-#define ID_STATIC_ED2K_VALUE		28
-#define ID_STATIC_SHA1_VALUE		29
+#define ID_STATIC_ED2K_VALUE		29
+#define ID_STATIC_SHA1_VALUE		30
 
-#define ID_NUM_WINDOWS				30
+#define ID_NUM_WINDOWS				31
 
 #define IDM_COPY_CRC				40
 #define IDM_COPY_MD5				41
@@ -216,6 +218,7 @@ typedef struct _FILEINFO{
 	DWORD	dwError;
 	BOOL	bCrcFound;
 	BOOL	bMd5Found;
+	BOOL	bSha1Found;
 	_lFILEINFO * parentList;
 	TCHAR	szFilename[MAX_PATH];
 	TCHAR *	szFilenameShort;
@@ -226,6 +229,7 @@ typedef struct _FILEINFO{
 	BYTE	abMd5Result[16];
 	BYTE	abMd5Found[16];
 	BYTE	abSha1Result[20];
+	BYTE	abSha1Found[20];
 	BYTE	abEd2kResult[16];
 	TCHAR	szEd2kResult[ED2K_AS_STRING_LENGHT];
 }FILEINFO;
@@ -257,6 +261,7 @@ typedef struct{
 	FILEINFO	* pFileinfo_cur_displayed;
 	BOOL		bCrcIsWrong;
 	BOOL		bMd5IsWrong;
+	BOOL		bSha1IsWrong;
 }SHOWRESULT_PARAMS;
 
 typedef struct{
@@ -326,6 +331,8 @@ typedef struct{
 	BOOL			bDisplaySha1InListView;
 	TCHAR			szCRCStringDelims[MAX_PATH];
 	BOOL			bAllowCrcAnywhere;
+	UINT			uiCreateFileModeSha1;
+	TCHAR			szFilenameSha1[MAX_PATH];
 }PROGRAM_OPTIONS;
 
 typedef struct{
@@ -337,7 +344,7 @@ typedef struct{
 }PROGRAM_STATUS;
 
 typedef struct{
-	UINT			uiModeSfvOrMd5;				// In		: should the dialog display options for sfv or md5?
+	UINT			uiMode;						// In		: should the dialog display options for sfv/md5/sha1?
 	UINT			uiNumSelected;				// In		: did the user select some files => "all" / "selected"
 	UINT			uiCreateFileMode;			// In/Out	: in: last user choice; out: new user choice
 	TCHAR			szFilename[MAX_PATH];		// In/Out	: in: last choice for checksum filename; out: new choice
@@ -454,9 +461,12 @@ BOOL EnterSfvMode(lFILEINFO *fileList);
 DWORD WriteSfvHeader(CONST HANDLE hFile);
 DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST DWORD dwCrc);
 DWORD WriteSingleLineSfvFile(CONST FILEINFO * pFileinfo);
+BOOL EnterMd5Mode(lFILEINFO *fileList);
 DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abMd5Result[16]);
 DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo);
-BOOL EnterMd5Mode(lFILEINFO *fileList);
+BOOL EnterSha1Mode(lFILEINFO *fileList);
+DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abSha1Result[20]);
+DWORD WriteSingleLineSha1File(CONST FILEINFO * pFileinfo);
 #ifdef UNICODE
 BOOL WriteCurrentBOM(CONST HANDLE hFile);
 #endif

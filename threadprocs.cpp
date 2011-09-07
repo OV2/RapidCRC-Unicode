@@ -219,7 +219,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			
 			FILEINFO& curFileInfo = (*it);
 
-			if ( (curFileInfo.dwError == NO_ERROR) && (curFileInfo.qwFilesize != 0) && (bCalculateCrc || bCalculateMd5 || bCalculateEd2k))
+			if ( (curFileInfo.dwError == NO_ERROR) /*&& (curFileInfo.qwFilesize != 0)*/ && (bCalculateCrc || bCalculateMd5 || bCalculateEd2k || bCalculateSha1))
 			{
 
 				SetWindowText(arrHwnd[ID_EDIT_STATUS], curFileInfo.szFilename);
@@ -343,8 +343,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				QueryPerformanceCounter((LARGE_INTEGER*) &qwStop);
 				curFileInfo.fSeconds = (float)((qwStop - qwStart) / (float)wqFreq);
 			}
-			else if(curFileInfo.qwFilesize == 0)	// this case is to have legal values in fSeconds
-				curFileInfo.fSeconds = 0;			// if the file has 0 bytes
+			/*else if(curFileInfo.qwFilesize == 0)	// this case is to have legal values in fSeconds
+				curFileInfo.fSeconds = 0;			// if the file has 0 bytes*/
 
 			SetFileInfoStrings(&curFileInfo,fileList);
 			InsertItemIntoList(arrHwnd[ID_LISTVIEW], &curFileInfo,fileList);

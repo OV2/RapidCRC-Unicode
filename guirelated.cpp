@@ -185,6 +185,8 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	SendMessage(arrHwnd[ID_BTN_CRC_IN_SFV],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 	arrHwnd[ID_BTN_MD5_IN_MD5]			= CreateWindow(TEXT("BUTTON"), TEXT("Create MD5 file"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_MD5_IN_MD5, g_hInstance, NULL);
 	SendMessage(arrHwnd[ID_BTN_MD5_IN_MD5],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+	arrHwnd[ID_BTN_SHA1_IN_SHA1]		= CreateWindow(TEXT("BUTTON"), TEXT("Create SHA1 file"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_SHA1_IN_SHA1, g_hInstance, NULL);
+	SendMessage(arrHwnd[ID_BTN_SHA1_IN_SHA1],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 	arrHwnd[ID_BTN_OPTIONS]				= CreateWindow(TEXT("BUTTON"), TEXT("Options"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_OPTIONS, g_hInstance, NULL);
 
 	//arrHwnd[ID_STATIC_PRIORITY]			= CreateWindow(TEXT("STATIC"), TEXT("Priority"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_PRIORITY, g_hInstance, NULL);
@@ -897,10 +899,11 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 	TCHAR szTemp2[MAX_RESULT_LINE];
 	TCHAR szFormatString[MAX_RESULT_LINE];
 	DOUBLE fSize;
-	BOOL bAreMd5Equal;
+	BOOL bAreHashesEqual;
 
 	pshowresult_params->bCrcIsWrong = FALSE;
 	pshowresult_params->bMd5IsWrong = FALSE;
+	pshowresult_params->bSha1IsWrong = FALSE;
 
 	if(pFileinfo == NULL){
 		SetWindowText(arrHwnd[ID_EDIT_FILENAME], TEXT(""));
@@ -956,11 +959,11 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 			if(pFileinfo->parentList->bMd5Calculated){
 				StringCchCopy(szTemp1,MAX_RESULT_LINE,pFileinfo->szMd5Result);
 				if(pFileinfo->bMd5Found){
-					bAreMd5Equal = TRUE;
+					bAreHashesEqual = TRUE;
 					for(INT i = 0; i < 16; ++i)
 						if(pFileinfo->abMd5Result[i] != pFileinfo->abMd5Found[i])
-							bAreMd5Equal = FALSE;
-					if(!bAreMd5Equal){
+							bAreHashesEqual = FALSE;
+					if(!bAreHashesEqual){
 						StringCchPrintf(szTemp2, MAX_RESULT_LINE, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
 							pFileinfo->abMd5Found[0], pFileinfo->abMd5Found[1], pFileinfo->abMd5Found[2], pFileinfo->abMd5Found[3], 
 							pFileinfo->abMd5Found[4], pFileinfo->abMd5Found[5], pFileinfo->abMd5Found[6], pFileinfo->abMd5Found[7], 
@@ -986,6 +989,24 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 
 			if(pFileinfo->parentList->bSha1Calculated){
 				StringCchCopy(szTemp1,MAX_RESULT_LINE,pFileinfo->szSha1Result);
+				if(pFileinfo->bSha1Found){
+					bAreHashesEqual = TRUE;
+					for(INT i = 0; i < 20; ++i)
+						if(pFileinfo->abSha1Result[i] != pFileinfo->abSha1Found[i])
+							bAreHashesEqual = FALSE;
+					if(!bAreHashesEqual){
+						StringCchPrintf(szTemp2, MAX_RESULT_LINE, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
+							pFileinfo->abSha1Found[0], pFileinfo->abSha1Found[1], pFileinfo->abSha1Found[2], pFileinfo->abSha1Found[3], 
+							pFileinfo->abSha1Found[4], pFileinfo->abSha1Found[5], pFileinfo->abSha1Found[6], pFileinfo->abSha1Found[7], 
+							pFileinfo->abSha1Found[8], pFileinfo->abSha1Found[9], pFileinfo->abSha1Found[10], pFileinfo->abSha1Found[11], 
+							pFileinfo->abSha1Found[12], pFileinfo->abSha1Found[13], pFileinfo->abSha1Found[14], pFileinfo->abSha1Found[15],
+							pFileinfo->abSha1Found[16], pFileinfo->abSha1Found[17], pFileinfo->abSha1Found[18], pFileinfo->abSha1Found[19]);
+						StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT("  =>  "));
+						StringCchCat(szTemp1, MAX_RESULT_LINE, szTemp2);
+						StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT(" found in SHA1 file"));
+						pshowresult_params->bSha1IsWrong = TRUE;
+					}
+				}
 			}
 			else
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
@@ -1057,8 +1078,6 @@ VOID DisplayStatusOverview(CONST HWND hEditStatus)
 		fileList = *it;
 		for(list<FILEINFO>::iterator fInfoIt=fileList->fInfos.begin();fInfoIt!=fileList->fInfos.end();fInfoIt++) {
 			pFileinfo = &(*fInfoIt);
-			// ATTENTION: the same logic is implemented in InsertItemIntoList, InfoToIntValue, DisplayStatusOverview.
-			// Any changes here have to be transfered there
 			switch(InfoToIntValue(pFileinfo)) {
 				case 1: dwCountOK++;
 						break;

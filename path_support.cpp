@@ -261,17 +261,17 @@ BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH], CONST TCHAR * szExtensio
 Return Value:
 	returns TRUE if szFilename has the extension
 
-Notes:
-- szExtension is assumed to be of the form .sfv or .md5, i.e. a dot and 3 chars
 *****************************************************************************/
-BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH], CONST TCHAR szExtension[4])
+BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH], CONST TCHAR *szExtension)
 {
 	size_t stString;
+	size_t stExtension;
 
 	StringCchLength(szFilename, MAX_PATH, & stString);
+	StringCchLength(szExtension, MAX_PATH, & stExtension);
 
 	// we compare the 4 last characters
-	if( (stString > 4) && (lstrcmpi(szFilename + stString - 4, szExtension) == 0) )
+	if( (stString > stExtension) && (lstrcmpi(szFilename + stString - stExtension, szExtension) == 0) )
 		return TRUE;
 	else
 		return FALSE;
@@ -433,6 +433,8 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 			EnterSfvMode(fileList);
 		else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".md5")))
 			EnterMd5Mode(fileList);
+		else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sha1")))
+			EnterSha1Mode(fileList);
 		else{
 			SetBasePath(fileList);
 			ProcessDirectories(fileList);
@@ -446,7 +448,8 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 	fileList->bCalculateMd5	= ((fileList->uiRapidCrcMode == MODE_NORMAL) &&	(g_program_options.bCalcMd5PerDefault))
 								|| (fileList->uiRapidCrcMode == MODE_MD5);
 	fileList->bCalculateEd2k  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcEd2kPerDefault));
-	fileList->bCalculateSha1  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcSha1PerDefault));
+	fileList->bCalculateSha1  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcSha1PerDefault))
+								|| (fileList->uiRapidCrcMode == MODE_SHA1);
 
 	switch(fileList->uiCmdOpts) {
 		case CMD_SFV:
