@@ -869,7 +869,7 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 		if( MessageBox(arrHwnd[ID_MAIN_WND],
 			msgString,
 			TEXT("Question"),MB_OKCANCEL | MB_ICONQUESTION | MB_APPLMODAL | MB_SETFOREGROUND) == IDCANCEL)
-			return NOERROR;
+			return true;
 		doRehash = true;
 	}
 	if(doRehash) {

@@ -996,7 +996,7 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_STATIC_FILENAME], lACW * 3, wHeight - lACH * (resultGroupY - 15/10.0), lACW * 5, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_EDIT_FILENAME], lACW * 9, wHeight - lACH * (resultGroupY - 15/10.0), wWidth - lACW * 12, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_STATIC_CRC_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 52, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 51, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_STATIC_ED2K_VALUE], lACW * 61, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_EDIT_ED2K_VALUE], lACW * 67, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 42, lACH, TRUE);
 	MoveWindow(arrHwnd[ID_STATIC_MD5_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 45/10.0), lACW * 5, lACH, TRUE);

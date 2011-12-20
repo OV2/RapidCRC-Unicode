@@ -470,7 +470,7 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 	}
 
 	EnableMenuItem(popup,IDM_CLEAR_LIST,MF_BYCOMMAND | (SyncQueue.bThreadDone ? MF_ENABLED : MF_GRAYED));
-	EnableMenuItem(popup,IDM_REMOVE_ITEMS,MF_BYCOMMAND | ((uiSelected>0) ? MF_ENABLED : MF_GRAYED));
+	EnableMenuItem(popup,IDM_REMOVE_ITEMS,MF_BYCOMMAND | ((SyncQueue.bThreadDone && uiSelected>0) ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_CRC,MF_BYCOMMAND | (bCrc ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_MD5,MF_BYCOMMAND | (bMd5 ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_SHA1,MF_BYCOMMAND | (bSha1 ? MF_ENABLED : MF_GRAYED));
@@ -1240,6 +1240,7 @@ VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStat
 	EnableWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], bStatus);
 	EnableWindow(arrHwnd[ID_BTN_CRC_IN_SFV], bStatus);
 	EnableWindow(arrHwnd[ID_BTN_MD5_IN_MD5], bStatus);
+	EnableWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], bStatus);
 	ShowWindow(arrHwnd[ID_BTN_PLAY_PAUSE],!bStatus);
 	if(!g_program_options.bEnableQueue)
 		EnableWindow(arrHwnd[ID_BTN_OPENFILES_PAUSE],bStatus);
