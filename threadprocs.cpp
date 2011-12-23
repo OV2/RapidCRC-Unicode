@@ -383,6 +383,9 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				case CMD_MD5:
 					CreateChecksumFiles(arrHwnd,MODE_MD5,&finalList);
 					break;
+				case CMD_SHA1:
+					CreateChecksumFiles(arrHwnd,MODE_SHA1,&finalList);
+					break;
 				case CMD_NAME:
 					ActionCrcIntoFilename(arrHwnd,TRUE,&finalList);
 					break;

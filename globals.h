@@ -120,6 +120,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_NAME			3
 #define CMD_NTFS			4
 #define CMD_REPARENT		5
+#define CMD_SHA1			6
 
 //CRC Locations
 #define CRC_FOUND_NONE		0

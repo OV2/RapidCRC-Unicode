@@ -460,6 +460,9 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 		case CMD_MD5:
 			fileList->bCalculateMd5 = true;
 			break;
+		case CMD_SHA1:
+			fileList->bCalculateSha1 = true;
+			break;
 		default:
 			break;
 	}
