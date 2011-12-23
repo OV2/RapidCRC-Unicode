@@ -797,6 +797,12 @@ VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList, CONST INT iImag
 			else  // iImageIndex == ICON_NO_CRC
 				StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, TEXT("No CRC found"));
 		}
+		else if(pFileinfo->dwCrc32Found)
+			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT,
+				(pFileinfo->dwCrc32Found == CRC_FOUND_FILENAME?
+				TEXT("Checksum in filename"):
+				TEXT("Checksum in stream"))
+			);
 		else
 			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGHT, TEXT("No checksum calculated"));
 	}

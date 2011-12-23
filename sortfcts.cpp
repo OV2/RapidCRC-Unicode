@@ -214,11 +214,15 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 				iResult = 3;
 		}
 		else{ // MODE_SFV and MODE_NORMAL; the icon does not differ between these modes
-			if( (pFileinfo->parentList->bCrcCalculated) && (pFileinfo->bCrcFound) ){
-				if(pFileinfo->dwCrc32Result == pFileinfo->dwCrc32Found)
-					iResult = 1;
-				else
-					iResult = 2;
+			if( pFileinfo->dwCrcFound ) {
+				if( pFileinfo->parentList->bCrcCalculated ){
+					if(pFileinfo->dwCrc32Result == pFileinfo->dwCrc32Found)
+						iResult = 1;
+					else
+						iResult = 2;
+				} else {
+					iResult = pFileinfo->dwCrcFound == CRC_FOUND_FILENAME ? 5 : 6;
+				}
 			}
 			else
 				iResult = 3;

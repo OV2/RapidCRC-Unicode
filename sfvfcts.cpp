@@ -139,7 +139,7 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 					if(! IsLegalHexSymbol(szLine[uiStringLength-i]))
 						bCrcOK = FALSE;
 				if(bCrcOK){
-					fileinfoTmp.bCrcFound = TRUE;
+					fileinfoTmp.dwCrcFound = CRC_FOUND_SFV;
 					fileinfoTmp.dwCrc32Found = HexToDword(szLine + uiStringLength - 8, 8);
 					fileinfoTmp.dwError = NOERROR;
 				}

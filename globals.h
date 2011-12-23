@@ -121,6 +121,12 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_NTFS			4
 #define CMD_REPARENT		5
 
+//CRC Locations
+#define CRC_FOUND_NONE		0
+#define CRC_FOUND_SFV		1
+#define CRC_FOUND_FILENAME	2
+#define CRC_FOUND_STREAM	3
+
 // these are the different possibilities for how to create SFV and MD5 files
 #define CREATE_ONE_PER_FILE		0
 #define CREATE_ONE_PER_DIR		1
@@ -216,7 +222,7 @@ typedef struct _FILEINFO{
 	DWORD	dwCrc32Result;
 	DWORD	dwCrc32Found;
 	DWORD	dwError;
-	BOOL	bCrcFound;
+	DWORD	dwCrcFound;
 	BOOL	bMd5Found;
 	BOOL	bSha1Found;
 	_lFILEINFO * parentList;

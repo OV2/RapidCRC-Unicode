@@ -88,13 +88,13 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<F
 		bAFileWasProcessed = FALSE;
 		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 			pFileinfo = (*it);
-			if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(pFileinfo->bCrcFound)) ){
+			if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(pFileinfo->dwCrcFound)) ){
 					bAFileWasProcessed = TRUE;
 					GenerateNewFilename(szFilenameTemp, pFileinfo->szFilename, pFileinfo->dwCrc32Result, g_program_options.szFilenamePattern);
 					if(SaveCRCIntoStream(pFileinfo->szFilename,pFileinfo->dwCrc32Result)){
 						// this updates pFileinfo->szFilenameShort automatically
 						pFileinfo->dwCrc32Found = pFileinfo->dwCrc32Result;
-						pFileinfo->bCrcFound = TRUE;
+						pFileinfo->dwCrcFound = CRC_FOUND_STREAM;
 					}
 					else{
 						pFileinfo->dwError = GetLastError();
@@ -202,14 +202,14 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list
 		bAFileWasProcessed = FALSE;
 		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 			pFileinfo = (*it);
-			if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(pFileinfo->bCrcFound)) ){
+			if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(pFileinfo->dwCrcFound)) ){
 					bAFileWasProcessed = TRUE;
 					GenerateNewFilename(szFilenameTemp, pFileinfo->szFilename, pFileinfo->dwCrc32Result, g_program_options.szFilenamePattern);
 					if(MoveFile(pFileinfo->szFilename, szFilenameTemp)){
 						StringCchCopy(pFileinfo->szFilename, MAX_PATH, szFilenameTemp);
 						// this updates pFileinfo->szFilenameShort automatically
 						pFileinfo->dwCrc32Found = pFileinfo->dwCrc32Result;
-						pFileinfo->bCrcFound = TRUE;
+						pFileinfo->dwCrcFound = CRC_FOUND_FILENAME;
 					}
 					else{
 						pFileinfo->dwError = GetLastError();

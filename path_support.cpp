@@ -603,12 +603,12 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 				fileList->qwFilesizeSum += (*it).qwFilesize;
 				if(fileList->uiRapidCrcMode == MODE_NORMAL)
 					if(GetCrcFromFilename((*it).szFilenameShort, & (*it).dwCrc32Found))
-						(*it).bCrcFound = TRUE;
+						(*it).dwCrcFound = CRC_FOUND_FILENAME;
 					else
 						if(GetCrcFromStream((*it).szFilename, & (*it).dwCrc32Found))
-							(*it).bCrcFound = TRUE;
+							(*it).dwCrcFound = CRC_FOUND_STREAM;
 						else
-							(*it).bCrcFound = FALSE;
+							(*it).dwCrcFound = CRC_FOUND_NONE;
 			}
 		}
 

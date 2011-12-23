@@ -603,7 +603,7 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	SetSubItemColumns(hWndListView);
 
 	// Create the full-sized icon image lists. 
-	hSmall = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 4, 1);
+	hSmall = ImageList_Create(16, 16, ILC_COLOR32 | ILC_MASK, 6, 1);
 
 	// Add the icons to image list.
 	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_MODERN_OK)); 
@@ -621,6 +621,11 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_MODERN_ERROR)); 
 	ImageList_AddIcon(hSmall, hiconItem); 
 	DestroyIcon(hiconItem); 
+
+	hiconItem = LoadIcon(g_hInstance, MAKEINTRESOURCE(IDI_ICON_MODERN_NOCRC));
+	ImageList_AddIcon(hSmall, hiconItem);
+	ImageList_AddIcon(hSmall, hiconItem);
+	DestroyIcon(hiconItem);
 
 	// Assign the image lists to the list-view control. 
 	ListView_SetImageList(hWndListView, hSmall, LVSIL_SMALL); 
@@ -942,7 +947,7 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 		}
 		else{
 			if(pFileinfo->parentList->bCrcCalculated){
-				if( (pFileinfo->bCrcFound) && (pFileinfo->dwCrc32Result != pFileinfo->dwCrc32Found)){
+				if( (pFileinfo->dwCrcFound) && (pFileinfo->dwCrc32Result != pFileinfo->dwCrc32Found)){
 					if(pFileinfo->parentList->uiRapidCrcMode == MODE_SFV)
 						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX  =>  %08LX found in SFV file"), pFileinfo->dwCrc32Result, pFileinfo->dwCrc32Found );
 					else
@@ -952,6 +957,12 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 				else
 					StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX"), pFileinfo->dwCrc32Result );
 			}
+			else if(pFileinfo->dwCrcFound)
+				StringCchPrintf(szTemp1, MAX_RESULT_LINE,
+					(pFileinfo->dwCrcFound == CRC_FOUND_FILENAME ?
+					TEXT("CRC found in filename"):
+					TEXT("CRC found in stream"))
+				);
 			else
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
 			SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE], szTemp1);
