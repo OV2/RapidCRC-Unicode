@@ -91,8 +91,9 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 		InsertMenu(hSubMenu,2,MF_SEPARATOR | MF_BYPOSITION,0,NULL);
 		InsertMenu(hSubMenu,3,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SFV,TEXT("Create SFV"));
 		InsertMenu(hSubMenu,4,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_MD5,TEXT("Create MD5"));
-		InsertMenu(hSubMenu,5,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NAME,TEXT("Put CRC in Filename"));
-		InsertMenu(hSubMenu,6,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NTFS,TEXT("Put CRC in NTFS Stream"));
+		InsertMenu(hSubMenu,5,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SHA1,TEXT("Create SHA1"));
+		InsertMenu(hSubMenu,6,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NAME,TEXT("Put CRC in Filename"));
+		InsertMenu(hSubMenu,7,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NTFS,TEXT("Put CRC in NTFS Stream"));
 
 		mii.fMask = MIIM_SUBMENU | MIIM_STRING | MIIM_ID;
 		mii.cbSize = sizeof(mii);
@@ -123,6 +124,7 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 			SetMenuItemInfo(hSubMenu, 4, TRUE, &mii);
 			SetMenuItemInfo(hSubMenu, 5, TRUE, &mii);
 			SetMenuItemInfo(hSubMenu, 6, TRUE, &mii);
+			SetMenuItemInfo(hSubMenu, 7, TRUE, &mii);
 		} else {
 			hBmp = LoadIconAsBitmap(g_hmodThisDll, IDI_RAPIDCRC);
 			SetMenuItemBitmaps(hMenu,indexMenu,MF_BYPOSITION,hBmp,hBmp);
@@ -136,6 +138,7 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 			SetMenuItemBitmaps(hSubMenu,4,MF_BYPOSITION,hBmp,hBmp);
 			SetMenuItemBitmaps(hSubMenu,5,MF_BYPOSITION,hBmp,hBmp);
 			SetMenuItemBitmaps(hSubMenu,6,MF_BYPOSITION,hBmp,hBmp);
+			SetMenuItemBitmaps(hSubMenu,7,MF_BYPOSITION,hBmp,hBmp);
 		}
 
 		return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(IDM_SUBMENU));
@@ -291,6 +294,36 @@ STDMETHODIMP CShellExt::GetCommandString(THIS_
 				break; 
 		}
 	}
+	else if(idCommand == IDM_SHA1)
+	{
+		switch(uFlags)
+		{
+			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
+			// that windows wants ANSI strings in certain situations
+			case GCS_HELPTEXTA:
+	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens the files with RapidCRC and creates an SHA1 File");
+				break; 
+
+	        case GCS_HELPTEXTW: 
+				// hr = StringCbCopyNW((LPWSTR)pszName, sizeof(pszName), 
+				//                     L"Opens the files with RapidCRC and calculates checksum", uMaxNameLen);
+				// it was in this way in the MSDN Library!! And it doesn't work: sizeof(pszName) is always 4 ;-)
+				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens the files with RapidCRC and creates an SHA1 File");
+				break;
+	
+			case GCS_VERBA:
+	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCCreateSHA1");
+				break; 
+	
+			case GCS_VERBW:
+	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCCreateSHA1");
+				break; 
+	
+			default:
+	            hr = S_OK;
+				break; 
+		}
+	}
 	else if(idCommand == IDM_NAME)
 	{
 		switch(uFlags)
@@ -411,6 +444,10 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 		{
 			doRapidCrcMD5();
 		}
+		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA1"))
+		{
+			doRapidCrcSHA1();
+		}
 		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCPutName"))
 		{
 			doRapidCrcNAME();
@@ -444,6 +481,10 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 		{
 			doRapidCrcMD5();
 		}
+		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA1"))
+		{
+			doRapidCrcSHA1();
+		}
 		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCPutName"))
 		{
 			doRapidCrcNAME();
@@ -473,6 +514,10 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 	else if(LOWORD(lpcmi->lpVerb) == IDM_MD5)
 	{
 		doRapidCrcMD5();
+	}
+	else if(LOWORD(lpcmi->lpVerb) == IDM_SHA1)
+	{
+		doRapidCrcSHA1();
 	}
 	else if(LOWORD(lpcmi->lpVerb) == IDM_NAME)
 	{
@@ -523,6 +568,16 @@ void CShellExt::doRapidCrcMD5(void)
 	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
 	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
 	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, TEXT(" -CreateMD5"));
+	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
+		free(my_proc_params_shex_stringarray.FileNameArray[i]);
+	free(my_proc_params_shex_stringarray.FileNameArray);
+}
+
+void CShellExt::doRapidCrcSHA1(void)
+{
+	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
+	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
+	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, TEXT(" -CreateSHA1"));
 	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
 		free(my_proc_params_shex_stringarray.FileNameArray[i]);
 	free(my_proc_params_shex_stringarray.FileNameArray);
