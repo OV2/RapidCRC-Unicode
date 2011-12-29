@@ -83,7 +83,11 @@ STDAPI DllCanUnloadNow(void)
 STDAPI DllRegisterServer()
 {
 	TCHAR szFileName[MAX_PATH];
+#ifndef _WIN64
 	TCHAR szDescription[255]=TEXT("RCRCFile");
+#else
+    TCHAR szDescription[255]=TEXT("RCRCFile64");
+#endif
 	TCHAR szCLSID[255]=RCRC_SHEXT_GUID;
 	TCHAR szRegKey[255];
 	HKEY				hKey;
@@ -168,7 +172,11 @@ STDAPI DllRegisterServer()
 
 STDAPI DllUnregisterServer()
 {
+#ifndef _WIN64
 	TCHAR szDescription[255]=TEXT("RCRCFile");
+#else
+    TCHAR szDescription[255]=TEXT("RCRCFile64");
+#endif
 	TCHAR szCLSID[255]=RCRC_SHEXT_GUID;
 	TCHAR szRegKey[255];
 	HKEY				hKey;
