@@ -151,11 +151,12 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		break;
 	case WM_GETMINMAXINFO:
-		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 127;
+		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 131;
 		((MINMAXINFO *)lParam)->ptMinTrackSize.y = lAveCharHeight * 25;
 		return 0;
 	case WM_SIZE:
 		MoveAndSizeWindows(arrHwnd, LOWORD(lParam), HIWORD(lParam), lAveCharWidth, lAveCharHeight);
+        RedrawWindow(arrHwnd[ID_MAIN_WND], NULL, NULL, RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
 		return 0;
 	case WM_THREAD_FILEINFO_START:
 		fileList = (lFILEINFO *)wParam;
@@ -989,44 +990,44 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 
 #pragma warning(disable: 4244) //disable float cut-off warnings
 
-	MoveWindow(arrHwnd[ID_LISTVIEW], lACW * leftMargin, lACH * 65/100.0, wWidth - lACW * rightMargin, wHeight - lACH * (actButtonY + 1), TRUE);
+	MoveWindow(arrHwnd[ID_LISTVIEW], lACW * leftMargin, lACH * 65/100.0, wWidth - lACW * rightMargin, wHeight - lACH * (actButtonY + 1), FALSE);
 
-	MoveWindow(arrHwnd[ID_GROUP_RESULT], lACW * leftMargin, wHeight - lACH * resultGroupY, wWidth - lACW * rightMargin, lACH * 90/10.0, TRUE);
+	MoveWindow(arrHwnd[ID_GROUP_RESULT], lACW * leftMargin, wHeight - lACH * resultGroupY, wWidth - lACW * rightMargin, lACH * 90/10.0, FALSE);
 
-	MoveWindow(arrHwnd[ID_STATIC_FILENAME], lACW * 3, wHeight - lACH * (resultGroupY - 15/10.0), lACW * 5, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_FILENAME], lACW * 9, wHeight - lACH * (resultGroupY - 15/10.0), wWidth - lACW * 12, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_STATIC_CRC_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 51, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_STATIC_ED2K_VALUE], lACW * 61, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_ED2K_VALUE], lACW * 67, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 42, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_STATIC_MD5_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 45/10.0), lACW * 5, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_MD5_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 45/10.0), wWidth - lACW * 12, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_STATIC_SHA1_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 5, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_SHA1_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 60/10.0), wWidth - lACW * 12, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_STATIC_INFO], lACW * 3, wHeight - lACH * (resultGroupY - 75/10.0), lACW * 5, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_INFO], lACW * 9, wHeight - lACH * (resultGroupY - 75/10.0), wWidth - lACW * 20, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_BTN_ERROR_DESCR], wWidth - lACW * 105/10.0, wHeight - lACH * (resultGroupY - 73/10.0), lACW * 75/10.0, lACH * 15/10.0, TRUE);
+	MoveWindow(arrHwnd[ID_STATIC_FILENAME], lACW * 3, wHeight - lACH * (resultGroupY - 15/10.0), lACW * 5, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_FILENAME], lACW * 9, wHeight - lACH * (resultGroupY - 15/10.0), wWidth - lACW * 12, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_STATIC_CRC_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 51, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_STATIC_ED2K_VALUE], lACW * 61, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_ED2K_VALUE], lACW * 67, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 42, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_STATIC_MD5_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 45/10.0), lACW * 5, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_MD5_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 45/10.0), wWidth - lACW * 12, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_STATIC_SHA1_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 5, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_SHA1_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 60/10.0), wWidth - lACW * 12, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_STATIC_INFO], lACW * 3, wHeight - lACH * (resultGroupY - 75/10.0), lACW * 5, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_INFO], lACW * 9, wHeight - lACH * (resultGroupY - 75/10.0), wWidth - lACW * 20, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_ERROR_DESCR], wWidth - lACW * 105/10.0, wHeight - lACH * (resultGroupY - 73/10.0), lACW * 75/10.0, lACH * 15/10.0, FALSE);
 
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * leftMargin, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, TRUE);
-	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 16 + 1) + 16, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, TRUE);
-	MoveWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], lACW * (leftMargin + 32 + 2) + 32, wHeight - lACH * actButtonY, lACW * 17 + 16, lACH * 19/10.0, TRUE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 49 + 3) + 48, wHeight - lACH * actButtonY, lACW * 22, lACH * 19/10.0, TRUE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 71 + 4) + 48, wHeight - lACH * actButtonY, lACW * 26, lACH * 19/10.0, TRUE);
-	//MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - lACW * 125/10.0/*lACW * (leftMargin + 88 + 4) + 32*/, wHeight - lACH * actButtonY, 32, lACH * 19/10.0, TRUE);
-	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, TRUE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * leftMargin, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 16 + 1) + 16, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], lACW * (leftMargin + 32 + 2) + 32, wHeight - lACH * actButtonY, lACW * 17 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 49 + 3) + 48, wHeight - lACH * actButtonY, lACW * 24, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 73 + 4) + 48, wHeight - lACH * actButtonY, lACW * 28, lACH * 19/10.0, FALSE);
+	//MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - lACW * 125/10.0/*lACW * (leftMargin + 88 + 4) + 32*/, wHeight - lACH * actButtonY, 32, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, FALSE);
 	
-	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 35 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, TRUE);
-	//MoveWindow(arrHwnd[ID_STATIC_PRIORITY], wWidth - lACW * 38, wHeight - lACH * 44/10.0, lACW * 8, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_COMBO_PRIORITY], wWidth - lACW * 35, wHeight - lACH * 45/10.0, lACW * 17/*12*/, lACH * 5, TRUE);
+	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 35 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, FALSE);
+	//MoveWindow(arrHwnd[ID_STATIC_PRIORITY], wWidth - lACW * 38, wHeight - lACH * 44/10.0, lACW * 8, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_COMBO_PRIORITY], wWidth - lACW * 35, wHeight - lACH * 45/10.0, lACW * 17/*12*/, lACH * 5, FALSE);
 	
 
-	MoveWindow(arrHwnd[ID_STATIC_STATUS], lACW * leftMargin, wHeight - lACH * 42/10.0, lACW * 7, lACH, TRUE);
-	MoveWindow(arrHwnd[ID_EDIT_STATUS], lACW * 85/10.0, wHeight - lACH * 42/10.0, wWidth - lACW * 523/10.0, lACH, TRUE);
+	MoveWindow(arrHwnd[ID_STATIC_STATUS], lACW * leftMargin, wHeight - lACH * 42/10.0, lACW * 7, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_STATUS], lACW * 85/10.0, wHeight - lACH * 42/10.0, wWidth - lACW * 523/10.0, lACH, FALSE);
 
-	MoveWindow(arrHwnd[ID_PROGRESS_FILE], lACW * leftMargin, wHeight - lACH * 24/10.0, wWidth - lACW * 193/10.0, lACH * 95/100.0, TRUE);
-	MoveWindow(arrHwnd[ID_PROGRESS_GLOBAL], lACW * leftMargin, wHeight - lACH * 14/10.0, wWidth - lACW * 193/10.0, lACH * 95/100.0, TRUE);
-	MoveWindow(arrHwnd[ID_BTN_OPENFILES_PAUSE], wWidth - lACW * 167/10.0, wHeight - lACH * 46/10.0, lACW * 155/10.0, lACH * 19/10.0, TRUE);
-	MoveWindow(arrHwnd[ID_BTN_EXIT], wWidth - lACW * 167/10.0, wHeight - lACH * 24/10.0, lACW * 155/10.0, lACH * 19/10.0, TRUE);
+	MoveWindow(arrHwnd[ID_PROGRESS_FILE], lACW * leftMargin, wHeight - lACH * 24/10.0, wWidth - lACW * 193/10.0, lACH * 95/100.0, FALSE);
+	MoveWindow(arrHwnd[ID_PROGRESS_GLOBAL], lACW * leftMargin, wHeight - lACH * 14/10.0, wWidth - lACW * 193/10.0, lACH * 95/100.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_OPENFILES_PAUSE], wWidth - lACW * 167/10.0, wHeight - lACH * 46/10.0, lACW * 155/10.0, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_EXIT], wWidth - lACW * 167/10.0, wHeight - lACH * 24/10.0, lACW * 155/10.0, lACH * 19/10.0, FALSE);
 
 #pragma warning(default: 4244)
 
@@ -1060,4 +1061,22 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	//ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], 0, wWidth - iCurrentWidthUsed - lACW * 8);
 	ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], 0, wWidth - iCurrentWidthUsed - GetSystemMetrics(SM_CXVSCROLL) - lACW * 4);
 	return;
+}
+
+LRESULT CALLBACK WndProcGroupBox(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	if(message==WM_ERASEBKGND) {
+        RECT    rect;
+        HDC     hDC = (HDC)wParam;
+        HWND ghWnd = GetParent(hWnd);
+
+        // Erase the group box's background.
+        GetClientRect(hWnd, &rect);
+        FillRect(hDC,&rect,(HBRUSH)GetClassLong(ghWnd, GCL_HBRBACKGROUND));
+
+        return TRUE; // Background has been erased.
+    }
+
+    WNDPROC lpfnOldWndProc = (WNDPROC)GetWindowLongPtr(hWnd,GWL_USERDATA);
+	return CallWindowProc(lpfnOldWndProc, hWnd, message, wParam, lParam);
 }

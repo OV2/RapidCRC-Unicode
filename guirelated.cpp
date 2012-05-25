@@ -40,7 +40,7 @@ ATOM RegisterMainWindowClass()
 	WNDCLASSEX wcex;
 
 	wcex.cbSize			= sizeof(WNDCLASSEX); 
-	wcex.style			= CS_HREDRAW | CS_VREDRAW;
+	wcex.style			= 0; //CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc	= (WNDPROC)WndProcMain;
 	wcex.cbClsExtra		= 0;
 	wcex.cbWndExtra		= 0;
@@ -74,7 +74,7 @@ HWND InitInstance(CONST INT iCmdShow)
 	
 	if(!GetVersionString(buffer,MAX_PATH))
 		StringCchCopy(buffer,MAX_PATH,TEXT("RapidCRC Unicode"));
-	hWnd = CreateWindow(TEXT("RapidCrcMainWindow"), buffer, WS_OVERLAPPEDWINDOW,
+    hWnd = CreateWindow(TEXT("RapidCrcMainWindow"), buffer, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
 		CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, (HMENU)ID_MAIN_WND, g_hInstance, NULL);
 
 	if (hWnd == NULL)
@@ -159,7 +159,10 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 
 
 	arrHwnd[ID_MAIN_WND]				= hMainWnd;
-	arrHwnd[ID_GROUP_RESULT]			= CreateWindow(TEXT("BUTTON"), TEXT("Results"), BS_GROUPBOX | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_GROUP_RESULT, g_hInstance, NULL);
+	arrHwnd[ID_GROUP_RESULT]			= CreateWindow(TEXT("BUTTON"), TEXT("Results"), BS_GROUPBOX | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hMainWnd, (HMENU)ID_GROUP_RESULT, g_hInstance, NULL);
+    WNDPROC lpfnOldWndProc = (WNDPROC)SetWindowLongPtr(arrHwnd[ID_GROUP_RESULT],GWLP_WNDPROC,(LONG_PTR)WndProcGroupBox);
+    SetWindowLongPtr(arrHwnd[ID_GROUP_RESULT],GWLP_USERDATA,(LONG)lpfnOldWndProc);
+
 
 	arrHwnd[ID_STATIC_FILENAME]			= CreateWindow(TEXT("STATIC"), TEXT("File:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_FILENAME, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_FILENAME]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_FILENAME, g_hInstance, NULL);
