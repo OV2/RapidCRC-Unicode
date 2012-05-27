@@ -159,6 +159,10 @@ INT WINAPI WinMain (HINSTANCE hInst, HINSTANCE /*hPrevInstance*/, LPSTR /*szCmdL
 
 	g_hInstance = hInst;
 
+    g_pstatus.bHaveComCtrlv6=CheckOsVersion(5,1);	//are the common controls v6 available? (os>=winxp)
+    g_pstatus.bIsVista=CheckOsVersion(6,0);
+    g_pstatus.bHideVerified = false;
+
 	InitializeCriticalSection(&thread_fileinfo_crit);
 
 	hMutex = CreateMutex(NULL,FALSE,TEXT("Local\\RapidCRCUMutex"));

@@ -191,6 +191,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_REMOVE_ITEMS			44
 #define IDM_CLEAR_LIST				45
 #define IDM_COPY_SHA1				46
+#define IDM_HIDE_VERIFIED           47
 
 #define IDM_CRC_COLUMN              50
 #define IDM_MD5_COLUMN              51
@@ -285,10 +286,6 @@ typedef struct{
 typedef struct{
 	QWORD				qwBytesReadCurFile;				// out
 	QWORD				qwBytesReadAllFiles;			// out
-	//QWORD				qwFilesizeSum;
-	//BOOL				bCalculateCrc;					// in
-	//BOOL				bCalculateMd5;					// in
-	//BOOL				bCalculateEd2k;
 	BOOL				signalExit;
 	SHOWRESULT_PARAMS	* pshowresult_params;			// in / out
 	HWND				* arrHwnd;						// in
@@ -343,11 +340,9 @@ typedef struct{
 }PROGRAM_OPTIONS;
 
 typedef struct{
-	UINT			uiRapidCrcMode;
-	BOOL			bCrcCalculated;
-	BOOL			bMd5Calculated;
-	BOOL			bSha1Calculated;
-	BOOL			bEd2kCalculated;
+	BOOL bHaveComCtrlv6;							//are the common controls v6 available? (os>=winxp)
+    BOOL bIsVista;
+    BOOL bHideVerified;
 }PROGRAM_STATUS;
 
 typedef struct{
@@ -363,8 +358,7 @@ extern HINSTANCE g_hInstance;
 //extern FILEINFO * g_fileinfo_list_first_item;
 //extern TCHAR g_szBasePath[MAX_PATH];
 extern PROGRAM_OPTIONS g_program_options;
-extern BOOL gComCtrlv6;							//are the common controls v6 available? (os>=winxp)
-extern BOOL gIsVista;
+extern PROGRAM_STATUS g_pstatus;
 extern CRITICAL_SECTION thread_fileinfo_crit;
 
 //****** function prototypes *******
@@ -411,6 +405,8 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU pupup,int x,int y, S
 void CreateListViewHeaderPopupMenu(HMENU *menu);
 BOOL ListViewHeaderPopup(HWND pHwnd,HMENU pupup,int x,int y);
 VOID ClearAllItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params);
+void HideVerifiedItems(CONST HWND hListView);
+void RestoreVerifiedItems(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
 
 //helper functions (helpfcts.cpp)
 BOOL IsLegalHexSymbol(CONST TCHAR tcChar);

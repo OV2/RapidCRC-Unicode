@@ -408,7 +408,7 @@ BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 	pFInfoList = new lFILEINFO;
 	
 #ifdef UNICODE
-	if(gIsVista)
+	if(g_pstatus.bIsVista)
 		dialogReturn = OpenFilesVistaUp(arrHwnd[ID_MAIN_WND],pFInfoList);
 	else
 #endif

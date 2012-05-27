@@ -205,7 +205,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 		QueryPerformanceFrequency((LARGE_INTEGER*)&wqFreq);
 
-		if(g_program_options.bEnableQueue && gComCtrlv6) {
+		if(g_program_options.bEnableQueue && g_pstatus.bHaveComCtrlv6) {
 			if(fileList->iGroupId==0)
 				InsertGroupIntoListView(arrHwnd[ID_LISTVIEW],fileList);
 			else
@@ -347,7 +347,10 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				curFileInfo.fSeconds = 0;			// if the file has 0 bytes*/
 
 			SetFileInfoStrings(&curFileInfo,fileList);
-			InsertItemIntoList(arrHwnd[ID_LISTVIEW], &curFileInfo,fileList);
+
+            if(!g_pstatus.bHideVerified || InfoToIntValue(&curFileInfo)!=1) {
+			    InsertItemIntoList(arrHwnd[ID_LISTVIEW], &curFileInfo,fileList);
+            }
 			ShowResult(arrHwnd, &curFileInfo, pshowresult_params);
 		}
 

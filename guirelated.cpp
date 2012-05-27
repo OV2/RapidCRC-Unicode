@@ -265,6 +265,8 @@ void CreateListViewPopupMenu(HMENU *menu) {
 
 	//InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_POPUP,(UINT_PTR)hSubMenu,TEXT("Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
+    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_HIDE_VERIFIED,TEXT("Hide Verified Items"));
+    InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_CLEAR_LIST,TEXT("Clear List"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_REMOVE_ITEMS,TEXT("Remove Selected Items"));
 }
@@ -429,12 +431,55 @@ void RemoveItems(CONST HWND hListView,list<FILEINFO*> *finalList)
 		pList->fInfos.remove_if(ComparePtr(pFileinfo));
 		if(pList->fInfos.empty()) {
 			doneList->remove(pList);
-			if(g_program_options.bEnableQueue && gComCtrlv6)
+			if(g_program_options.bEnableQueue && g_pstatus.bHaveComCtrlv6)
 				ListView_RemoveGroup(hListView,pList->iGroupId);
 			delete pList;
 		}
 	}
 	SyncQueue.releaseDoneList();
+}
+
+/*****************************************************************************
+void HideVerifiedItems(CONST HWND hListView)
+	hListView	: (IN) HWND of the listview
+
+Notes:
+	This function removes all files with verified crc/md5/sha1 from the listview
+    They are not removed from the list of calculated files and can be restored
+*****************************************************************************/
+void HideVerifiedItems(CONST HWND hListView) {
+    LVITEM lvitem={0};
+
+    g_pstatus.bHideVerified = true;
+    lvitem.mask = LVIF_PARAM;
+	for(int i=ListView_GetItemCount(hListView)-1;i>=0;i--) {
+		lvitem.iItem = i;
+		ListView_GetItem(hListView,&lvitem);
+        if(InfoToIntValue((FILEINFO *)lvitem.lParam)==1)
+			ListView_DeleteItem(hListView,i);
+	}
+}
+
+/*****************************************************************************
+void RestoreVerifiedItems(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+	arrHwnd	: (IN) array with window handles
+
+Notes:
+	Restores hidden verified items by clearing the listview and re-inserting
+    all files
+*****************************************************************************/
+void RestoreVerifiedItems(CONST HWND arrHwnd[ID_NUM_WINDOWS]) {
+    list<lFILEINFO *> *doneList;
+
+    g_pstatus.bHideVerified = false;
+    ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
+    doneList = SyncQueue.getDoneList();
+    for(list<lFILEINFO *>::iterator it=doneList->begin();it!=doneList->end();it++) {
+        for(list<FILEINFO>::iterator fit=(*it)->fInfos.begin();fit!=(*it)->fInfos.end();fit++) {
+            InsertItemIntoList(arrHwnd[ID_LISTVIEW],&(*fit),(*fit).parentList);
+        }
+    }
+    SyncQueue.releaseDoneList();
 }
 
 /*****************************************************************************
@@ -474,6 +519,8 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 
 	EnableMenuItem(popup,IDM_CLEAR_LIST,MF_BYCOMMAND | (SyncQueue.bThreadDone ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_REMOVE_ITEMS,MF_BYCOMMAND | ((SyncQueue.bThreadDone && uiSelected>0) ? MF_ENABLED : MF_GRAYED));
+    EnableMenuItem(popup,IDM_HIDE_VERIFIED,MF_BYCOMMAND | (SyncQueue.bThreadDone ? MF_ENABLED : MF_GRAYED));
+    CheckMenuItem(popup,IDM_HIDE_VERIFIED,MF_BYCOMMAND | (g_pstatus.bHideVerified ? MF_CHECKED : MF_UNCHECKED));
 	EnableMenuItem(popup,IDM_COPY_CRC,MF_BYCOMMAND | (bCrc ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_MD5,MF_BYCOMMAND | (bMd5 ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_COPY_SHA1,MF_BYCOMMAND | (bSha1 ? MF_ENABLED : MF_GRAYED));
@@ -492,6 +539,10 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 									break;
 		case IDM_REMOVE_ITEMS:		RemoveItems(arrHwnd[ID_LISTVIEW],&finalList);
 									break;
+        case IDM_HIDE_VERIFIED:     if(g_pstatus.bHideVerified)
+                                        RestoreVerifiedItems(arrHwnd);
+                                    else
+                                        HideVerifiedItems(arrHwnd[ID_LISTVIEW]);
 		default:					return;
 	}
 	
@@ -581,7 +632,7 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	ListView_SetExtendedListViewStyle(hWndListView, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
     //explorer-style listview and group view work only with common controls v6
-	if(gComCtrlv6) {
+	if(g_pstatus.bHaveComCtrlv6) {
 		uxTheme = LoadLibrary(TEXT("uxtheme.dll"));
 		if(uxTheme) {
 			SetWindowTheme = (SWT) GetProcAddress(uxTheme,"SetWindowTheme");
@@ -711,7 +762,7 @@ BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo,lFILEINFO *fi
 	lvI.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE;
 	lvI.state = 0;
 	lvI.stateMask = 0;
-	if(g_program_options.bEnableQueue && gComCtrlv6) {
+	if(g_program_options.bEnableQueue && g_pstatus.bHaveComCtrlv6) {
 		lvI.mask |= LVIF_GROUPID;
 		lvI.iGroupId = fileList->iGroupId;
 	}
@@ -1280,7 +1331,7 @@ VOID ClearAllItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshow
 	SyncQueue.clearQueue();
 	SyncQueue.clearList();
 	ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
-	if(gComCtrlv6)
+	if(g_pstatus.bHaveComCtrlv6)
 		ListView_RemoveAllGroups(arrHwnd[ID_LISTVIEW]);
 	ShowResult(arrHwnd,NULL,pshowresult_params);
 	SetWindowText(arrHwnd[ID_EDIT_STATUS],TEXT(""));

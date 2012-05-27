@@ -318,7 +318,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 					//if the queueing option has been changed we need to clear the lists, since this also enables/disables grouping
 					if(prevQueue!=g_program_options.bEnableQueue) {
 						ClearAllItems(arrHwnd,&showresult_params);
-						if(gComCtrlv6)
+						if(g_pstatus.bHaveComCtrlv6)
 							ListView_EnableGroupView(arrHwnd[ID_LISTVIEW],g_program_options.bEnableQueue);
 					}
 					UpdateListViewColumns(arrHwnd, lAveCharWidth);
@@ -387,7 +387,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
 		UpdateOptionsDialogControls(hDlg, TRUE, & program_options_temp);
 
-		EnableWindow(GetDlgItem(hDlg,IDC_ENABLE_QUEUE),gComCtrlv6);
+		EnableWindow(GetDlgItem(hDlg,IDC_ENABLE_QUEUE),g_pstatus.bHaveComCtrlv6);
 
 		return TRUE;
 

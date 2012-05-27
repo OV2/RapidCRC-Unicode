@@ -405,7 +405,7 @@ VOID ReadOptions()
 		CloseHandle(hFile);
 	}
 
-	if(!gComCtrlv6)
+	if(!g_pstatus.bHaveComCtrlv6)
 		g_program_options.bEnableQueue = FALSE;
 
 	if(!IsLegalFilename(g_program_options.szFilenamePattern) ||
