@@ -160,8 +160,8 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 
 	arrHwnd[ID_MAIN_WND]				= hMainWnd;
 	arrHwnd[ID_GROUP_RESULT]			= CreateWindow(TEXT("BUTTON"), TEXT("Results"), BS_GROUPBOX | WS_VISIBLE | WS_CHILD | WS_CLIPSIBLINGS, 0, 0, 0, 0, hMainWnd, (HMENU)ID_GROUP_RESULT, g_hInstance, NULL);
-    WNDPROC lpfnOldWndProc = (WNDPROC)SetWindowLongPtr(arrHwnd[ID_GROUP_RESULT],GWLP_WNDPROC,(LONG_PTR)WndProcGroupBox);
-    SetWindowLongPtr(arrHwnd[ID_GROUP_RESULT],GWLP_USERDATA,(LONG)lpfnOldWndProc);
+    WNDPROC lpfnOldWndProc              = (WNDPROC)SetWindowLongPtr(arrHwnd[ID_GROUP_RESULT],GWLP_WNDPROC,(LONG_PTR)WndProcGroupBox);
+    SetWindowLongPtr(arrHwnd[ID_GROUP_RESULT],GWLP_USERDATA,(LONG_PTR)lpfnOldWndProc);
 
 
 	arrHwnd[ID_STATIC_FILENAME]			= CreateWindow(TEXT("STATIC"), TEXT("File:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_FILENAME, g_hInstance, NULL);

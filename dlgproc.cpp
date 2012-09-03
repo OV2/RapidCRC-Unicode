@@ -1072,11 +1072,11 @@ LRESULT CALLBACK WndProcGroupBox(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
         // Erase the group box's background.
         GetClientRect(hWnd, &rect);
-        FillRect(hDC,&rect,(HBRUSH)GetClassLong(ghWnd, GCL_HBRBACKGROUND));
+        FillRect(hDC,&rect,(HBRUSH)GetClassLongPtr(ghWnd, GCLP_HBRBACKGROUND));
 
         return TRUE; // Background has been erased.
     }
 
-    WNDPROC lpfnOldWndProc = (WNDPROC)GetWindowLongPtr(hWnd,GWL_USERDATA);
+    WNDPROC lpfnOldWndProc = (WNDPROC)GetWindowLongPtr(hWnd,GWLP_USERDATA);
 	return CallWindowProc(lpfnOldWndProc, hWnd, message, wParam, lParam);
 }
