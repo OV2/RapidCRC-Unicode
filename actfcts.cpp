@@ -90,16 +90,14 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<F
 			pFileinfo = (*it);
 			if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(pFileinfo->dwCrcFound)) ){
 					bAFileWasProcessed = TRUE;
-					GenerateNewFilename(szFilenameTemp, pFileinfo->szFilename, pFileinfo->dwCrc32Result, g_program_options.szFilenamePattern);
 					if(SaveCRCIntoStream(pFileinfo->szFilename,pFileinfo->dwCrc32Result)){
-						// this updates pFileinfo->szFilenameShort automatically
 						pFileinfo->dwCrc32Found = pFileinfo->dwCrc32Result;
 						pFileinfo->dwCrcFound = CRC_FOUND_STREAM;
 					}
 					else{
 						pFileinfo->dwError = GetLastError();
 						StringCchPrintf(szFilenameTemp, MAX_PATH,
-							TEXT("Error %u occured while renaming file :\r\n %s"),
+							TEXT("Error %u occured while saving stream in File :\r\n %s"),
 							pFileinfo->dwError, pFileinfo->szFilenameShort);
 						MessageBox(arrHwnd[ID_MAIN_WND], szFilenameTemp, TEXT("Error"), MB_OK);
 					}
@@ -416,12 +414,6 @@ BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 
 	if(!dialogReturn)
 		return FALSE;
-
-	//we clear all lists if not in queue mode
-	if(!g_program_options.bEnableQueue) {
-		ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
-		SyncQueue.clearList();
-	}
 	
 	PostMessage(arrHwnd[ID_MAIN_WND],WM_THREAD_FILEINFO_START,(WPARAM)pFInfoList,NULL);
 
