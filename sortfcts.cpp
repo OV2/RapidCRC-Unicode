@@ -234,12 +234,12 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 
 bool ListCompFunction(const FILEINFO& pFileinfo1, const FILEINFO& pFileinfo2)
 {
-	TCHAR szFilenameTemp1[MAX_PATH];
-	TCHAR szFilenameTemp2[MAX_PATH];
+	TCHAR szFilenameTemp1[MAX_PATH_EX];
+	TCHAR szFilenameTemp2[MAX_PATH_EX];
 	INT iDiff;
 
-	StringCchCopy(szFilenameTemp1, MAX_PATH, pFileinfo1.szFilenameShort);
-	StringCchCopy(szFilenameTemp2, MAX_PATH, pFileinfo2.szFilenameShort);
+	StringCchCopy(szFilenameTemp1, MAX_PATH_EX, pFileinfo1.szFilenameShort);
+	StringCchCopy(szFilenameTemp2, MAX_PATH_EX, pFileinfo2.szFilenameShort);
 
 	ReduceToPath(szFilenameTemp1);
 	ReduceToPath(szFilenameTemp2);
@@ -313,12 +313,12 @@ INT QuickCompFunction(const void * pElem1, const void * pElem2)
 {
 	CONST FILEINFO * CONST pFileinfo1 = *(FILEINFO **)pElem1;
 	CONST FILEINFO * CONST pFileinfo2 = *(FILEINFO **)pElem2;
-	TCHAR szFilenameTemp1[MAX_PATH];
-	TCHAR szFilenameTemp2[MAX_PATH];
+	TCHAR szFilenameTemp1[MAX_PATH_EX];
+	TCHAR szFilenameTemp2[MAX_PATH_EX];
 	INT iDiff;
 
-	StringCchCopy(szFilenameTemp1, MAX_PATH, pFileinfo1->szFilenameShort);
-	StringCchCopy(szFilenameTemp2, MAX_PATH, pFileinfo2->szFilenameShort);
+	StringCchCopy(szFilenameTemp1, MAX_PATH_EX, pFileinfo1->szFilenameShort);
+	StringCchCopy(szFilenameTemp2, MAX_PATH_EX, pFileinfo2->szFilenameShort);
 
 	ReduceToPath(szFilenameTemp1);
 	ReduceToPath(szFilenameTemp2);

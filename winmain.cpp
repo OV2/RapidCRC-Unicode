@@ -40,7 +40,7 @@ Notes:
 lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 	INT iNumFiles;
 	HWND prevInst;
-	TCHAR prevInstTitle[MAX_PATH];
+	TCHAR prevInstTitle[MAX_PATH_EX];
 
 	lFILEINFO *fileList;
 	FILEINFO fileinfoTmp={0};
@@ -90,7 +90,7 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 				fileList->uiCmdOpts = CMD_REPARENT;
 			}
 		}
-		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH)) {
+		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH_EX)) {
 			prevInst = NULL;
 			prevInst = FindWindowEx(NULL,prevInst,TEXT("RapidCrcMainWindow"),prevInstTitle);
 			if(prevInst) {
@@ -109,7 +109,7 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 		// get number of files
 		iNumFiles = argc - 1; // -1 because 1st element is the path to the executable itself
 
-		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH)) {
+		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH_EX)) {
 			prevInst = NULL;
 			prevInst = FindWindowEx(NULL,prevInst,TEXT("RapidCrcMainWindow"),prevInstTitle);
 			if(prevInst) {
@@ -127,8 +127,8 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 		}
 
 		for(INT i = 0; i < iNumFiles; ++i){
-			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
-			StringCchCopy(fileinfoTmp.szFilename, MAX_PATH, argv[i+1]);
+			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
+			StringCchCopy(fileinfoTmp.szFilename, MAX_PATH_EX, argv[i+1]);
 			fileList->fInfos.push_back(fileinfoTmp);
 		}
 	}

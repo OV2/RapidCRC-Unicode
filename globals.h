@@ -70,8 +70,9 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 // some sizes for variables
 #define MAX_BUFFER_SIZE_CALC	0x10000
 #define MAX_BUFFER_SIZE_OFN 0xFFFFF // Win9x has a problem with values where just the first bit is set like 0x20000 for OFN buffer:
-#define MAX_LINE_LENGTH 1200
-#define MAX_UTF8_PATH (MAX_PATH * 4)
+#define MAX_PATH_EX 32767
+#define MAX_LINE_LENGTH MAX_PATH_EX + 100
+#define MAX_UTF8_PATH (MAX_PATH_EX * 4)
 #define MAX_RESULT_LINE 200
 #define CRC_AS_STRING_LENGHT 9
 #define MD5_AS_STRING_LENGHT 33
@@ -228,7 +229,7 @@ typedef struct _FILEINFO{
 	BOOL	bMd5Found;
 	BOOL	bSha1Found;
 	_lFILEINFO * parentList;
-	TCHAR	szFilename[MAX_PATH];
+	TCHAR	szFilename[MAX_PATH_EX];
 	TCHAR *	szFilenameShort;
 	TCHAR	szCrcResult[CRC_AS_STRING_LENGHT];
 	TCHAR	szMd5Result[MD5_AS_STRING_LENGHT];
@@ -256,7 +257,7 @@ typedef struct _lFILEINFO {
 	UINT uiCmdOpts;
 	UINT uiRapidCrcMode;
 	int iGroupId;
-	TCHAR g_szBasePath[MAX_PATH];
+	TCHAR g_szBasePath[MAX_PATH_EX];
 	_lFILEINFO() {qwFilesizeSum=0;bCrcCalculated=false;bMd5Calculated=false;bSha1Calculated=false;
 				  bEd2kCalculated=false;bCalculateCrc=false;bCalculateMd5=false;bCalculateSha1=false;
 				  bCalculateEd2k=false;uiCmdOpts=CMD_NORMAL;
@@ -303,7 +304,7 @@ typedef struct{
 
 typedef struct{
 	DWORD			dwVersion;
-	TCHAR			szFilenamePattern[MAX_PATH];
+	TCHAR			szFilenamePattern[MAX_PATH_EX];
 	BOOL			bDisplayCrcInListView;
 	BOOL			bDisplayEd2kInListView;
 	BOOL			bSortList;
@@ -319,13 +320,13 @@ typedef struct{
 	BOOL			bCalcEd2kPerDefault;
 	UINT			uiCreateFileModeSfv;
 	UINT			uiCreateFileModeMd5;
-	TCHAR			szFilenameSfv[MAX_PATH];
-	TCHAR			szFilenameMd5[MAX_PATH];
+	TCHAR			szFilenameSfv[MAX_PATH_EX];
+	TCHAR			szFilenameMd5[MAX_PATH_EX];
 	BOOL			bCreateUnixStyle;
 	//RCR Unicode specific
 	BOOL			bCreateUnicodeFiles;
 	BOOL			bAutoScrollListView;
-	TCHAR			szExcludeString[MAX_PATH];
+	TCHAR			szExcludeString[MAX_PATH_EX];
     UNICODE_TYPE    iUnicodeSaveType;
 	UINT			uiWndLeft;
 	UINT			uiWndTop;
@@ -333,10 +334,10 @@ typedef struct{
 	BOOL			bDefaultOpenUTF8;
 	BOOL			bCalcSha1PerDefault;
 	BOOL			bDisplaySha1InListView;
-	TCHAR			szCRCStringDelims[MAX_PATH];
+	TCHAR			szCRCStringDelims[MAX_PATH_EX];
 	BOOL			bAllowCrcAnywhere;
 	UINT			uiCreateFileModeSha1;
-	TCHAR			szFilenameSha1[MAX_PATH];
+	TCHAR			szFilenameSha1[MAX_PATH_EX];
 }PROGRAM_OPTIONS;
 
 typedef struct{
@@ -349,14 +350,14 @@ typedef struct{
 	UINT			uiMode;						// In		: should the dialog display options for sfv/md5/sha1?
 	UINT			uiNumSelected;				// In		: did the user select some files => "all" / "selected"
 	UINT			uiCreateFileMode;			// In/Out	: in: last user choice; out: new user choice
-	TCHAR			szFilename[MAX_PATH];		// In/Out	: in: last choice for checksum filename; out: new choice
+	TCHAR			szFilename[MAX_PATH_EX];		// In/Out	: in: last choice for checksum filename; out: new choice
 }FILECREATION_OPTIONS;
 
 //****** global variables *******
 
 extern HINSTANCE g_hInstance;
 //extern FILEINFO * g_fileinfo_list_first_item;
-//extern TCHAR g_szBasePath[MAX_PATH];
+//extern TCHAR g_szBasePath[MAX_PATH_EX];
 extern PROGRAM_OPTIONS g_program_options;
 extern PROGRAM_STATUS g_pstatus;
 extern CRITICAL_SECTION thread_fileinfo_crit;
@@ -421,14 +422,14 @@ VOID UnicodeFromAnsi(TCHAR *szUnicodeString,CONST int max_line,CHAR *szAnsiStrin
 VOID GetNextLine(CONST HANDLE hFile, TCHAR * szLine, CONST UINT uiLengthLine, UINT * puiStringLength, BOOL * pbErrorOccured, BOOL * pbEndOfFile, BOOL bFileIsUTF16);
 VOID ReadOptions();
 VOID WriteOptions(CONST HWND hMainWnd, CONST LONG lACW, CONST LONG lACH);
-BOOL IsLegalFilename(CONST TCHAR szFilename[MAX_PATH]);
+BOOL IsLegalFilename(CONST TCHAR szFilename[MAX_PATH_EX]);
 VOID SetDefaultOptions(PROGRAM_OPTIONS * pProgram_options);
 //FILEINFO * AllocateFileinfo();
 //VOID AllocateMultipleFileinfo(CONST UINT uiCount);
 //VOID DeallocateFileinfoMemory(CONST HWND hListView);
 BOOL IsApplDefError(CONST DWORD dwError);
 VOID CopyJustProgramOptions(CONST PROGRAM_OPTIONS * pProgram_options_src, PROGRAM_OPTIONS * pProgram_options_dst);
-BOOL IsStringPrefix(CONST TCHAR szSearchPattern[MAX_PATH], CONST TCHAR szSearchString[MAX_PATH]);
+BOOL IsStringPrefix(CONST TCHAR szSearchPattern[MAX_PATH_EX], CONST TCHAR szSearchString[MAX_PATH_EX]);
 DWORD MyPriorityToPriorityClass(CONST UINT uiMyPriority);
 VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList);
 VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList, CONST INT iImageIndex);
@@ -441,14 +442,14 @@ VOID ReplaceChar(TCHAR * szString, CONST size_t stBufferLength, CONST TCHAR tcIn
 int CALLBACK BrowseFolderSetSelProc (HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
 
 //path support functions (path_support.cpp)
-BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH]);
+BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH_EX]);
 DWORD GetFileSizeQW(CONST TCHAR * szFilename, QWORD * qwSize);
-BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH], CONST TCHAR szFilenameOld[MAX_PATH], CONST DWORD dwCrc32, CONST TCHAR szFilenamePattern[MAX_PATH]);
-BOOL SeparatePathFilenameExt(CONST TCHAR szCompleteFilename[MAX_PATH], TCHAR szPath[MAX_PATH], TCHAR szFilename[MAX_PATH], TCHAR szFileext[MAX_PATH]);
-INT ReduceToPath(TCHAR szString[MAX_PATH]);
-CONST TCHAR * GetFilenameWithoutPathPointer(CONST TCHAR szFilenameLong[MAX_PATH]);
-BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH], CONST TCHAR * szExtension);
-BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH], DWORD * pdwFoundCrc);
+BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH_EX], CONST TCHAR szFilenameOld[MAX_PATH_EX], CONST DWORD dwCrc32, CONST TCHAR szFilenamePattern[MAX_PATH_EX]);
+BOOL SeparatePathFilenameExt(CONST TCHAR szCompleteFilename[MAX_PATH_EX], TCHAR szPath[MAX_PATH_EX], TCHAR szFilename[MAX_PATH_EX], TCHAR szFileext[MAX_PATH_EX]);
+INT ReduceToPath(TCHAR szString[MAX_PATH_EX]);
+CONST TCHAR * GetFilenameWithoutPathPointer(CONST TCHAR szFilenameLong[MAX_PATH_EX]);
+BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR * szExtension);
+BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc);
 VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params,lFILEINFO *fileList);
 VOID ProcessDirectories(lFILEINFO *fileList);
 //FILEINFO * ExpandDirectory(FILEINFO * pFileinfo_prev);
@@ -463,13 +464,13 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList);
 //SFV and MD5 functions (sfvfcts.cpp)
 BOOL EnterSfvMode(lFILEINFO *fileList);
 DWORD WriteSfvHeader(CONST HANDLE hFile);
-DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST DWORD dwCrc);
+DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST DWORD dwCrc);
 DWORD WriteSingleLineSfvFile(CONST FILEINFO * pFileinfo);
 BOOL EnterMd5Mode(lFILEINFO *fileList);
-DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abMd5Result[16]);
+DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abMd5Result[16]);
 DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo);
 BOOL EnterSha1Mode(lFILEINFO *fileList);
-DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abSha1Result[20]);
+DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abSha1Result[20]);
 DWORD WriteSingleLineSha1File(CONST FILEINFO * pFileinfo);
 #ifdef UNICODE
 BOOL WriteCurrentBOM(CONST HANDLE hFile);

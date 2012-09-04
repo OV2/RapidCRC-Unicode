@@ -221,8 +221,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		fileList->uiCmdOpts = CMD_NORMAL;
 		fileinfoTmp.parentList = fileList;
 		for(INT i = 0; i < argc - 1; ++i){
-			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
-			StringCchCopy(fileinfoTmp.szFilename, MAX_PATH, argv[i+1]);
+			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
+			StringCchCopy(fileinfoTmp.szFilename, MAX_PATH_EX, argv[i+1]);
 			fileList->fInfos.push_back(fileinfoTmp);
 		}
 		LocalFree(argv);
@@ -372,7 +372,7 @@ Notes:
 INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static PROGRAM_OPTIONS program_options_temp;
-	TCHAR szFilenamePattern[MAX_PATH];
+	TCHAR szFilenamePattern[MAX_PATH_EX];
 	size_t szLen;
 
 	switch (message)
@@ -413,9 +413,9 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			break;
 		case IDC_EDIT_FILENAME_PATTERN:
 			if(HIWORD(wParam) == EN_CHANGE){
-				GetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_PATTERN), szFilenamePattern, MAX_PATH);
+				GetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_PATTERN), szFilenamePattern, MAX_PATH_EX);
 				if(IsLegalFilename(szFilenamePattern)){
-					StringCchCopy(program_options_temp.szFilenamePattern, MAX_PATH, szFilenamePattern);
+					StringCchCopy(program_options_temp.szFilenamePattern, MAX_PATH_EX, szFilenamePattern);
 
 					UpdateOptionsDialogControls(hDlg, FALSE, & program_options_temp);
 				}
@@ -427,20 +427,20 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			break;
 		case IDC_EDIT_EXCLUDE_LIST:
 			if(HIWORD(wParam) == EN_CHANGE){
-				GetWindowText(GetDlgItem(hDlg, IDC_EDIT_EXCLUDE_LIST), szFilenamePattern, MAX_PATH);
-				StringCchLength(szFilenamePattern,MAX_PATH,&szLen);
+				GetWindowText(GetDlgItem(hDlg, IDC_EDIT_EXCLUDE_LIST), szFilenamePattern, MAX_PATH_EX);
+				StringCchLength(szFilenamePattern,MAX_PATH_EX,&szLen);
 				if(szLen!=0 && *(szFilenamePattern + szLen - 1) != TEXT(';')) {
-					StringCchCat(szFilenamePattern,MAX_PATH,TEXT(";"));
+					StringCchCat(szFilenamePattern,MAX_PATH_EX,TEXT(";"));
 				}
 					
-				StringCchCopy(program_options_temp.szExcludeString, MAX_PATH, szFilenamePattern);
+				StringCchCopy(program_options_temp.szExcludeString, MAX_PATH_EX, szFilenamePattern);
 				return TRUE;
 			}
 			break;
 		case IDC_CRC_DELIM_LIST:
 			if(HIWORD(wParam) == EN_CHANGE){
-				GetWindowText(GetDlgItem(hDlg, IDC_CRC_DELIM_LIST), szFilenamePattern, MAX_PATH);
-				StringCchCopy(program_options_temp.szCRCStringDelims, MAX_PATH, szFilenamePattern);
+				GetWindowText(GetDlgItem(hDlg, IDC_CRC_DELIM_LIST), szFilenamePattern, MAX_PATH_EX);
+				StringCchCopy(program_options_temp.szCRCStringDelims, MAX_PATH_EX, szFilenamePattern);
 				return TRUE;
 			}
 			break;
@@ -573,15 +573,15 @@ Notes:
 *****************************************************************************/
 INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-	TCHAR szString[MAX_PATH];
+	TCHAR szString[MAX_PATH_EX];
 	static FILECREATION_OPTIONS * pfco;
-	static TCHAR szFilenameChecksumTemp[MAX_PATH];
+	static TCHAR szFilenameChecksumTemp[MAX_PATH_EX];
 
 	switch (message)
 	{
 	case WM_INITDIALOG :
 		pfco = (FILECREATION_OPTIONS *)lParam;
-		StringCchCopy(szFilenameChecksumTemp, MAX_PATH, pfco->szFilename);
+		StringCchCopy(szFilenameChecksumTemp, MAX_PATH_EX, pfco->szFilename);
 	case WM_SET_CTRLS_STATE:
 		TCHAR hashExt[10];
 		switch(pfco->uiMode) {
@@ -590,22 +590,22 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 			default:
 				StringCchCopy(hashExt,10,TEXT("SFV")); break;
 		}
-		StringCchPrintf(szString, MAX_PATH, TEXT("How to create the .%s file(s)?"), hashExt);
+		StringCchPrintf(szString, MAX_PATH_EX, TEXT("How to create the .%s file(s)?"), hashExt);
 		SetWindowText(hDlg, szString);
 
-		StringCchPrintf(szString, MAX_PATH, TEXT("Please choose how you want to write %s files into the .%s file:"),
+		StringCchPrintf(szString, MAX_PATH_EX, TEXT("Please choose how you want to write %s files into the .%s file:"),
 			 pfco->uiNumSelected == 0 ? TEXT("all") : TEXT("the selected"), hashExt);
 		SetWindowText(GetDlgItem(hDlg, IDC_STATIC_INTRO_TEXT), szString);
 
-		StringCchPrintf(szString, MAX_PATH, TEXT("Create a .%s file for every single file%s"),
+		StringCchPrintf(szString, MAX_PATH_EX, TEXT("Create a .%s file for every single file%s"),
 			hashExt,  pfco->uiMode == MODE_MD5 ? TEXT(" (md5sum compatible)") : TEXT("") );
 		SetWindowText(GetDlgItem(hDlg, IDC_RADIO_ONE_PER_FILE), szString);
 
-		StringCchPrintf(szString, MAX_PATH, TEXT("Create a .%s file for every directory%s"),
+		StringCchPrintf(szString, MAX_PATH_EX, TEXT("Create a .%s file for every directory%s"),
 			hashExt,  pfco->uiMode == MODE_MD5 ? TEXT(" (md5sum compatible)") : TEXT("") );
 		SetWindowText(GetDlgItem(hDlg, IDC_RADIO_ONE_PER_DIR), szString);
 
-		StringCchPrintf(szString, MAX_PATH, TEXT("Create one .%s file for all files%s"),
+		StringCchPrintf(szString, MAX_PATH_EX, TEXT("Create one .%s file for all files%s"),
 			hashExt,  pfco->uiMode == MODE_MD5 ? TEXT(" (potentially not md5sum compatible *)") : TEXT("") );
 		SetWindowText(GetDlgItem(hDlg, IDC_RADIO_ONE_FILE), szString);
 
@@ -652,9 +652,9 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 		case IDC_EDIT_FILENAME_CHECKSUM:
 			if(HIWORD(wParam) == EN_CHANGE){
 				if(IsDlgButtonChecked(hDlg, IDC_RADIO_ONE_PER_DIR) == BST_CHECKED){
-					GetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_CHECKSUM), szString, MAX_PATH);
+					GetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_CHECKSUM), szString, MAX_PATH_EX);
 					if(IsLegalFilename(szString))
-						StringCchCopy(szFilenameChecksumTemp, MAX_PATH, szString);
+						StringCchCopy(szFilenameChecksumTemp, MAX_PATH_EX, szString);
 					else
 						SetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_CHECKSUM), szFilenameChecksumTemp);
 				}
@@ -668,7 +668,7 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 					pfco->uiCreateFileMode = CREATE_ONE_PER_FILE;
 				else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ONE_PER_DIR) == BST_CHECKED){
 					pfco->uiCreateFileMode = CREATE_ONE_PER_DIR;
-					GetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_CHECKSUM), pfco->szFilename, MAX_PATH);
+					GetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_CHECKSUM), pfco->szFilename, MAX_PATH_EX);
 				}
 				else
 					pfco->uiCreateFileMode = CREATE_ONE_FILE;
@@ -682,11 +682,11 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 				PROGRAM_OPTIONS po;
 				SetDefaultOptions(& po);
 				if(pfco->uiMode == MODE_MD5){
-					StringCchCopy(szFilenameChecksumTemp, MAX_PATH, po.szFilenameMd5);
+					StringCchCopy(szFilenameChecksumTemp, MAX_PATH_EX, po.szFilenameMd5);
 					pfco->uiCreateFileMode = po.uiCreateFileModeMd5;
 				}
 				else{
-					StringCchCopy(szFilenameChecksumTemp, MAX_PATH, po.szFilenameSfv);
+					StringCchCopy(szFilenameChecksumTemp, MAX_PATH_EX, po.szFilenameSfv);
 					pfco->uiCreateFileMode = po.uiCreateFileModeSfv;
 				}
 				SendMessage(hDlg, WM_SET_CTRLS_STATE, 0, 0);

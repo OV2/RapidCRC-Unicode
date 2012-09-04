@@ -70,10 +70,10 @@ Notes:
 HWND InitInstance(CONST INT iCmdShow)
 {
 	HWND hWnd;
-	TCHAR buffer[MAX_PATH];
+	TCHAR buffer[MAX_PATH_EX];
 	
-	if(!GetVersionString(buffer,MAX_PATH))
-		StringCchCopy(buffer,MAX_PATH,TEXT("RapidCRC Unicode"));
+	if(!GetVersionString(buffer,MAX_PATH_EX))
+		StringCchCopy(buffer,MAX_PATH_EX,TEXT("RapidCRC Unicode"));
     hWnd = CreateWindow(TEXT("RapidCrcMainWindow"), buffer, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN,
 		CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, NULL, (HMENU)ID_MAIN_WND, g_hInstance, NULL);
 
@@ -282,8 +282,8 @@ Notes:
 *****************************************************************************/
 void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 {
-#define MAX_ED2K_LINK_ENCODED_SIZE (MAX_PATH * 3 + 20 + 49 + 1)
-#define MAX_FILE_ENCODED_SIZE (MAX_PATH * 3)
+#define MAX_ED2K_LINK_ENCODED_SIZE (MAX_PATH_EX * 3 + 20 + 49 + 1)
+#define MAX_FILE_ENCODED_SIZE (MAX_PATH_EX * 3)
 	size_t ed2kStrSize,max_ed2k_str_size;
 	DWORD dwEncodedFileSize;;
 	TCHAR *clip, *curpos, *ed2k_links;
@@ -727,13 +727,14 @@ BOOL InsertGroupIntoListView(CONST HWND hListView, lFILEINFO *fileList)
 {
 	static int currGroupId=1;
 	LVGROUP lvGroup={0};
-	TCHAR szGroupHeader[MAX_PATH + 9];
+	TCHAR szGroupHeader[MAX_PATH_EX + 9];
 
 	fileList->iGroupId=currGroupId++;//SendMessage(hListView,LVM_GETGROUPCOUNT,0,0) + 1;
 	lvGroup.mask = LVGF_HEADER|LVGF_GROUPID;
 	lvGroup.cbSize = sizeof(LVGROUP);
 	lvGroup.iGroupId=fileList->iGroupId;
-	StringCchPrintf(szGroupHeader,MAX_PATH + 6,TEXT("Job %02d - %s"),fileList->iGroupId,fileList->g_szBasePath);
+	StringCchPrintf(szGroupHeader,MAX_PATH_EX + 6,TEXT("Job %02d - %s"),fileList->iGroupId,
+        (*fileList->g_szBasePath == TEXT('\0') ? fileList->g_szBasePath : fileList->g_szBasePath + 4) );
 	lvGroup.pszHeader=(LPWSTR)szGroupHeader;//fileList->g_szBasePath;
 	if(ListView_InsertGroup(hListView,-1,&lvGroup)==-1)
 		return FALSE;
@@ -1254,7 +1255,7 @@ Notes:
 *****************************************************************************/
 VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST PROGRAM_OPTIONS * pprogram_options)
 {
-	TCHAR szGenFilename[MAX_PATH];
+	TCHAR szGenFilename[MAX_PATH_EX];
 
 	CheckDlgButton(hDlg, IDC_CHECK_CRC_DEFAULT, pprogram_options->bCalcCrcPerDefault ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_MD5_DEFAULT, pprogram_options->bCalcMd5PerDefault ? BST_CHECKED : BST_UNCHECKED);

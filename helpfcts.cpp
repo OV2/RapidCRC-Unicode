@@ -54,7 +54,7 @@ Return Value:
 BOOL IsValidCRCDelim(CONST TCHAR tcChar)
 {
 	size_t delimStrLen;
-	StringCchLength(g_program_options.szCRCStringDelims,MAX_PATH,&delimStrLen);
+	StringCchLength(g_program_options.szCRCStringDelims,MAX_PATH_EX,&delimStrLen);
 	for(size_t i=0;i<delimStrLen;i++)
 		if(tcChar==g_program_options.szCRCStringDelims[i])
 			return TRUE;
@@ -253,7 +253,7 @@ Return Value:
 *****************************************************************************/
 BOOL CheckExcludeStringMatch(CONST TCHAR *szFilename) {
 	TCHAR *szExString = g_program_options.szExcludeString;
-	TCHAR szCurExt[MAX_PATH];
+	TCHAR szCurExt[MAX_PATH_EX];
 	TCHAR *szExtension;
 	int i=0;
 	
@@ -261,7 +261,7 @@ BOOL CheckExcludeStringMatch(CONST TCHAR *szFilename) {
 	while(*(szExString + i)!=TEXT('\0'))
 	{
 		if(*(szExString + i)==TEXT(';')) {
-			StringCchCopyN(szCurExt,MAX_PATH,szExString,i);
+			StringCchCopyN(szCurExt,MAX_PATH_EX,szExString,i);
 			if(lstrcmpi(szCurExt,szExtension)==0)
 				return TRUE;
 			szExString = szExString + i + 1;
@@ -378,15 +378,15 @@ Notes:
 VOID ReadOptions()
 {
 	HANDLE hFile;
-	TCHAR szOptionsFilename[MAX_PATH];
+	TCHAR szOptionsFilename[MAX_PATH_EX];
 	DWORD dwBytesRead;
 
 	// Generate filename of the options file
-//	GetModuleFileName(g_hInstance, szOptionsFilename, MAX_PATH);
+//	GetModuleFileName(g_hInstance, szOptionsFilename, MAX_PATH_EX);
 //	ReduceToPath(szOptionsFilename);
-//	StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\options.bin"));
+//	StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\options.bin"));
 	SHGetSpecialFolderPath(NULL, szOptionsFilename, CSIDL_APPDATA, TRUE);
-	StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\RapidCRC\\options_unicode.bin"));
+	StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\RapidCRC\\options_unicode.bin"));
 
 	SetDefaultOptions(& g_program_options);
 
@@ -395,7 +395,7 @@ VOID ReadOptions()
 
 	if(hFile == INVALID_HANDLE_VALUE) {
 		SHGetSpecialFolderPath(NULL, szOptionsFilename, CSIDL_APPDATA, TRUE);
-		StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\RapidCRC\\options.bin"));
+		StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\RapidCRC\\options.bin"));
 		hFile = CreateFile(szOptionsFilename, GENERIC_READ, FILE_SHARE_READ, NULL,
 					OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, 0);
 	}
@@ -433,7 +433,7 @@ Notes:
 VOID WriteOptions(CONST HWND hMainWnd, CONST LONG lACW, CONST LONG lACH)
 {
 	HANDLE hFile;
-	TCHAR szOptionsFilename[MAX_PATH];
+	TCHAR szOptionsFilename[MAX_PATH_EX];
 	DWORD dwBytesWritten;
 	WINDOWPLACEMENT wp;
 
@@ -447,10 +447,10 @@ VOID WriteOptions(CONST HWND hMainWnd, CONST LONG lACW, CONST LONG lACH)
 
 	// Generate filename of the options file
 	SHGetSpecialFolderPath(NULL, szOptionsFilename, CSIDL_APPDATA, TRUE);
-	StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\RapidCRC"));
+	StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\RapidCRC"));
 	if(!IsThisADirectory(szOptionsFilename))
 		CreateDirectory(szOptionsFilename, NULL);
-	StringCchCat(szOptionsFilename, MAX_PATH, TEXT("\\options_unicode.bin"));
+	StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\options_unicode.bin"));
 
 	hFile = CreateFile(szOptionsFilename, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, 0);
 	if(hFile != INVALID_HANDLE_VALUE){
@@ -462,7 +462,7 @@ VOID WriteOptions(CONST HWND hMainWnd, CONST LONG lACW, CONST LONG lACH)
 }
 
 /*****************************************************************************
-BOOL IsLegalFilename(CONST TCHAR szFilename[MAX_PATH])
+BOOL IsLegalFilename(CONST TCHAR szFilename[MAX_PATH_EX])
 	szFilenamePattern	: (IN) string that holds the filename pattern to be checked
 
 Return Value:
@@ -472,13 +472,13 @@ mustn't be a pathname. It has to be JUST the filename part
 Notes:
 -    \ / : * ? " < > |   are illegal
 *****************************************************************************/
-BOOL IsLegalFilename(CONST TCHAR szFilename[MAX_PATH])
+BOOL IsLegalFilename(CONST TCHAR szFilename[MAX_PATH_EX])
 {
 	size_t stLength;
 	UINT i;
 	BOOL bIsLegal;
 
-	StringCchLength(szFilename, MAX_PATH, &stLength);
+	StringCchLength(szFilename, MAX_PATH_EX, &stLength);
 
 	bIsLegal = TRUE;
 	for(i = 0; (i < stLength) && bIsLegal; i++){
@@ -510,7 +510,7 @@ Notes:
 VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 {
 	pprogram_options->dwVersion = 1;
-	StringCchCopy(pprogram_options->szFilenamePattern, MAX_PATH, TEXT("%FILENAME [%CRC].%FILEEXT") );
+	StringCchCopy(pprogram_options->szFilenamePattern, MAX_PATH_EX, TEXT("%FILENAME [%CRC].%FILEEXT") );
 	*pprogram_options->szExcludeString = TEXT('\0');
 	pprogram_options->bDisplayCrcInListView = FALSE;
 	pprogram_options->bDisplayEd2kInListView = FALSE;
@@ -528,8 +528,8 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	pprogram_options->bCalcEd2kPerDefault = FALSE;
 	pprogram_options->uiCreateFileModeMd5 = CREATE_ONE_PER_FILE;
 	pprogram_options->uiCreateFileModeSfv = CREATE_ONE_FILE;
-	StringCchCopy(pprogram_options->szFilenameMd5, MAX_PATH, TEXT("checksum.md5"));
-	StringCchCopy(pprogram_options->szFilenameSfv, MAX_PATH, TEXT("checksum.sfv"));
+	StringCchCopy(pprogram_options->szFilenameMd5, MAX_PATH_EX, TEXT("checksum.md5"));
+	StringCchCopy(pprogram_options->szFilenameSfv, MAX_PATH_EX, TEXT("checksum.sfv"));
 	pprogram_options->bCreateUnixStyle = FALSE;
 	pprogram_options->bCreateUnicodeFiles = TRUE;
 	pprogram_options->iUnicodeSaveType = UTF_8;
@@ -539,7 +539,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	pprogram_options->bDefaultOpenUTF8 = FALSE;
 	pprogram_options->bCalcSha1PerDefault= FALSE;
 	pprogram_options->bDisplaySha1InListView = FALSE;
-	StringCchCopy(pprogram_options->szCRCStringDelims, MAX_PATH, TEXT("{[(_)]}") );
+	StringCchCopy(pprogram_options->szCRCStringDelims, MAX_PATH_EX, TEXT("{[(_)]}") );
 	pprogram_options->bAllowCrcAnywhere = false;
 	return;
 }
@@ -656,8 +656,8 @@ Notes:
 *****************************************************************************/
 VOID CopyJustProgramOptions(CONST PROGRAM_OPTIONS * pprogram_options_src, PROGRAM_OPTIONS * pprogram_options_dst)
 {
-	/*StringCchCopy(pprogram_options_dst->szFilenamePattern, MAX_PATH, pprogram_options_src->szFilenamePattern);
-	StringCchCopy(pprogram_options_dst->szExcludeString, MAX_PATH, pprogram_options_src->szExcludeString);
+	/*StringCchCopy(pprogram_options_dst->szFilenamePattern, MAX_PATH_EX, pprogram_options_src->szFilenamePattern);
+	StringCchCopy(pprogram_options_dst->szExcludeString, MAX_PATH_EX, pprogram_options_src->szExcludeString);
 	pprogram_options_dst->bDisplayCrcInListView = pprogram_options_src->bDisplayCrcInListView;
 	pprogram_options_dst->bDisplayEd2kInListView = pprogram_options_src->bDisplayEd2kInListView;
 	pprogram_options_dst->bCreateUnixStyle = pprogram_options_src->bCreateUnixStyle;
@@ -677,18 +677,18 @@ VOID CopyJustProgramOptions(CONST PROGRAM_OPTIONS * pprogram_options_src, PROGRA
 }
 
 /*****************************************************************************
-BOOL IsStringPrefix(CONST TCHAR szSearchPattern[MAX_PATH], CONST TCHAR szSearchString[MAX_PATH])
+BOOL IsStringPrefix(CONST TCHAR szSearchPattern[MAX_PATH_EX], CONST TCHAR szSearchString[MAX_PATH_EX])
 	szSearchPattern	: (IN) 
 	szSearchString	: (IN) 
 
 Return Value:
 returns TRUE if szSearchPattern is a prefix of szSearchString
 *****************************************************************************/
-BOOL IsStringPrefix(CONST TCHAR szSearchPattern[MAX_PATH], CONST TCHAR szSearchString[MAX_PATH])
+BOOL IsStringPrefix(CONST TCHAR szSearchPattern[MAX_PATH_EX], CONST TCHAR szSearchString[MAX_PATH_EX])
 {
 	size_t stStringLength;
 
-	StringCchLength(szSearchPattern, MAX_PATH, & stStringLength);
+	StringCchLength(szSearchPattern, MAX_PATH_EX, & stStringLength);
 
 	for(UINT i = 0; i < stStringLength; i++)
 		if(szSearchPattern[i] != szSearchString[i])

@@ -21,17 +21,17 @@
 #include "globals.h"
 #include "CSyncQueue.h"
 
-static DWORD GetTypeOfPath(CONST TCHAR szPath[MAX_PATH]);
+static DWORD GetTypeOfPath(CONST TCHAR szPath[MAX_PATH_EX]);
 static VOID SetBasePath(lFILEINFO *fileList);
 
 /*****************************************************************************
-BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH])
+BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH_EX])
 	szName	: (IN) string
 
 Return Value:
 	returns TRUE if szName is a directory; FALSE otherwise
 *****************************************************************************/
-BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH])
+BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH_EX])
 {
 	DWORD dwResult;
 
@@ -86,8 +86,8 @@ DWORD GetFileSizeQW(CONST TCHAR * szFilename, QWORD * qwSize)
 }
 
 /*****************************************************************************
-BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH], CONST TCHAR szFilenameOld[MAX_PATH],
-						 DWORD dwCrc32, CONST TCHAR szFilenamePattern[MAX_PATH])
+BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH_EX], CONST TCHAR szFilenameOld[MAX_PATH_EX],
+						 DWORD dwCrc32, CONST TCHAR szFilenamePattern[MAX_PATH_EX])
 	szFilenameNew :		(OUT) String receiving the new generated filename
 						(assumed to be of length MAX_LENGTH)
 	szFilenameOld :		(IN) Input string from which the result is generated
@@ -102,40 +102,40 @@ Notes:
 - then the new filename is path\szFilenamePattern where the variables in szFilenamePattern
   are replaced with filename, extension and CRC
 *****************************************************************************/
-BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH], CONST TCHAR szFilenameOld[MAX_PATH],
-						 CONST DWORD dwCrc32, CONST TCHAR szFilenamePattern[MAX_PATH])
+BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH_EX], CONST TCHAR szFilenameOld[MAX_PATH_EX],
+						 CONST DWORD dwCrc32, CONST TCHAR szFilenamePattern[MAX_PATH_EX])
 {
 	size_t size_temp, stIndex;
 	TCHAR szStringCrc[15];
-	TCHAR szPath[MAX_PATH], szFilename[MAX_PATH], szFileext[MAX_PATH];
+	TCHAR szPath[MAX_PATH_EX], szFilename[MAX_PATH_EX], szFileext[MAX_PATH_EX];
 
 	// fill the substrings for later use in the pattern string
 	SeparatePathFilenameExt(szFilenameOld, szPath, szFilename, szFileext);
 	StringCchPrintf(szStringCrc, 15, TEXT("%08LX"), dwCrc32 );
 
-	StringCchCopy(szFilenameNew, MAX_PATH, szPath);
-	StringCchCat(szFilenameNew, MAX_PATH, TEXT("\\"));
+	StringCchCopy(szFilenameNew, MAX_PATH_EX, szPath);
+	StringCchCat(szFilenameNew, MAX_PATH_EX, TEXT("\\"));
 	//no we parse the pattern string provided by the user and generate szFilenameNew
-	StringCchLength(szFilenamePattern, MAX_PATH, & size_temp);
+	StringCchLength(szFilenamePattern, MAX_PATH_EX, & size_temp);
 
 	stIndex = 0;
 	while(stIndex < size_temp){
 		if(IsStringPrefix(TEXT("%FILENAME"), szFilenamePattern + stIndex)){
-			StringCchCat(szFilenameNew, MAX_PATH, szFilename);
+			StringCchCat(szFilenameNew, MAX_PATH_EX, szFilename);
 			stIndex += 9; //length of "%FILENAME"
 		}
 		else if(IsStringPrefix(TEXT("%FILEEXT"), szFilenamePattern + stIndex)){
-			StringCchCat(szFilenameNew, MAX_PATH, szFileext);
+			StringCchCat(szFilenameNew, MAX_PATH_EX, szFileext);
 			stIndex += 8;
 		}
 		else if(IsStringPrefix(TEXT("%CRC"), szFilenamePattern + stIndex)){
-			StringCchCat(szFilenameNew, MAX_PATH, szStringCrc);
+			StringCchCat(szFilenameNew, MAX_PATH_EX, szStringCrc);
 			stIndex += 4;
 		}
 		else{
 			// if no replacement has to taken place we just copy the current char and 
 			// proceed forward
-			StringCchCatN(szFilenameNew, MAX_PATH, szFilenamePattern + stIndex, 1);
+			StringCchCatN(szFilenameNew, MAX_PATH_EX, szFilenamePattern + stIndex, 1);
 			stIndex++;
 		}
 	}
@@ -144,8 +144,8 @@ BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH], CONST TCHAR szFilenameOl
 }
 
 /*****************************************************************************
-BOOL SeparatePathFilenameExt(CONST TCHAR szCompleteFilename[MAX_PATH],
-							 TCHAR szPath[MAX_PATH], TCHAR szFilename[MAX_PATH], TCHAR szFileext[MAX_PATH])
+BOOL SeparatePathFilenameExt(CONST TCHAR szCompleteFilename[MAX_PATH_EX],
+							 TCHAR szPath[MAX_PATH_EX], TCHAR szFilename[MAX_PATH_EX], TCHAR szFileext[MAX_PATH_EX])
 	szFilename		: (IN) String to be seperated
 	szPath			: (OUT) Path
 	szFilename		: (OUT) Filename
@@ -161,32 +161,32 @@ Notes:
 - looks for a '.' between the last character and last '\'. That is szFileext.
 	Rest is szFilename and szPath. If no '.' is found szFileext is empty
 *****************************************************************************/
-BOOL SeparatePathFilenameExt(CONST TCHAR szCompleteFilename[MAX_PATH],
-							 TCHAR szPath[MAX_PATH], TCHAR szFilename[MAX_PATH], TCHAR szFileext[MAX_PATH])
+BOOL SeparatePathFilenameExt(CONST TCHAR szCompleteFilename[MAX_PATH_EX],
+							 TCHAR szPath[MAX_PATH_EX], TCHAR szFilename[MAX_PATH_EX], TCHAR szFileext[MAX_PATH_EX])
 {
 	size_t size_temp;
-	TCHAR szFilenameTemp[MAX_PATH];
+	TCHAR szFilenameTemp[MAX_PATH_EX];
 	BOOL bExtensionFound;
 
-	StringCchLength(szCompleteFilename, MAX_PATH, & size_temp);
+	StringCchLength(szCompleteFilename, MAX_PATH_EX, & size_temp);
 
-	StringCchCopy(szFilenameTemp, MAX_PATH, szCompleteFilename);
+	StringCchCopy(szFilenameTemp, MAX_PATH_EX, szCompleteFilename);
 
-	StringCchCopy(szPath, MAX_PATH, TEXT(""));
-	StringCchCopy(szFilename, MAX_PATH, TEXT(""));
-	StringCchCopy(szFileext, MAX_PATH, TEXT(""));
+	StringCchCopy(szPath, MAX_PATH_EX, TEXT(""));
+	StringCchCopy(szFilename, MAX_PATH_EX, TEXT(""));
+	StringCchCopy(szFileext, MAX_PATH_EX, TEXT(""));
 	bExtensionFound = FALSE;
 	for(UINT iIndex = (UINT) size_temp; iIndex > 0; --iIndex){
 		if( !bExtensionFound && (szFilenameTemp[iIndex] == TEXT('.')) ){
-			StringCchCopy(szFileext, MAX_PATH, szFilenameTemp + iIndex + 1);
+			StringCchCopy(szFileext, MAX_PATH_EX, szFilenameTemp + iIndex + 1);
 			szFilenameTemp[iIndex] = TEXT('\0');
 			bExtensionFound = TRUE;
 		}
 			
 		if(szFilenameTemp[iIndex] == TEXT('\\') ){
-			StringCchCopy(szFilename, MAX_PATH, szFilenameTemp + iIndex + 1);
+			StringCchCopy(szFilename, MAX_PATH_EX, szFilenameTemp + iIndex + 1);
 			szFilenameTemp[iIndex] = TEXT('\0');
-			StringCchCopy(szPath, MAX_PATH, szFilenameTemp);
+			StringCchCopy(szPath, MAX_PATH_EX, szFilenameTemp);
 			break;
 		}
 	}
@@ -195,7 +195,7 @@ BOOL SeparatePathFilenameExt(CONST TCHAR szCompleteFilename[MAX_PATH],
 }
 
 /*****************************************************************************
-INT ReduceToPath(TCHAR szString[MAX_PATH])
+INT ReduceToPath(TCHAR szString[MAX_PATH_EX])
 	szString	: (IN/OUT) assumed to be a string containing a filepath
 
 Return Value:
@@ -206,16 +206,16 @@ Notes:
 	  to \0. Otherwise the whole string is set to TEXT("")
 	- used to set g_szBasePath
 *****************************************************************************/
-INT ReduceToPath(TCHAR szString[MAX_PATH])
+INT ReduceToPath(TCHAR szString[MAX_PATH_EX])
 {
 	size_t	stStringLength;
 	INT		iStringLength;
 
-	StringCchLength(szString, MAX_PATH, & stStringLength);
+	StringCchLength(szString, MAX_PATH_EX, & stStringLength);
 	iStringLength = (INT) stStringLength;
 	while( (iStringLength > 0) && (szString[iStringLength] != TEXT('\\')) )
 		iStringLength--;
-	if(iStringLength == 2) // this is the case for example for C:\ or C:\test.txt. Then we want soemthing like C:\ and not C:
+	if(iStringLength != 0) // this is the case for example for C:\ or C:\test.txt. Then we want soemthing like C:\ and not C:
 		iStringLength++;
 	szString[iStringLength] = TEXT('\0'); // replace the '\' with 0 to get the path of the sfv file
 	
@@ -223,7 +223,7 @@ INT ReduceToPath(TCHAR szString[MAX_PATH])
 }
 
 /*****************************************************************************
-TCHAR * GetFilenameWithoutPathPointer(TCHAR szFilenameLong[MAX_PATH])
+TCHAR * GetFilenameWithoutPathPointer(TCHAR szFilenameLong[MAX_PATH_EX])
 	szFilenameLong	: (IN) a filename including path
 
 Return Value:
@@ -233,12 +233,12 @@ Notes:
 	- filepart if everything after the last '\' in the string. If no '\' is found,
 	  we return the original pointer
 *****************************************************************************/
-CONST TCHAR * GetFilenameWithoutPathPointer(CONST TCHAR szFilenameLong[MAX_PATH])
+CONST TCHAR * GetFilenameWithoutPathPointer(CONST TCHAR szFilenameLong[MAX_PATH_EX])
 {
 	size_t size_temp;
 	INT iIndex;
 
-	StringCchLength(szFilenameLong, MAX_PATH, &size_temp);
+	StringCchLength(szFilenameLong, MAX_PATH_EX, &size_temp);
 
 	for(iIndex=((INT)size_temp - 1); iIndex >= 0; --iIndex){
 		if(szFilenameLong[iIndex] == TEXT('\\'))
@@ -254,7 +254,7 @@ CONST TCHAR * GetFilenameWithoutPathPointer(CONST TCHAR szFilenameLong[MAX_PATH]
 }
 
 /*****************************************************************************
-BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH], CONST TCHAR * szExtension)
+BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR * szExtension)
 	szName		: (IN) filename string
 	szExtension	: (IN) extension we want to look for
 
@@ -262,13 +262,13 @@ Return Value:
 	returns TRUE if szFilename has the extension
 
 *****************************************************************************/
-BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH], CONST TCHAR *szExtension)
+BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR *szExtension)
 {
 	size_t stString;
 	size_t stExtension;
 
-	StringCchLength(szFilename, MAX_PATH, & stString);
-	StringCchLength(szExtension, MAX_PATH, & stExtension);
+	StringCchLength(szFilename, MAX_PATH_EX, & stString);
+	StringCchLength(szExtension, MAX_PATH_EX, & stExtension);
 
 	// we compare the 4 last characters
 	if( (stString > stExtension) && (lstrcmpi(szFilename + stString - stExtension, szExtension) == 0) )
@@ -278,7 +278,7 @@ BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH], CONST TCHAR *szExtension
 }
 
 /*****************************************************************************
-BOOL GetCrcFromStream(TCHAR szFilename[MAX_PATH], DWORD * pdwFoundCrc)
+BOOL GetCrcFromStream(TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc)
 	szFilename		: (IN) string; assumed to be the szFilename member of the
 						   FILEINFO struct
 	pdwFoundCrc		: (OUT) return value is TRUE this parameter is set to the found
@@ -293,13 +293,13 @@ BOOL GetCrcFromStream(TCHAR *szFileName, DWORD * pdwFoundCrc)
 	BOOL bFound;
 	CHAR szCrc[9];
 	TCHAR szCrcUnicode[9];
-	TCHAR szFileIn[MAX_PATH+6]=TEXT("");
+	TCHAR szFileIn[MAX_PATH_EX+6]=TEXT("");
 	bFound = FALSE;
 	HANDLE hFile;
 	DWORD NumberOfBytesRead;
 
-	StringCchCopy(szFileIn, MAX_PATH+6, szFileName);
-	StringCchCat(szFileIn, MAX_PATH+6, TEXT(":CRC32"));
+	StringCchCopy(szFileIn, MAX_PATH_EX+6, szFileName);
+	StringCchCat(szFileIn, MAX_PATH_EX+6, TEXT(":CRC32"));
 	hFile = CreateFile(szFileIn, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
 	if(hFile == INVALID_HANDLE_VALUE) return FALSE;
 	if(!ReadFile(hFile, &szCrc, 8, &NumberOfBytesRead, NULL)) {
@@ -315,7 +315,7 @@ BOOL GetCrcFromStream(TCHAR *szFileName, DWORD * pdwFoundCrc)
 }
 
 /*****************************************************************************
-BOOL GetCrcFromFilename(TCHAR szFilename[MAX_PATH], DWORD * pdwFoundCrc)
+BOOL GetCrcFromFilename(TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc)
 	szFilename		: (IN) string; assumed to be the szFilenameShort member of the
 						   FILEINFO struct
 	pdwFoundCrc		: (OUT) return value is TRUE this parameter is set to the found
@@ -329,17 +329,17 @@ Notes:
 	- if a ']' or ')' is found we check if 9 chars before is an '[' or '(' and if
 	  there are 8 legal Hex characters in between (via IsLegalHexSymbol)
 *****************************************************************************/
-BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH], DWORD * pdwFoundCrc)
+BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc)
 {
 	size_t StringSize;
 	INT iIndex;
 	BOOL bFound;
 	TCHAR szCrc[9];
-	TCHAR szFileWithoutPath[MAX_PATH];
+	TCHAR szFileWithoutPath[MAX_PATH_EX];
 
-	StringCchCopy(szFileWithoutPath, MAX_PATH, GetFilenameWithoutPathPointer(szFilename));
+	StringCchCopy(szFileWithoutPath, MAX_PATH_EX, GetFilenameWithoutPathPointer(szFilename));
 
-	if(FAILED(StringCchLength(szFileWithoutPath, MAX_PATH, &StringSize)))
+	if(FAILED(StringCchLength(szFileWithoutPath, MAX_PATH_EX, &StringSize)))
 		return FALSE;
 
 	if(StringSize == 0)
@@ -429,13 +429,13 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 	fileList->uiRapidCrcMode = MODE_NORMAL;
 
 	if(!fileList->fInfos.empty()) {
-		if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sfv")))
+        if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sfv"))) {
 			EnterSfvMode(fileList);
-		else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".md5")))
+        } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".md5"))) {
 			EnterMd5Mode(fileList);
-		else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sha1")))
+        } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sha1"))) {
 			EnterSha1Mode(fileList);
-		else{
+        } else{
 			SetBasePath(fileList);
 			ProcessDirectories(fileList);
 		}
@@ -490,10 +490,10 @@ Notes:
 *****************************************************************************/
 VOID ProcessDirectories(lFILEINFO *fileList)
 {
-	TCHAR szCurrentPath[MAX_PATH];
+	TCHAR szCurrentPath[MAX_PATH_EX];
 
 	// save org. path
-	GetCurrentDirectory(MAX_PATH, szCurrentPath);
+	GetCurrentDirectory(MAX_PATH_EX, szCurrentPath);
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();) {
 		if(IsThisADirectory((*it).szFilename))
@@ -536,23 +536,27 @@ list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::i
 	FILEINFO fileinfoTmp={0};
 	fileinfoTmp.parentList=(*it).parentList;
 	UINT insertCount=0;
+    TCHAR savedPath[MAX_PATH_EX];
 
-	if(!SetCurrentDirectory((*it).szFilename)){
-		it = fList->erase(it);
-		return it;
-	}
+    StringCchCopy(savedPath,MAX_PATH_EX,(*it).szFilename);
 	it = fList->erase(it);
 
 	// start to find files and directories in this directory
-	hFileSearch = FindFirstFile(TEXT("*.*"), & findFileData);
+    if(savedPath[lstrlen(savedPath) - 1] == TEXT('\\'))
+        savedPath[lstrlen(savedPath) - 1] = TEXT('\0');
+    StringCchCat(savedPath,MAX_PATH_EX,TEXT("\\*"));
+	hFileSearch = FindFirstFile(savedPath, & findFileData);
+    savedPath[lstrlen(savedPath) - 2] = TEXT('\0');
+
 	if(hFileSearch == INVALID_HANDLE_VALUE){
 		return it;
 	}
 
 	do{
 		if( (lstrcmpi(findFileData.cFileName, TEXT(".")) != 0) && (lstrcmpi(findFileData.cFileName, TEXT("..")) != 0) ){
-			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
-			GetFullPathName(findFileData.cFileName, MAX_PATH, fileinfoTmp.szFilename, NULL);
+			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
+			//GetFullPathName(findFileData.cFileName, MAX_PATH_EX, fileinfoTmp.szFilename, NULL);
+            StringCchPrintf(fileinfoTmp.szFilename,MAX_PATH_EX,TEXT("%s\\%s"),savedPath,findFileData.cFileName);
 			
 			// now create a new item amd increase the count of inserted items
 			if(IsThisADirectory(fileinfoTmp.szFilename) || !CheckExcludeStringMatch(fileinfoTmp.szFilename)) {
@@ -588,17 +592,16 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 	size_t stString;
 	//FILEINFO * pFileinfo;
 
-	StringCchLength(fileList->g_szBasePath, MAX_PATH, & stString);
+	StringCchLength(fileList->g_szBasePath, MAX_PATH_EX, & stString);
 	// g_szBasePath can have a trailing '\' or not. For example 'D:\' or 'D:\Bla'. If the trailing '\'
 	// is missing we increase stString by 1 because we don't want a \ as the first symbol in szFilename
-	if(stString > 0)
+	/*if(stString > 0)
 		if( fileList->g_szBasePath[stString - 1] != TEXT('\\') )
-			++stString;
+			++stString;*/
 
 	fileList->qwFilesizeSum = 0;
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
-		GetLongPathName((*it).szFilename, (*it).szFilename, MAX_PATH);
 		(*it).szFilenameShort = (*it).szFilename + stString;
 		if(!IsApplDefError((*it).dwError)){
 			(*it).dwError = GetFileSizeQW((*it).szFilename, &((*it).qwFilesize));
@@ -633,12 +636,17 @@ Notes:
 *****************************************************************************/
 VOID MakePathsAbsolute(lFILEINFO *fileList)
 {
-	TCHAR szFilenameTemp[MAX_PATH];
+	TCHAR szFilenameTemp[MAX_PATH_EX];
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
-		StringCchCopy(szFilenameTemp, MAX_PATH, (*it).szFilename);
-		ReplaceChar(szFilenameTemp, MAX_PATH, TEXT('/'), TEXT('\\'));
-		GetFullPathName(szFilenameTemp, MAX_PATH, (*it).szFilename, NULL);
+		//StringCchCopy(szFilenameTemp, MAX_PATH_EX, (*it).szFilename);
+        //StringCchCopy(szFilenameTemp, MAX_PATH_EX, TEXT("\\\\?\\"));
+        //StringCchCat(szFilenameTemp, MAX_PATH_EX, (*it).szFilename);
+		ReplaceChar((*it).szFilename, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
+		GetFullPathName((*it).szFilename, MAX_PATH_EX, szFilenameTemp, NULL);
+        StringCchCopy((*it).szFilename, MAX_PATH_EX, TEXT("\\\\?\\"));
+        StringCchCat((*it).szFilename, MAX_PATH_EX, szFilenameTemp);
+        GetLongPathName((*it).szFilename, (*it).szFilename, MAX_PATH_EX);
 	}
 
 	return;
@@ -659,10 +667,10 @@ static VOID SetBasePath(lFILEINFO *fileList)
 {
 	BOOL bIsPraefixForAll;
 
-	StringCchCopy(fileList->g_szBasePath, MAX_PATH, fileList->fInfos.front().szFilename);
+	StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, fileList->fInfos.front().szFilename);
 	ReduceToPath(fileList->g_szBasePath);
 
-	GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH);
+	GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH_EX);
 
 	bIsPraefixForAll = TRUE;
 
@@ -672,7 +680,7 @@ static VOID SetBasePath(lFILEINFO *fileList)
 	}
 
 	if(!bIsPraefixForAll || !IsThisADirectory(fileList->g_szBasePath))
-		StringCchCopy(fileList->g_szBasePath, MAX_PATH, TEXT(""));
+		StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, TEXT(""));
 
 	return;
 }
@@ -712,14 +720,14 @@ UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
 	}
 
 	if(sameBaseDir && *firstBasePathPointer != TEXT('\0')) {
-		StringCchLength(firstBasePathPointer,MAX_PATH,(size_t *)&countSameChars);
+		StringCchLength(firstBasePathPointer,MAX_PATH_EX,(size_t *)&countSameChars);
 		countSameChars++;
 	}
 
 	while( (countSameChars > 0) && (fileInfoList->front()->szFilename[countSameChars - 1] != TEXT('\\')) )
 		countSameChars--;
-	if(countSameChars == 2) // this is the case for example for C:\ or C:\test.txt. Then we want soemthing like C:\ and not C:
-		countSameChars++;
+	/*if(countSameChars == 2) // this is the case for example for C:\ or C:\test.txt. Then we want soemthing like C:\ and not C:
+		countSameChars++;*/
 
 	return countSameChars;
 }

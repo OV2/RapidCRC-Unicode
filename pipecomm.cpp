@@ -124,7 +124,7 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList)
 		OutputDebugString(szTemp);
 		#endif
 
-		ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
+		ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
 
 		if(WaitForSingleObject(hEventWriteDone, 3000) == WAIT_TIMEOUT){
 			MessageBox(	NULL, TEXT("Interprocess communication failed: waiting too long for client"),
@@ -134,7 +134,7 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList)
 		}
 		ResetEvent(hEventWriteDone);
 
-		if(!ReadFile(hPipe, fileinfoTmp.szFilename, MAX_PATH * sizeof(TCHAR), &dwNumBytesRead, NULL)){
+		if(!ReadFile(hPipe, fileinfoTmp.szFilename, MAX_PATH_EX * sizeof(TCHAR), &dwNumBytesRead, NULL)){
 			#ifdef _DEBUG
 			OutputDebugString(TEXT("RapidCRC: Dateinamen einlesen ist schief gegangen"));
 			#endif

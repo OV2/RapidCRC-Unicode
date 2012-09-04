@@ -38,7 +38,7 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 	CHAR	szLineAnsi[MAX_LINE_LENGTH];
 #endif
 	TCHAR	szLine[MAX_LINE_LENGTH];
-	TCHAR	szFilenameSfv[MAX_PATH];
+	TCHAR	szFilenameSfv[MAX_PATH_EX];
 	HANDLE	hFile;
 	UINT	uiStringLength;
 	BOOL	bErrorOccured, bEndOfFile;
@@ -52,13 +52,13 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 
 	// save SFV filename and path
 	// => g_szBasePath in SFV-mode is the path part of the complete filename of the .sfv file
-	StringCchCopy(szFilenameSfv, MAX_PATH, fileList->fInfos.front().szFilename);
-	StringCchCopy(fileList->g_szBasePath, MAX_PATH, szFilenameSfv);
+	StringCchCopy(szFilenameSfv, MAX_PATH_EX, fileList->fInfos.front().szFilename);
+	StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szFilenameSfv);
 	ReduceToPath(fileList->g_szBasePath);
-	GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH);
+	//GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH_EX);
 
 	if(fileList->uiCmdOpts==CMD_REPARENT) {
-		TCHAR	szReparentPath[MAX_PATH];
+		TCHAR	szReparentPath[MAX_PATH_EX];
 		LPITEMIDLIST iidl=NULL;
 		BROWSEINFO bInfo = {0};
 		bInfo.lpszTitle = TEXT("Select folder for sfv reparenting");
@@ -68,7 +68,8 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 		if(iidl=SHBrowseForFolder(&bInfo)) {
 			SHGetPathFromIDList(iidl,szReparentPath);
 			CoTaskMemFree(iidl);
-			StringCchCopy(fileList->g_szBasePath, MAX_PATH, szReparentPath);
+            StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, TEXT("\\\\?\\"));
+			StringCchCat(fileList->g_szBasePath, MAX_PATH_EX, szReparentPath);
 		}
 	}
 
@@ -154,7 +155,7 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 					uiStringLength--;
 				}
 
-				GetFullPathName(szLine, MAX_PATH, fileinfoTmp.szFilename, NULL);
+				//GetFullPathName(szLine, MAX_PATH_EX, fileinfoTmp.szFilename, NULL);
 
 				fileList->fInfos.push_back(fileinfoTmp);
 			}
@@ -210,7 +211,7 @@ DWORD WriteSfvHeader(CONST HANDLE hFile)
 }
 
 /*****************************************************************************
-DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST DWORD dwCrc)
+DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST DWORD dwCrc)
 	hFile		: (IN) handle to an open file
 	szFilename	: (IN) string of the filename that we want to write into the sfv file
 	dwCrc		: (IN) the crc that belongs to the filename
@@ -218,9 +219,9 @@ DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST D
 Return Value:
 - returns NOERROR or GetLastError()
 *****************************************************************************/
-DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST DWORD dwCrc)
+DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST DWORD dwCrc)
 {
-	TCHAR szFilenameTemp[MAX_PATH];
+	TCHAR szFilenameTemp[MAX_PATH_EX];
 	TCHAR szLine[MAX_LINE_LENGTH];
 #ifdef UNICODE
 	CHAR szFilenameAnsi[MAX_UTF8_PATH];
@@ -230,9 +231,9 @@ DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST D
 	size_t stStringLength;
 	VOID *szOutLine=szLine;
 
-	StringCchCopy(szFilenameTemp, MAX_PATH, szFilename);
+	StringCchCopy(szFilenameTemp, MAX_PATH_EX, szFilename);
 	if(g_program_options.bCreateUnixStyle)
-		ReplaceChar(szFilenameTemp, MAX_PATH, TEXT('\\'), TEXT('/'));
+		ReplaceChar(szFilenameTemp, MAX_PATH_EX, TEXT('\\'), TEXT('/'));
 
 #ifdef UNICODE
     // we only need the conversion if we don't write unicode data
@@ -276,12 +277,12 @@ the header eventually)
 *****************************************************************************/
 DWORD WriteSingleLineSfvFile(CONST FILEINFO * pFileinfo)
 {
-	TCHAR szFileSfvOut[MAX_PATH];
+	TCHAR szFileSfvOut[MAX_PATH_EX];
 	HANDLE hFile;
 	DWORD dwResult;
 
-	StringCchCopy(szFileSfvOut, MAX_PATH, pFileinfo->szFilename);
-	StringCchCat(szFileSfvOut, MAX_PATH, TEXT(".sfv"));
+	StringCchCopy(szFileSfvOut, MAX_PATH_EX, pFileinfo->szFilename);
+	StringCchCat(szFileSfvOut, MAX_PATH_EX, TEXT(".sfv"));
 
 	hFile = CreateFile(szFileSfvOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 	if(hFile == INVALID_HANDLE_VALUE)
@@ -308,7 +309,7 @@ DWORD WriteSingleLineSfvFile(CONST FILEINFO * pFileinfo)
 }
 
 /*****************************************************************************
-DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abMd5Result[16])
+DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abMd5Result[16])
 	hFile		: (IN) handle to an open file
 	szFilename	: (IN) string of the filename that we want to write into the md5 file
 	abMd5Result	: (IN) Array with md5 values
@@ -316,9 +317,9 @@ DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST B
 Return Value:
 - returns NOERROR or GetLastError()
 *****************************************************************************/
-DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abMd5Result[16])
+DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abMd5Result[16])
 {
-	TCHAR szFilenameTemp[MAX_PATH];
+	TCHAR szFilenameTemp[MAX_PATH_EX];
 	TCHAR szLine[MAX_LINE_LENGTH];
 #ifdef UNICODE
 	CHAR szFilenameAnsi[MAX_UTF8_PATH];
@@ -328,9 +329,9 @@ DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST B
 	size_t stStringLength;
 	VOID *szOutLine=szLine;
 
-	StringCchCopy(szFilenameTemp, MAX_PATH, szFilename);
+	StringCchCopy(szFilenameTemp, MAX_PATH_EX, szFilename);
 	if(g_program_options.bCreateUnixStyle)
-		ReplaceChar(szFilenameTemp, MAX_PATH, TEXT('\\'), TEXT('/'));
+		ReplaceChar(szFilenameTemp, MAX_PATH_EX, TEXT('\\'), TEXT('/'));
 
 #ifdef UNICODE
     // we only need the conversion if we don't write unicode data
@@ -391,12 +392,12 @@ a ".md5" and writes just pFileinfo->szFilename and abMd5Result into that file
 *****************************************************************************/
 DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo)
 {
-	TCHAR szFileSfvOut[MAX_PATH];
+	TCHAR szFileSfvOut[MAX_PATH_EX];
 	HANDLE hFile;
 	DWORD dwResult;
 
-	StringCchCopy(szFileSfvOut, MAX_PATH, pFileinfo->szFilename);
-	StringCchCat(szFileSfvOut, MAX_PATH, TEXT(".md5"));
+	StringCchCopy(szFileSfvOut, MAX_PATH_EX, pFileinfo->szFilename);
+	StringCchCat(szFileSfvOut, MAX_PATH_EX, TEXT(".md5"));
 
 	hFile = CreateFile(szFileSfvOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 	if(hFile == INVALID_HANDLE_VALUE)
@@ -431,7 +432,7 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 	CHAR	szLineAnsi[MAX_LINE_LENGTH];
 #endif
 	TCHAR	szLine[MAX_LINE_LENGTH];
-	TCHAR	szFilenameMd5[MAX_PATH];
+	TCHAR	szFilenameMd5[MAX_PATH_EX];
 	HANDLE	hFile;
 	UINT	uiStringLength;
 	BOOL	bErrorOccured, bEndOfFile;
@@ -448,13 +449,13 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 
 	// save MD5 filename and path
 	// => g_szBasePath in MD5-mode is the path part of the complete filename of the .md5 file
-	StringCchCopy(szFilenameMd5, MAX_PATH, fileList->fInfos.front().szFilename);
-	StringCchCopy(fileList->g_szBasePath, MAX_PATH, szFilenameMd5);
+	StringCchCopy(szFilenameMd5, MAX_PATH_EX, fileList->fInfos.front().szFilename);
+	StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szFilenameMd5);
 	ReduceToPath(fileList->g_szBasePath);
-	GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH);
+	//GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH_EX);
 
 	if(fileList->uiCmdOpts==CMD_REPARENT) {
-		TCHAR	szReparentPath[MAX_PATH];
+		TCHAR	szReparentPath[MAX_PATH_EX];
 		LPITEMIDLIST iidl=NULL;
 		BROWSEINFO bInfo = {0};
 		bInfo.lpszTitle = TEXT("Select folder for md5 reparenting");
@@ -464,14 +465,14 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 		if(iidl=SHBrowseForFolder(&bInfo)) {
 			SHGetPathFromIDList(iidl,szReparentPath);
 			CoTaskMemFree(iidl);
-			StringCchCopy(fileList->g_szBasePath, MAX_PATH, szReparentPath);
+			StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szReparentPath);
 		}
 	}
 
 	// This is(should be) the ONLY place where a persistent change of the current directory is done
 	// (for GetFullPathName())
-	if(!SetCurrentDirectory(fileList->g_szBasePath))
-		return FALSE;
+	/*if(!SetCurrentDirectory(fileList->g_szBasePath))
+		return FALSE;*/
 
 	// set md5 mode
 	fileList->uiRapidCrcMode = MODE_MD5;
@@ -548,7 +549,8 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 				while( (uiIndex < uiStringLength) && ((szLine[uiIndex] == TEXT(' ')) || (szLine[uiIndex] == TEXT('*'))) )
 					uiIndex++;
 
-				GetFullPathName(szLine + uiIndex, MAX_PATH, fileinfoTmp.szFilename, NULL);
+                StringCchPrintf(fileinfoTmp.szFilename, MAX_PATH_EX, TEXT("%s%s"), fileList->g_szBasePath, szLine + uiIndex);
+				//GetFullPathName(szLine + uiIndex, MAX_PATH_EX, fileinfoTmp.szFilename, NULL);
 
 				fileList->fInfos.push_back(fileinfoTmp);
 			}
@@ -567,7 +569,7 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 }
 
 /*****************************************************************************
-DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abSha1Result[20])
+DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abSha1Result[20])
 	hFile		: (IN) handle to an open file
 	szFilename	: (IN) string of the filename that we want to write into the sha1 file
 	abMd5Result	: (IN) Array with sha1 values
@@ -575,9 +577,9 @@ DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST 
 Return Value:
 - returns NOERROR or GetLastError()
 *****************************************************************************/
-DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST BYTE abSha1Result[20])
+DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abSha1Result[20])
 {
-	TCHAR szFilenameTemp[MAX_PATH];
+	TCHAR szFilenameTemp[MAX_PATH_EX];
 	TCHAR szLine[MAX_LINE_LENGTH];
 #ifdef UNICODE
 	CHAR szFilenameAnsi[MAX_UTF8_PATH];
@@ -587,9 +589,9 @@ DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH], CONST 
 	size_t stStringLength;
 	VOID *szOutLine=szLine;
 
-	StringCchCopy(szFilenameTemp, MAX_PATH, szFilename);
+	StringCchCopy(szFilenameTemp, MAX_PATH_EX, szFilename);
 	if(g_program_options.bCreateUnixStyle)
-		ReplaceChar(szFilenameTemp, MAX_PATH, TEXT('\\'), TEXT('/'));
+		ReplaceChar(szFilenameTemp, MAX_PATH_EX, TEXT('\\'), TEXT('/'));
 
 #ifdef UNICODE
     // we only need the conversion if we don't write unicode data
@@ -653,12 +655,12 @@ a ".sha1" and writes just pFileinfo->szFilename and abSha1Result into that file
 *****************************************************************************/
 DWORD WriteSingleLineSha1File(CONST FILEINFO * pFileinfo)
 {
-	TCHAR szFileSfvOut[MAX_PATH];
+	TCHAR szFileSfvOut[MAX_PATH_EX];
 	HANDLE hFile;
 	DWORD dwResult;
 
-	StringCchCopy(szFileSfvOut, MAX_PATH, pFileinfo->szFilename);
-	StringCchCat(szFileSfvOut, MAX_PATH, TEXT(".sha1"));
+	StringCchCopy(szFileSfvOut, MAX_PATH_EX, pFileinfo->szFilename);
+	StringCchCat(szFileSfvOut, MAX_PATH_EX, TEXT(".sha1"));
 
 	hFile = CreateFile(szFileSfvOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 	if(hFile == INVALID_HANDLE_VALUE)
@@ -693,7 +695,7 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 	CHAR	szLineAnsi[MAX_LINE_LENGTH];
 #endif
 	TCHAR	szLine[MAX_LINE_LENGTH];
-	TCHAR	szFilenameSha1[MAX_PATH];
+	TCHAR	szFilenameSha1[MAX_PATH_EX];
 	HANDLE	hFile;
 	UINT	uiStringLength;
 	BOOL	bErrorOccured, bEndOfFile;
@@ -708,13 +710,13 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 
 	// save SHA1 filename and path
 	// => g_szBasePath in SHA1-mode is the path part of the complete filename of the .md5 file
-	StringCchCopy(szFilenameSha1, MAX_PATH, fileList->fInfos.front().szFilename);
-	StringCchCopy(fileList->g_szBasePath, MAX_PATH, szFilenameSha1);
+	StringCchCopy(szFilenameSha1, MAX_PATH_EX, fileList->fInfos.front().szFilename);
+	StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szFilenameSha1);
 	ReduceToPath(fileList->g_szBasePath);
-	GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH);
+	//GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH_EX);
 
 	if(fileList->uiCmdOpts==CMD_REPARENT) {
-		TCHAR	szReparentPath[MAX_PATH];
+		TCHAR	szReparentPath[MAX_PATH_EX];
 		LPITEMIDLIST iidl=NULL;
 		BROWSEINFO bInfo = {0};
 		bInfo.lpszTitle = TEXT("Select folder for sha1 reparenting");
@@ -724,7 +726,7 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 		if(iidl=SHBrowseForFolder(&bInfo)) {
 			SHGetPathFromIDList(iidl,szReparentPath);
 			CoTaskMemFree(iidl);
-			StringCchCopy(fileList->g_szBasePath, MAX_PATH, szReparentPath);
+			StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szReparentPath);
 		}
 	}
 
@@ -808,7 +810,7 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 				while( (uiIndex < uiStringLength) && ((szLine[uiIndex] == TEXT(' ')) || (szLine[uiIndex] == TEXT('*'))) )
 					uiIndex++;
 
-				GetFullPathName(szLine + uiIndex, MAX_PATH, fileinfoTmp.szFilename, NULL);
+				//GetFullPathName(szLine + uiIndex, MAX_PATH_EX, fileinfoTmp.szFilename, NULL);
 
 				fileList->fInfos.push_back(fileinfoTmp);
 			}

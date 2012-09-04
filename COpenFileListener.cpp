@@ -27,8 +27,8 @@ STDMETHODIMP COpenFileListener::OnFileOk(IFileDialog* pfd)
 				psiaResults->GetItemAt(i,&isi);
 				isi->GetDisplayName(SIGDN_FILESYSPATH,&pwsz);
 				isi->Release();
-				ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
-				StringCchCopy(fileinfoTmp.szFilename,MAX_PATH,pwsz);
+				ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
+				StringCchCopy(fileinfoTmp.szFilename,MAX_PATH_EX,pwsz);
 				pFInfoList->fInfos.push_back(fileinfoTmp);
 				CoTaskMemFree(pwsz);
 			}

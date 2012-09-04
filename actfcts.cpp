@@ -25,7 +25,7 @@
 #include "COpenFileListener.h"
 
 static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *finalList);
-static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode, CONST TCHAR szChkSumFilename[MAX_PATH], list<FILEINFO*> *finalList);
+static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode, CONST TCHAR szChkSumFilename[MAX_PATH_EX], list<FILEINFO*> *finalList);
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList);
 static BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult);
 static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode);
@@ -72,7 +72,7 @@ Notes:
 *****************************************************************************/
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList)
 {
-	TCHAR szFilenameTemp[MAX_PATH];
+	TCHAR szFilenameTemp[MAX_PATH_EX];
 	BOOL bAFileWasProcessed;
 	FILEINFO * pFileinfo;
 	UINT uiNumSelected;
@@ -96,7 +96,7 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<F
 					}
 					else{
 						pFileinfo->dwError = GetLastError();
-						StringCchPrintf(szFilenameTemp, MAX_PATH,
+						StringCchPrintf(szFilenameTemp, MAX_PATH_EX,
 							TEXT("Error %u occured while saving stream in File :\r\n %s"),
 							pFileinfo->dwError, pFileinfo->szFilenameShort);
 						MessageBox(arrHwnd[ID_MAIN_WND], szFilenameTemp, TEXT("Error"), MB_OK);
@@ -125,14 +125,14 @@ Notes:
 	helper function for ActionCrcIntoStream - this is the actual writing logic
 *****************************************************************************/
 static BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult) {
-	TCHAR szFileOut[MAX_PATH]=TEXT("");
+	TCHAR szFileOut[MAX_PATH_EX]=TEXT("");
 	CHAR szCrcInHex[9];
 	HANDLE hFile;
 	DWORD NumberOfBytesWritten;
 
 	StringCchPrintfA(szCrcInHex, 9, "%08LX", crcResult );
-	StringCchCopy(szFileOut, MAX_PATH, szFileName);
-	StringCchCat(szFileOut, MAX_PATH, TEXT(":CRC32"));
+	StringCchCopy(szFileOut, MAX_PATH_EX, szFileName);
+	StringCchCat(szFileOut, MAX_PATH_EX, TEXT(":CRC32"));
 	hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 	if(hFile == INVALID_HANDLE_VALUE) return FALSE;
 	if(!WriteFile(hFile, &szCrcInHex, 8, &NumberOfBytesWritten, NULL)) {
@@ -184,7 +184,7 @@ Notes:
 *****************************************************************************/
 VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList)
 {
-	TCHAR szFilenameTemp[MAX_PATH];
+	TCHAR szFilenameTemp[MAX_PATH_EX];
 	BOOL bAFileWasProcessed;
 	FILEINFO * pFileinfo;
 	UINT uiNumSelected;
@@ -204,14 +204,14 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list
 					bAFileWasProcessed = TRUE;
 					GenerateNewFilename(szFilenameTemp, pFileinfo->szFilename, pFileinfo->dwCrc32Result, g_program_options.szFilenamePattern);
 					if(MoveFile(pFileinfo->szFilename, szFilenameTemp)){
-						StringCchCopy(pFileinfo->szFilename, MAX_PATH, szFilenameTemp);
+						StringCchCopy(pFileinfo->szFilename, MAX_PATH_EX, szFilenameTemp);
 						// this updates pFileinfo->szFilenameShort automatically
 						pFileinfo->dwCrc32Found = pFileinfo->dwCrc32Result;
 						pFileinfo->dwCrcFound = CRC_FOUND_FILENAME;
 					}
 					else{
 						pFileinfo->dwError = GetLastError();
-						StringCchPrintf(szFilenameTemp, MAX_PATH,
+						StringCchPrintf(szFilenameTemp, MAX_PATH_EX,
 							TEXT("Error %u occured while renaming file :\r\n %s"),
 							pFileinfo->dwError, pFileinfo->szFilenameShort);
 						MessageBox(arrHwnd[ID_MAIN_WND], szFilenameTemp, TEXT("Error"), MB_OK);
@@ -234,10 +234,10 @@ BOOL OpenFilesVistaUp(HWND hwnd, lFILEINFO *pFInfoList)
     IFileOpenDialog *pfd;
 	IFileDialogCustomize *pfdc;
 	FILEOPENDIALOGOPTIONS dwOptions;
-	TCHAR szCurrentPath[MAX_PATH];
+	TCHAR szCurrentPath[MAX_PATH_EX];
 	DWORD dwCookie = 0;
 
-	GetCurrentDirectory(MAX_PATH, szCurrentPath);
+	GetCurrentDirectory(MAX_PATH_EX, szCurrentPath);
     
 	CoInitialize(NULL);
     
@@ -316,7 +316,7 @@ BOOL OpenFilesXPPrev(HWND hwnd, lFILEINFO *pFInfoList)
 {
 	OPENFILENAME ofn;
 	TCHAR * szBuffer, * szBufferPart;
-	TCHAR szCurrentPath[MAX_PATH];
+	TCHAR szCurrentPath[MAX_PATH_EX];
 	size_t stStringLength;
 	FILEINFO fileinfoTmp={0};
 
@@ -336,7 +336,7 @@ BOOL OpenFilesXPPrev(HWND hwnd, lFILEINFO *pFInfoList)
 	ofn.Flags             = OFN_ALLOWMULTISELECT | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLEHOOK;
 	ofn.lpfnHook		  = OFNHookProc;
 
-	GetCurrentDirectory(MAX_PATH, szCurrentPath);
+	GetCurrentDirectory(MAX_PATH_EX, szCurrentPath);
 	if(!GetOpenFileName( & ofn )){
 		if(CommDlgExtendedError() == FNERR_BUFFERTOOSMALL){
 			MessageBox(hwnd, TEXT("You selected too many files. The buffers was too small. You can select as many files as you want, if you use the rightclick shell extension of RapidCRC!"),
@@ -356,23 +356,23 @@ BOOL OpenFilesXPPrev(HWND hwnd, lFILEINFO *pFInfoList)
 		// the first part in szBuffer is the path;
 		// the other parts are filenames without path
 		szBufferPart = szBuffer;
-		StringCchCopy(pFInfoList->g_szBasePath, MAX_PATH, szBufferPart);
-		StringCchLength(szBufferPart, MAX_PATH, & stStringLength);
+		StringCchCopy(pFInfoList->g_szBasePath, MAX_PATH_EX, szBufferPart);
+		StringCchLength(szBufferPart, MAX_PATH_EX, & stStringLength);
 		szBufferPart += stStringLength + 1;
 
 		//pFileinfo = g_fileinfo_list_first_item;
 		while(szBufferPart[0]!= TEXT('\0')){
-			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH * sizeof(TCHAR));
-			StringCchPrintf(fileinfoTmp.szFilename, MAX_PATH, TEXT("%s\\%s"), pFInfoList->g_szBasePath, szBufferPart);
+			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
+			StringCchPrintf(fileinfoTmp.szFilename, MAX_PATH_EX, TEXT("%s\\%s"), pFInfoList->g_szBasePath, szBufferPart);
 			pFInfoList->fInfos.push_back(fileinfoTmp);
 
 			// go to the next part the buffer
-			StringCchLength(szBufferPart, MAX_PATH, & stStringLength);
+			StringCchLength(szBufferPart, MAX_PATH_EX, & stStringLength);
 			szBufferPart += stStringLength + 1;
 		}
 	}
 	else{ // only one file is selected
-		StringCchCopy(fileinfoTmp.szFilename, MAX_PATH, szBuffer);
+		StringCchCopy(fileinfoTmp.szFilename, MAX_PATH_EX, szBuffer);
 		pFInfoList->fInfos.push_back(fileinfoTmp);
 	}
 
@@ -437,7 +437,7 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 {
 	list<FILEINFO*> finalList;
 	DWORD checkReturn;
-	TCHAR szErrorMessage[MAX_PATH];
+	TCHAR szErrorMessage[MAX_PATH_EX];
 
 	// check if there are any item in our list (without checking an access violation could occur)
 	if(ListView_GetItemCount(arrHwnd[ID_LISTVIEW]) == 0)
@@ -453,7 +453,7 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 	}
 
 	if((checkReturn = CreateChecksumFiles(arrHwnd,uiMode,&finalList)) != NOERROR) {
-		StringCchPrintf(szErrorMessage, MAX_PATH,
+		StringCchPrintf(szErrorMessage, MAX_PATH_EX,
 							TEXT("Error %u occured during checksum file creation"),
 							checkReturn);
 		MessageBox(arrHwnd[ID_MAIN_WND], szErrorMessage, TEXT("Error"), MB_OK);
@@ -486,15 +486,15 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
 	switch(uiMode) {
 		case MODE_MD5:
 			fco.uiCreateFileMode = g_program_options.uiCreateFileModeMd5;
-			StringCchCopy(fco.szFilename, MAX_PATH, g_program_options.szFilenameMd5);
+			StringCchCopy(fco.szFilename, MAX_PATH_EX, g_program_options.szFilenameMd5);
 			break;
 		case MODE_SHA1:
 			fco.uiCreateFileMode = g_program_options.uiCreateFileModeSha1;
-			StringCchCopy(fco.szFilename, MAX_PATH, g_program_options.szFilenameSha1);
+			StringCchCopy(fco.szFilename, MAX_PATH_EX, g_program_options.szFilenameSha1);
 			break;
 		default:
 			fco.uiCreateFileMode = g_program_options.uiCreateFileModeSfv;
-			StringCchCopy(fco.szFilename, MAX_PATH, g_program_options.szFilenameSfv);
+			StringCchCopy(fco.szFilename, MAX_PATH_EX, g_program_options.szFilenameSfv);
 			break;
 	}
 
@@ -505,15 +505,15 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
 	switch(uiMode) {
 		case MODE_MD5:
 			g_program_options.uiCreateFileModeMd5 = fco.uiCreateFileMode;
-			StringCchCopy(g_program_options.szFilenameMd5, MAX_PATH, fco.szFilename);
+			StringCchCopy(g_program_options.szFilenameMd5, MAX_PATH_EX, fco.szFilename);
 			break;
 		case MODE_SHA1:
 			g_program_options.uiCreateFileModeSha1 = fco.uiCreateFileMode;
-			StringCchCopy(g_program_options.szFilenameSha1, MAX_PATH, fco.szFilename);
+			StringCchCopy(g_program_options.szFilenameSha1, MAX_PATH_EX, fco.szFilename);
 			break;
 		default:
 			g_program_options.uiCreateFileModeSfv = fco.uiCreateFileMode;
-			StringCchCopy(g_program_options.szFilenameSfv, MAX_PATH, fco.szFilename);
+			StringCchCopy(g_program_options.szFilenameSfv, MAX_PATH_EX, fco.szFilename);
 			break;
 	}
 
@@ -570,7 +570,7 @@ static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *
 }
 
 /*****************************************************************************
-static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSumFilename[MAX_PATH], list<FILEINFO*> *finalList)
+static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSumFilename[MAX_PATH_EX], list<FILEINFO*> *finalList)
 	uiMode			: (IN) create MD5 or SFV files
 	szChkSumFilename: (IN) filename without path
 	finalList		: (IN) pointer to list of fileinfo pointers on which the action is to be performed
@@ -582,12 +582,12 @@ Notes:
 - handles the situation if the user want one sfv/md5 file per directory. In every directory
   a file with the name szChkSumFilename is created
 *****************************************************************************/
-static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSumFilename[MAX_PATH], list<FILEINFO*> *finalList)
+static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSumFilename[MAX_PATH_EX], list<FILEINFO*> *finalList)
 {
 	DWORD dwResult;
-	TCHAR szCurrentDir[MAX_PATH];
-	TCHAR szCurChecksumFilename[MAX_PATH];
-	TCHAR szPreviousDir[MAX_PATH] = TEXT("?:><");	// some symbols that are not allowed in filenames to force
+	TCHAR szCurrentDir[MAX_PATH_EX];
+	TCHAR szCurChecksumFilename[MAX_PATH_EX];
+	TCHAR szPreviousDir[MAX_PATH_EX] = TEXT("?:><");	// some symbols that are not allowed in filenames to force
 													// the checksum file creation in the for loop
 	HANDLE hFile = NULL;
 
@@ -595,12 +595,12 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 	//for(UINT uiIndex = 0; uiIndex < uiNumElements; uiIndex++){
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 		if( (*it)->dwError == NO_ERROR ){
-			StringCchCopy(szCurrentDir, MAX_PATH, (*it)->szFilename);
+			StringCchCopy(szCurrentDir, MAX_PATH_EX, (*it)->szFilename);
 			ReduceToPath(szCurrentDir);
 			if(lstrcmpi(szPreviousDir, szCurrentDir) != 0){
 				CloseHandle(hFile);
-				StringCchCopy(szPreviousDir, MAX_PATH, szCurrentDir);
-				StringCchPrintf(szCurChecksumFilename, MAX_PATH, TEXT("%s\\%s"), szCurrentDir, szChkSumFilename);
+				StringCchCopy(szPreviousDir, MAX_PATH_EX, szCurrentDir);
+				StringCchPrintf(szCurChecksumFilename, MAX_PATH_EX, TEXT("%s\\%s"), szCurrentDir, szChkSumFilename);
 				hFile = CreateFile(szCurChecksumFilename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 				if(hFile == INVALID_HANDLE_VALUE){
 					return GetLastError();
@@ -661,38 +661,38 @@ Notes:
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList)
 {
 
-	TCHAR szCurrentPath[MAX_PATH];
-	TCHAR szFileOut[MAX_PATH] = TEXT("");
+	TCHAR szCurrentPath[MAX_PATH_EX];
+	TCHAR szFileOut[MAX_PATH_EX] = TEXT("");
 	HANDLE hFile;
 	UINT uiSameCharCount;
 	OPENFILENAME ofn;
 	DWORD dwResult;
 
-	StringCchCopy(szFileOut, MAX_PATH, GetFilenameWithoutPathPointer(finalList->front()->parentList->g_szBasePath) );
+	StringCchCopy(szFileOut, MAX_PATH_EX, GetFilenameWithoutPathPointer(finalList->front()->parentList->g_szBasePath) );
 
 	TCHAR hashExt[10];
-	TCHAR msgString[MAX_PATH];
-	TCHAR filterString[MAX_PATH];
+	TCHAR msgString[MAX_PATH_EX];
+	TCHAR filterString[MAX_PATH_EX];
 	switch(uiMode) {
 		case MODE_MD5: StringCchCopy(hashExt,10,TEXT("md5"));break;
 		case MODE_SHA1: StringCchCopy(hashExt,10,TEXT("sha1"));break;
 		default: StringCchCopy(hashExt,10,TEXT("sfv"));break;
 	}
-	StringCchPrintf(filterString,MAX_PATH,TEXT(".%s files%c*.%s%cAll files%c*.*%c"),hashExt,TEXT('\0'),hashExt,TEXT('\0'),TEXT('\0'),TEXT('\0'));
-	StringCchPrintf(msgString,MAX_PATH,TEXT("Please choose a filename for the .%s file"),hashExt);
+	StringCchPrintf(filterString,MAX_PATH_EX,TEXT(".%s files%c*.%s%cAll files%c*.*%c"),hashExt,TEXT('\0'),hashExt,TEXT('\0'),TEXT('\0'),TEXT('\0'));
+	StringCchPrintf(msgString,MAX_PATH_EX,TEXT("Please choose a filename for the .%s file"),hashExt);
 
 	ZeroMemory(& ofn, sizeof (OPENFILENAME));
 	ofn.lStructSize       = sizeof (OPENFILENAME) ;
 	ofn.hwndOwner         = arrHwnd[ID_MAIN_WND] ;
 	ofn.lpstrFilter       = filterString ;
 	ofn.lpstrFile         = szFileOut ;
-	ofn.nMaxFile          = MAX_PATH ;
+	ofn.nMaxFile          = MAX_PATH_EX ;
 	ofn.lpstrInitialDir   = finalList->front()->parentList->g_szBasePath ;
 	ofn.lpstrTitle        = msgString;
 	ofn.Flags             = OFN_OVERWRITEPROMPT | OFN_EXPLORER ;
 	ofn.lpstrDefExt       = hashExt;
 
-	GetCurrentDirectory(MAX_PATH, szCurrentPath);
+	GetCurrentDirectory(MAX_PATH_EX, szCurrentPath);
 	if(! GetSaveFileName(& ofn) ){
 		SetCurrentDirectory(szCurrentPath);
 		return NOERROR;
@@ -851,13 +851,13 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 	
 	if( needRehash ){
 		TCHAR hashExt[10];
-		TCHAR msgString[MAX_PATH];
+		TCHAR msgString[MAX_PATH_EX];
 		switch(uiMode) {
 			case MODE_MD5: StringCchCopy(hashExt,10,TEXT("MD5"));break;
 			case MODE_SHA1: StringCchCopy(hashExt,10,TEXT("SHA1"));break;
 			default: StringCchCopy(hashExt,10,TEXT("CRC"));break;
 		}
-		StringCchPrintf(msgString,MAX_PATH,TEXT("You have to calculate the %s checksums first. Click OK to do that now."),hashExt);
+		StringCchPrintf(msgString,MAX_PATH_EX,TEXT("You have to calculate the %s checksums first. Click OK to do that now."),hashExt);
 		if( MessageBox(arrHwnd[ID_MAIN_WND],
 			msgString,
 			TEXT("Question"),MB_OKCANCEL | MB_ICONQUESTION | MB_APPLMODAL | MB_SETFOREGROUND) == IDCANCEL)
