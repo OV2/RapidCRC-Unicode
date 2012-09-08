@@ -1133,41 +1133,10 @@ VOID DisplayStatusOverview(CONST HWND hEditStatus)
 {
 	TCHAR szLine[MAX_LINE_LENGTH];
 	TCHAR szLineTmp[MAX_LINE_LENGTH];
-	/*lFILEINFO *fileList;
-	FILEINFO *pFileinfo;
-	list<lFILEINFO*> *doneList;*/
-	//DWORD dwCountOK, dwCountNotOK, dwCountNoCrcFound, dwCountNotFound, dwCountErrors;
 	size_t stLength;
 
-	//dwCountOK = dwCountNotOK = dwCountNoCrcFound = dwCountNotFound = dwCountErrors = 0;
-	////pFileinfo = g_fileinfo_list_first_item;
-	//doneList = SyncQueue.getDoneList();
-	////while(pFileinfo != NULL){
-	//for(list<lFILEINFO*>::iterator it=doneList->begin();it!=doneList->end();it++) {
-	//	fileList = *it;
-	//	for(list<FILEINFO>::iterator fInfoIt=fileList->fInfos.begin();fInfoIt!=fileList->fInfos.end();fInfoIt++) {
-	//		pFileinfo = &(*fInfoIt);
-	//		switch(InfoToIntValue(pFileinfo)) {
-	//			case 1: dwCountOK++;
-	//					break;
-	//			case 2: dwCountNotOK++;
-	//					break;
-	//			case 3: dwCountNoCrcFound++;
-	//					break;
-	//			case 4: if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND)
-	//						dwCountNotFound++;
-	//					else
-	//						dwCountErrors++;
-	//					break;
-	//			default: dwCountNoCrcFound++;
-	//		}
-	//	}
-	//}
-
-	//SyncQueue.releaseDoneList();
-
 	StringCchCopy(szLine, MAX_LINE_LENGTH, TEXT(""));
-    StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux/%ux done,"), SyncQueue.dwCountDone, SyncQueue.dwCountTotal);
+    StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %u/%u done,"), SyncQueue.dwCountDone, SyncQueue.dwCountTotal);
 	StringCchCat(szLine, MAX_LINE_LENGTH, szLineTmp);
 	if(SyncQueue.dwCountOK > 0){
         StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux file OK,"), SyncQueue.dwCountOK);

@@ -55,7 +55,6 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 	StringCchCopy(szFilenameSfv, MAX_PATH_EX, fileList->fInfos.front().szFilename);
 	StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szFilenameSfv);
 	ReduceToPath(fileList->g_szBasePath);
-	//GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH_EX);
 
 	if(fileList->uiCmdOpts==CMD_REPARENT) {
 		TCHAR	szReparentPath[MAX_PATH_EX];
@@ -72,11 +71,6 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 			StringCchCat(fileList->g_szBasePath, MAX_PATH_EX, szReparentPath);
 		}
 	}
-
-	// This is(should be) the ONLY place where a persistent change of the current directory is done
-	// (for GetFullPathName())
-	//if(!SetCurrentDirectory(fileList->g_szBasePath))
-	//	return FALSE;
 
 	// set sfv mode
 	fileList->uiRapidCrcMode = MODE_SFV;
@@ -155,7 +149,6 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 					uiStringLength--;
 				}
 
-				//GetFullPathName(szLine, MAX_PATH_EX, fileinfoTmp.szFilename, NULL);
                 StringCchPrintf(fileinfoTmp.szFilename,MAX_PATH_EX,TEXT("%s%s"),fileList->g_szBasePath, szLine);
 
 				fileList->fInfos.push_back(fileinfoTmp);
@@ -425,8 +418,6 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 	UINT	uiIndex;
 
 	BOOL	bMd5OK;
-	//FILEINFO * pFileinfo;
-	//FILEINFO * pFileinfo_prev;
 	BOOL	fileIsUTF16;
     UINT    codePage;
 	UNICODE_TYPE detectedBOM;
@@ -438,7 +429,6 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 	StringCchCopy(szFilenameMd5, MAX_PATH_EX, fileList->fInfos.front().szFilename);
 	StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szFilenameMd5);
 	ReduceToPath(fileList->g_szBasePath);
-	//GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH_EX);
 
 	if(fileList->uiCmdOpts==CMD_REPARENT) {
 		TCHAR	szReparentPath[MAX_PATH_EX];
@@ -454,11 +444,6 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 			StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szReparentPath);
 		}
 	}
-
-	// This is(should be) the ONLY place where a persistent change of the current directory is done
-	// (for GetFullPathName())
-	/*if(!SetCurrentDirectory(fileList->g_szBasePath))
-		return FALSE;*/
 
 	// set md5 mode
 	fileList->uiRapidCrcMode = MODE_MD5;
@@ -536,7 +521,6 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 					uiIndex++;
 
                 StringCchPrintf(fileinfoTmp.szFilename, MAX_PATH_EX, TEXT("%s%s"), fileList->g_szBasePath, szLine + uiIndex);
-				//GetFullPathName(szLine + uiIndex, MAX_PATH_EX, fileinfoTmp.szFilename, NULL);
 
 				fileList->fInfos.push_back(fileinfoTmp);
 			}
@@ -683,7 +667,6 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 	StringCchCopy(szFilenameSha1, MAX_PATH_EX, fileList->fInfos.front().szFilename);
 	StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szFilenameSha1);
 	ReduceToPath(fileList->g_szBasePath);
-	//GetLongPathName(fileList->g_szBasePath, fileList->g_szBasePath, MAX_PATH_EX);
 
 	if(fileList->uiCmdOpts==CMD_REPARENT) {
 		TCHAR	szReparentPath[MAX_PATH_EX];
@@ -699,11 +682,6 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 			StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szReparentPath);
 		}
 	}
-
-	// This is(should be) the ONLY place where a persistent change of the current directory is done
-	// (for GetFullPathName())
-	/*if(!SetCurrentDirectory(fileList->g_szBasePath))
-		return FALSE;*/
 
 	// set sha1 mode
 	fileList->uiRapidCrcMode = MODE_SHA1;
@@ -780,7 +758,6 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 				while( (uiIndex < uiStringLength) && ((szLine[uiIndex] == TEXT(' ')) || (szLine[uiIndex] == TEXT('*'))) )
 					uiIndex++;
 
-				//GetFullPathName(szLine + uiIndex, MAX_PATH_EX, fileinfoTmp.szFilename, NULL);
                 StringCchPrintf(fileinfoTmp.szFilename,MAX_PATH_EX,TEXT("%s%s"),fileList->g_szBasePath, szLine + uiIndex);
 
 				fileList->fInfos.push_back(fileinfoTmp);
