@@ -222,7 +222,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			if ( (curFileInfo.dwError == NO_ERROR) /*&& (curFileInfo.qwFilesize != 0)*/ && (bCalculateCrc || bCalculateMd5 || bCalculateEd2k || bCalculateSha1))
 			{
 
-				SetWindowText(arrHwnd[ID_EDIT_STATUS], curFileInfo.szFilename);
+				SetWindowText(arrHwnd[ID_EDIT_STATUS], curFileInfo.szFilename + 4);
 
 				QueryPerformanceCounter((LARGE_INTEGER*) &qwStart);
 				hFile = CreateFile(curFileInfo.szFilename,
