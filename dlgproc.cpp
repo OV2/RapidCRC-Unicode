@@ -493,6 +493,12 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 			break;
+        case IDC_CHECK_INCLUDE_COMMENTS:
+            if(HIWORD(wParam) == BN_CLICKED){
+				program_options_temp.bIncludeFileComments = (IsDlgButtonChecked(hDlg, IDC_CHECK_INCLUDE_COMMENTS) == BST_CHECKED);
+				return TRUE;
+			}
+			break;
 		case IDC_CHECK_CREATE_UNIX_STYLE:
 			if(HIWORD(wParam) == BN_CLICKED){
 				program_options_temp.bCreateUnixStyle = (IsDlgButtonChecked(hDlg, IDC_CHECK_CREATE_UNIX_STYLE) == BST_CHECKED);

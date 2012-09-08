@@ -241,6 +241,7 @@ typedef struct _FILEINFO{
 	BYTE	abSha1Found[20];
 	BYTE	abEd2kResult[16];
 	TCHAR	szEd2kResult[ED2K_AS_STRING_LENGHT];
+    FILETIME ftModificationTime;
 }FILEINFO;
 
 typedef struct _lFILEINFO {
@@ -337,7 +338,8 @@ typedef struct{
 	TCHAR			szCRCStringDelims[MAX_PATH];
 	BOOL			bAllowCrcAnywhere;
 	UINT			uiCreateFileModeSha1;
-	TCHAR			szFilenameSha1[MAX_PATH_EX];
+	TCHAR			szFilenameSha1[MAX_PATH];
+    BOOL            bIncludeFileComments;
 }PROGRAM_OPTIONS;
 
 typedef struct{
@@ -443,7 +445,7 @@ int CALLBACK BrowseFolderSetSelProc (HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM
 
 //path support functions (path_support.cpp)
 BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH_EX]);
-DWORD GetFileSizeQW(CONST TCHAR * szFilename, QWORD * qwSize);
+VOID SetFileinfoAttributes(FILEINFO *fileInfo);
 BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH_EX], CONST TCHAR szFilenameOld[MAX_PATH_EX], CONST DWORD dwCrc32, CONST TCHAR szFilenamePattern[MAX_PATH_EX]);
 BOOL SeparatePathFilenameExt(CONST TCHAR szCompleteFilename[MAX_PATH_EX], TCHAR szPath[MAX_PATH_EX], TCHAR szFilename[MAX_PATH_EX], TCHAR szFileext[MAX_PATH_EX]);
 INT ReduceToPath(TCHAR szString[MAX_PATH_EX]);
@@ -472,6 +474,7 @@ DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo);
 BOOL EnterSha1Mode(lFILEINFO *fileList);
 DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abSha1Result[20]);
 DWORD WriteSingleLineSha1File(CONST FILEINFO * pFileinfo);
+DWORD WriteFileComment(CONST HANDLE hFile, CONST FILEINFO *pFileInfo, UINT startChar);
 #ifdef UNICODE
 BOOL WriteCurrentBOM(CONST HANDLE hFile);
 #endif

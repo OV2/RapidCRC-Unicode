@@ -26,13 +26,13 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 // Dialog
 //
 
-IDD_OPTIONS DIALOGEX 0, 0, 442, 184
+IDD_OPTIONS DIALOGEX 0, 0, 442, 196
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Options"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,327,167,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,386,167,50,14
+    DEFPUSHBUTTON   "OK",IDOK,327,174,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,386,174,50,14
     GROUPBOX        "Algorithms",IDC_STATIC,3,2,216,39
     LTEXT           "When not checking SFV/MD5 files calculate:",IDC_STATIC,9,12,140,8
     CONTROL         "CRC32",IDC_CHECK_CRC_DEFAULT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,24,38,10
@@ -50,29 +50,31 @@ BEGIN
     CONTROL         "Enable Job Queueing",IDC_ENABLE_QUEUE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,109,83,10
     CONTROL         "Default to UTF-8 when opening",IDC_DEFAULT_OPEN_UTF8,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,120,116,10
-    GROUPBOX        "File Creation",IDC_STATIC,4,135,216,44
+    GROUPBOX        "File Creation",IDC_STATIC,4,135,216,54
     CONTROL         "Create WinSFV-compatible SFV files",IDC_CHECK_WINSFV_COMP,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,144,129,10
+    CONTROL         "Include file information comments",IDC_CHECK_INCLUDE_COMMENTS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,154,117,11
     CONTROL         "Create Unix style SFV/MD5 files",IDC_CHECK_CREATE_UNIX_STYLE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,154,117,10
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,164,117,11
     CONTROL         "Create Unicode Files",IDC_CHECK_CREATE_UNICODE_FILES,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,165,106,8
-    COMBOBOX        IDC_UNICODE_TYPE,128,164,81,54,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,176,106,8
+    COMBOBOX        IDC_UNICODE_TYPE,131,175,81,54,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Exclude the following extensions",IDC_STATIC,223,2,216,39
     LTEXT           "Separate extension with "";""",IDC_STATIC,227,12,89,8
     EDITTEXT        IDC_EDIT_EXCLUDE_LIST,227,23,203,14,ES_AUTOHSCROLL
     GROUPBOX        "Allow the following characters as CRC in filename delimiters",IDC_STATIC,222,45,216,51
     LTEXT           "Do not separate the characters",IDC_STATIC,226,55,102,8
     EDITTEXT        IDC_CRC_DELIM_LIST,226,66,203,14,ES_AUTOHSCROLL
+    CONTROL         "Allow CRC without delimiters",IDC_ALLOW_CRC_ANYWHERE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,227,82,107,10
     GROUPBOX        "How to put the CRC into the filename",IDC_STATIC,222,98,216,67
     LTEXT           "Available variables: %FILENAME, %FILEEXT, %CRC",IDC_STATIC,227,109,169,8
     EDITTEXT        IDC_EDIT_FILENAME_PATTERN,227,121,203,14,ES_AUTOHSCROLL
     LTEXT           "Example:",IDC_STATIC,229,140,30,8
     LTEXT           "C:\\MyFile.txt =>",IDC_STATIC,228,150,58,8
     LTEXT           "",IDC_STATIC_FILENAME_EXAMPLE,286,150,147,8
-    PUSHBUTTON      "Default",IDC_BTN_DEFAULT,224,167,50,14
-    CONTROL         "Allow CRC without delimiters",IDC_ALLOW_CRC_ANYWHERE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,227,82,107,10
+    PUSHBUTTON      "Defaults",IDC_BTN_DEFAULT,224,174,50,14
 END
 
 IDD_DLG_FILE_CREATION DIALOGEX 0, 0, 251, 121
@@ -106,7 +108,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 435
         TOPMARGIN, 7
-        BOTTOMMARGIN, 177
+        BOTTOMMARGIN, 189
     END
 
     IDD_DLG_FILE_CREATION, DIALOG

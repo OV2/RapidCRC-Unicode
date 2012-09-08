@@ -541,6 +541,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	pprogram_options->bDisplaySha1InListView = FALSE;
 	StringCchCopy(pprogram_options->szCRCStringDelims, MAX_PATH_EX, TEXT("{[(_)]}") );
 	pprogram_options->bAllowCrcAnywhere = false;
+    pprogram_options->bIncludeFileComments = false;
 	return;
 }
 

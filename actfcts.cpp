@@ -719,6 +719,7 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	}
 
 	if(finalList->size()==1) {
+        WriteFileComment(hFile, finalList->front(), finalList->front()->szFilenameShort - finalList->front()->szFilename);
 		switch(uiMode) {
 			case MODE_MD5:
 				dwResult = WriteMd5Line(hFile, finalList->front()->szFilenameShort, finalList->front()->abMd5Result);
@@ -736,6 +737,17 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	}
 
 	uiSameCharCount = FindCommonPrefix(finalList);
+
+    if(g_program_options.bIncludeFileComments) {
+        for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
+            dwResult = WriteFileComment(hFile, (*it), uiSameCharCount);
+
+		    if(dwResult != NOERROR){
+			    CloseHandle(hFile);
+			    return dwResult;
+		    }
+	    }
+    }
 
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 		switch(uiMode) {

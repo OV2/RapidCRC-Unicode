@@ -58,31 +58,22 @@ Notes:
 - is also used to validate the string as a legal, openable file (f.e. if
 szFilename is some blabla GetLastError() will return 2 => file not found)
 *****************************************************************************/
-DWORD GetFileSizeQW(CONST TCHAR * szFilename, QWORD * qwSize)
+VOID SetFileinfoAttributes(FILEINFO *pfileInfo)
 {
-	DWORD dwErrorCode;
-	HANDLE hFile;
-	DWORD dwLo = 0, dwHi = 0;
+	BOOL bResult;
+	WIN32_FILE_ATTRIBUTE_DATA fileAttributeData;
 
-	hFile = CreateFile(szFilename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0 , 0);
-	if(hFile == INVALID_HANDLE_VALUE)
-		return GetLastError();
+    ZeroMemory(&fileAttributeData, sizeof(WIN32_FILE_ATTRIBUTE_DATA));
+    bResult = GetFileAttributesEx(pfileInfo->szFilename, GetFileExInfoStandard, &fileAttributeData);
+    if(!bResult) {
+        pfileInfo->dwError = GetLastError();
+        return;
+    }
 
-	dwLo = GetFileSize(hFile, &dwHi);
-	dwErrorCode = GetLastError();
+    pfileInfo->qwFilesize = MAKEQWORD(fileAttributeData.nFileSizeHigh, fileAttributeData.nFileSizeLow);
+    pfileInfo->ftModificationTime = fileAttributeData.ftLastWriteTime;
 
-	CloseHandle(hFile);
-
-	if(dwLo == INVALID_FILE_SIZE){
-		if(dwErrorCode != NOERROR){
-			(*qwSize) = 0;
-			return dwErrorCode;
-		}
-	}
-
-	(*qwSize) = MAKEQWORD(dwHi, dwLo);
-
-	return NO_ERROR;
+	return;
 }
 
 /*****************************************************************************
@@ -604,9 +595,10 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
 		(*it).szFilenameShort = (*it).szFilename + stString;
 		if(!IsApplDefError((*it).dwError)){
-			(*it).dwError = GetFileSizeQW((*it).szFilename, &((*it).qwFilesize));
+			SetFileinfoAttributes(&(*it));
 			if ((*it).dwError == NO_ERROR){
 				fileList->qwFilesizeSum += (*it).qwFilesize;
+
 				if(fileList->uiRapidCrcMode == MODE_NORMAL)
 					if(GetCrcFromFilename((*it).szFilenameShort, & (*it).dwCrc32Found))
 						(*it).dwCrcFound = CRC_FOUND_FILENAME;
@@ -698,7 +690,7 @@ Notes:
 UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
 {
 	list<FILEINFO*>::iterator itFirst;
-	UINT countSameChars=MAXUINT;;
+	size_t countSameChars=MAXUINT;;
 	TCHAR *firstBasePathPointer;
 	bool sameBaseDir = true;
 
@@ -720,7 +712,7 @@ UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
 	}
 
 	if(sameBaseDir && *firstBasePathPointer != TEXT('\0')) {
-		StringCchLength(firstBasePathPointer,MAX_PATH_EX,(size_t *)&countSameChars);
+		StringCchLength(firstBasePathPointer,MAX_PATH_EX,&countSameChars);
 		countSameChars++;
 	}
 
