@@ -75,8 +75,8 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 
 	// This is(should be) the ONLY place where a persistent change of the current directory is done
 	// (for GetFullPathName())
-	if(!SetCurrentDirectory(fileList->g_szBasePath))
-		return FALSE;
+	//if(!SetCurrentDirectory(fileList->g_szBasePath))
+	//	return FALSE;
 
 	// set sfv mode
 	fileList->uiRapidCrcMode = MODE_SFV;
@@ -156,6 +156,7 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 				}
 
 				//GetFullPathName(szLine, MAX_PATH_EX, fileinfoTmp.szFilename, NULL);
+                StringCchPrintf(fileinfoTmp.szFilename,MAX_PATH_EX,TEXT("%s%s"),fileList->g_szBasePath, szLine);
 
 				fileList->fInfos.push_back(fileinfoTmp);
 			}
@@ -701,8 +702,8 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 
 	// This is(should be) the ONLY place where a persistent change of the current directory is done
 	// (for GetFullPathName())
-	if(!SetCurrentDirectory(fileList->g_szBasePath))
-		return FALSE;
+	/*if(!SetCurrentDirectory(fileList->g_szBasePath))
+		return FALSE;*/
 
 	// set sha1 mode
 	fileList->uiRapidCrcMode = MODE_SHA1;
@@ -780,6 +781,7 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 					uiIndex++;
 
 				//GetFullPathName(szLine + uiIndex, MAX_PATH_EX, fileinfoTmp.szFilename, NULL);
+                StringCchPrintf(fileinfoTmp.szFilename,MAX_PATH_EX,TEXT("%s%s"),fileList->g_szBasePath, szLine + uiIndex);
 
 				fileList->fInfos.push_back(fileinfoTmp);
 			}
