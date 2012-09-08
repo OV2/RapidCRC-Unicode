@@ -304,7 +304,7 @@ typedef struct{
 
 typedef struct{
 	DWORD			dwVersion;
-	TCHAR			szFilenamePattern[MAX_PATH_EX];
+	TCHAR			szFilenamePattern[MAX_PATH];
 	BOOL			bDisplayCrcInListView;
 	BOOL			bDisplayEd2kInListView;
 	BOOL			bSortList;
@@ -320,13 +320,13 @@ typedef struct{
 	BOOL			bCalcEd2kPerDefault;
 	UINT			uiCreateFileModeSfv;
 	UINT			uiCreateFileModeMd5;
-	TCHAR			szFilenameSfv[MAX_PATH_EX];
-	TCHAR			szFilenameMd5[MAX_PATH_EX];
+	TCHAR			szFilenameSfv[MAX_PATH];
+	TCHAR			szFilenameMd5[MAX_PATH];
 	BOOL			bCreateUnixStyle;
 	//RCR Unicode specific
 	BOOL			bCreateUnicodeFiles;
 	BOOL			bAutoScrollListView;
-	TCHAR			szExcludeString[MAX_PATH_EX];
+	TCHAR			szExcludeString[MAX_PATH];
     UNICODE_TYPE    iUnicodeSaveType;
 	UINT			uiWndLeft;
 	UINT			uiWndTop;
@@ -334,7 +334,7 @@ typedef struct{
 	BOOL			bDefaultOpenUTF8;
 	BOOL			bCalcSha1PerDefault;
 	BOOL			bDisplaySha1InListView;
-	TCHAR			szCRCStringDelims[MAX_PATH_EX];
+	TCHAR			szCRCStringDelims[MAX_PATH];
 	BOOL			bAllowCrcAnywhere;
 	UINT			uiCreateFileModeSha1;
 	TCHAR			szFilenameSha1[MAX_PATH_EX];
