@@ -811,6 +811,8 @@ Notes:
 __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLISTVIEW * pnmlistview, DWORD * pdwSortStatus)
 {
 	int crcNum=0, md5Num=0, ed2kNum=0, sha1Num=0;
+    HWND hwndHeader;
+    HDITEM hditem;
 	crcNum=(g_program_options.bDisplayCrcInListView)?1:0;
 	md5Num=(g_program_options.bDisplayMd5InListView)?1:0;
 	ed2kNum=(g_program_options.bDisplayEd2kInListView)?1:0;
@@ -867,6 +869,19 @@ __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLIS
 		SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS ,
 			(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortInfo );
 	}
+
+    hwndHeader = ListView_GetHeader(arrHwnd[ID_LISTVIEW]);
+    ZeroMemory(&hditem,sizeof(HDITEM));
+    hditem.mask = HDI_FORMAT;
+    hditem.fmt = ((*pdwSortStatus) & SORT_FLAG_ASCENDING ? HDF_SORTUP : HDF_SORTDOWN) | HDF_STRING;
+    Header_SetItem(hwndHeader,pnmlistview->iSubItem,&hditem);
+
+    UINT columnCount = Header_GetItemCount(hwndHeader);
+    hditem.fmt = HDF_STRING;
+    for(UINT i=0;i<columnCount;i++) {
+        if(i==pnmlistview->iSubItem) continue;
+        Header_SetItem(hwndHeader,i,&hditem);
+    }
 
 	return;
 }
