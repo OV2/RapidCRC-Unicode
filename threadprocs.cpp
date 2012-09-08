@@ -222,126 +222,127 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			if ( (curFileInfo.dwError == NO_ERROR) /*&& (curFileInfo.qwFilesize != 0)*/ && (bCalculateCrc || bCalculateMd5 || bCalculateEd2k || bCalculateSha1))
 			{
 
-				SetWindowText(arrHwnd[ID_EDIT_STATUS], curFileInfo.szFilename + 4);
+				//SetWindowText(arrHwnd[ID_EDIT_STATUS], curFileInfo.szFilename + 4);
+                DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 
 				QueryPerformanceCounter((LARGE_INTEGER*) &qwStart);
 				hFile = CreateFile(curFileInfo.szFilename,
 						GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN , 0);
 				if(hFile == INVALID_HANDLE_VALUE){
 					curFileInfo.dwError = GetLastError();
-					continue;
-				}
+                } else {
 
-				bFileDone = FALSE;
+				    bFileDone = FALSE;
 
-				if(bCalculateCrc) {
-					ResetEvent(hEvtThreadCrcGo);
-					ResetEvent(hEvtThreadCrcReady);
-					crcCalcParams.result = &curFileInfo.dwCrc32Result;
-					hThreadCrc = CreateThread(NULL,0,ThreadProc_CrcCalc,&crcCalcParams,0,NULL);
-					if(hThreadCrc == NULL) {
-						ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-						ExitProcess(1);
-					}
-				}
-				if(bCalculateMd5) {
-					ResetEvent(hEvtThreadMd5Go);
-					ResetEvent(hEvtThreadMd5Ready);
-					md5CalcParams.result = &curFileInfo.abMd5Result;
-					hThreadMd5 = CreateThread(NULL,0,ThreadProc_Md5Calc,&md5CalcParams,0,NULL);
-					if(hThreadMd5 == NULL) {
-						ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-						ExitProcess(1);
-					}
-				}
-				if(bCalculateSha1) {
-					ResetEvent(hEvtThreadSha1Go);
-					ResetEvent(hEvtThreadSha1Ready);
-					sha1CalcParams.result = &curFileInfo.abSha1Result;
-					hThreadSha1 = CreateThread(NULL,0,ThreadProc_Sha1Calc,&sha1CalcParams,0,NULL);
-					if(hThreadSha1 == NULL) {
-						ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-						ExitProcess(1);
-					}
-				}
-				if(bCalculateEd2k) {
-					ResetEvent(hEvtThreadEd2kGo);
-					ResetEvent(hEvtThreadEd2kReady);
-					ed2kCalcParams.result = &curFileInfo.abEd2kResult;
-					hThreadEd2k = CreateThread(NULL,0,ThreadProc_Ed2kCalc,&ed2kCalcParams,0,NULL);
-					if(hThreadEd2k == NULL) {
-						ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-						ExitProcess(1);
-					}
-				}
+				    if(bCalculateCrc) {
+					    ResetEvent(hEvtThreadCrcGo);
+					    ResetEvent(hEvtThreadCrcReady);
+					    crcCalcParams.result = &curFileInfo.dwCrc32Result;
+					    hThreadCrc = CreateThread(NULL,0,ThreadProc_CrcCalc,&crcCalcParams,0,NULL);
+					    if(hThreadCrc == NULL) {
+						    ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+						    ExitProcess(1);
+					    }
+				    }
+				    if(bCalculateMd5) {
+					    ResetEvent(hEvtThreadMd5Go);
+					    ResetEvent(hEvtThreadMd5Ready);
+					    md5CalcParams.result = &curFileInfo.abMd5Result;
+					    hThreadMd5 = CreateThread(NULL,0,ThreadProc_Md5Calc,&md5CalcParams,0,NULL);
+					    if(hThreadMd5 == NULL) {
+						    ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+						    ExitProcess(1);
+					    }
+				    }
+				    if(bCalculateSha1) {
+					    ResetEvent(hEvtThreadSha1Go);
+					    ResetEvent(hEvtThreadSha1Ready);
+					    sha1CalcParams.result = &curFileInfo.abSha1Result;
+					    hThreadSha1 = CreateThread(NULL,0,ThreadProc_Sha1Calc,&sha1CalcParams,0,NULL);
+					    if(hThreadSha1 == NULL) {
+						    ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+						    ExitProcess(1);
+					    }
+				    }
+				    if(bCalculateEd2k) {
+					    ResetEvent(hEvtThreadEd2kGo);
+					    ResetEvent(hEvtThreadEd2kReady);
+					    ed2kCalcParams.result = &curFileInfo.abEd2kResult;
+					    hThreadEd2k = CreateThread(NULL,0,ThreadProc_Ed2kCalc,&ed2kCalcParams,0,NULL);
+					    if(hThreadEd2k == NULL) {
+						    ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+						    ExitProcess(1);
+					    }
+				    }
 
-				ZeroMemory(&olp,sizeof(olp));
-				olp.hEvent = hEvtReadDone;
-				olp.Offset = 0;
-				olp.OffsetHigh = 0;
-				bSuccess = ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, dwBytesReadRb, &olp);
-				if(!bSuccess && (GetLastError()==ERROR_IO_PENDING))
-					bAsync = TRUE;
-				else
-					bAsync = FALSE;
+				    ZeroMemory(&olp,sizeof(olp));
+				    olp.hEvent = hEvtReadDone;
+				    olp.Offset = 0;
+				    olp.OffsetHigh = 0;
+				    bSuccess = ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, dwBytesReadRb, &olp);
+				    if(!bSuccess && (GetLastError()==ERROR_IO_PENDING))
+					    bAsync = TRUE;
+				    else
+					    bAsync = FALSE;
 
-				do {
-					if(bAsync)
-						bSuccess = GetOverlappedResult(hFile,&olp,dwBytesReadRb,TRUE);
-					if(!bSuccess && (GetLastError() != ERROR_HANDLE_EOF)) {
-						curFileInfo.dwError = GetLastError();
-						bFileDone = TRUE;
-					}
-					pthread_params_calc->qwBytesReadCurFile  += *dwBytesReadRb; //for progress bar
-					pthread_params_calc->qwBytesReadAllFiles += *dwBytesReadRb;
+				    do {
+					    if(bAsync)
+						    bSuccess = GetOverlappedResult(hFile,&olp,dwBytesReadRb,TRUE);
+					    if(!bSuccess && (GetLastError() != ERROR_HANDLE_EOF)) {
+						    curFileInfo.dwError = GetLastError();
+						    bFileDone = TRUE;
+					    }
+					    pthread_params_calc->qwBytesReadCurFile  += *dwBytesReadRb; //for progress bar
+					    pthread_params_calc->qwBytesReadAllFiles += *dwBytesReadRb;
 
-					olp.Offset = pthread_params_calc->qwBytesReadCurFile & 0xffffffff;
-					olp.OffsetHigh = (pthread_params_calc->qwBytesReadCurFile >> 32) & 0xffffffff;
-					
-					WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
-					SWAPBUFFERS();
-					bSuccess = ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, dwBytesReadRb, &olp);
-					if(!bSuccess && (GetLastError()==ERROR_IO_PENDING))
-						bAsync = TRUE;
-					else
-						bAsync = FALSE;
+					    olp.Offset = pthread_params_calc->qwBytesReadCurFile & 0xffffffff;
+					    olp.OffsetHigh = (pthread_params_calc->qwBytesReadCurFile >> 32) & 0xffffffff;
+    					
+					    WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
+					    SWAPBUFFERS();
+					    bSuccess = ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, dwBytesReadRb, &olp);
+					    if(!bSuccess && (GetLastError()==ERROR_IO_PENDING))
+						    bAsync = TRUE;
+					    else
+						    bAsync = FALSE;
 
-					if(*dwBytesReadCb<MAX_BUFFER_SIZE_CALC || pthread_params_calc->signalExit)
-						bFileDone=TRUE;
+					    if(*dwBytesReadCb<MAX_BUFFER_SIZE_CALC || pthread_params_calc->signalExit)
+						    bFileDone=TRUE;
 
-					if(bCalculateCrc)
-						SetEvent(hEvtThreadCrcGo);
+					    if(bCalculateCrc)
+						    SetEvent(hEvtThreadCrcGo);
 
-					if(bCalculateMd5)
-						SetEvent(hEvtThreadMd5Go);
+					    if(bCalculateMd5)
+						    SetEvent(hEvtThreadMd5Go);
 
-					if(bCalculateSha1)
-						SetEvent(hEvtThreadSha1Go);
-					
-					if(bCalculateEd2k)
-						SetEvent(hEvtThreadEd2kGo);
+					    if(bCalculateSha1)
+						    SetEvent(hEvtThreadSha1Go);
+    					
+					    if(bCalculateEd2k)
+						    SetEvent(hEvtThreadEd2kGo);
 
-				} while(!bFileDone);
+				    } while(!bFileDone);
 
-				WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
+				    WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
 
-				if(hFile != NULL)
-					CloseHandle(hFile);
+				    if(hFile != NULL)
+					    CloseHandle(hFile);
 
-				if(bCalculateMd5)
-					CloseHandle(hThreadMd5);
-				if(bCalculateSha1)
-					CloseHandle(hThreadSha1);
-				if(bCalculateEd2k)
-					CloseHandle(hThreadEd2k);
-				if(bCalculateCrc)
-					CloseHandle(hThreadCrc);
+				    if(bCalculateMd5)
+					    CloseHandle(hThreadMd5);
+				    if(bCalculateSha1)
+					    CloseHandle(hThreadSha1);
+				    if(bCalculateEd2k)
+					    CloseHandle(hThreadEd2k);
+				    if(bCalculateCrc)
+					    CloseHandle(hThreadCrc);
 
-				if(pthread_params_calc->signalExit)
-					break;
+				    if(pthread_params_calc->signalExit)
+					    break;
 
-				QueryPerformanceCounter((LARGE_INTEGER*) &qwStop);
-				curFileInfo.fSeconds = (float)((qwStop - qwStart) / (float)wqFreq);
+				    QueryPerformanceCounter((LARGE_INTEGER*) &qwStop);
+				    curFileInfo.fSeconds = (float)((qwStop - qwStart) / (float)wqFreq);
+                }
 			}
 			/*else if(curFileInfo.qwFilesize == 0)	// this case is to have legal values in fSeconds
 				curFileInfo.fSeconds = 0;			// if the file has 0 bytes*/
@@ -351,6 +352,11 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
             if(!g_pstatus.bHideVerified || InfoToIntValue(&curFileInfo)!=1) {
 			    InsertItemIntoList(arrHwnd[ID_LISTVIEW], &curFileInfo,fileList);
             }
+
+            SyncQueue.getDoneList();
+            SyncQueue.adjustErrorCounters(&curFileInfo,1);
+            SyncQueue.releaseDoneList();
+
 			ShowResult(arrHwnd, &curFileInfo, pshowresult_params);
 		}
 

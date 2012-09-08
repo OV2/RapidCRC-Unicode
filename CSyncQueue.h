@@ -29,6 +29,9 @@ public:
 												//increases automatically as new files are added to the workQueue
 												//does not decrease as files are removed from the workQueue
 												//this is used to enable the progress bar display
+
+    volatile DWORD dwCountOK, dwCountNotOK, dwCountNoCrcFound, dwCountNotFound, dwCountErrors, dwCountTotal, dwCountDone;
+
 	CSyncQueue();
 	~CSyncQueue();
 
@@ -45,6 +48,7 @@ public:
 	void releaseDoneList();						//releases the lock on doneList caused by getDoneList
 	void setFileAccForCalc();					//sets qwNewFileAcc to the current value of qwQueueFilesizeSum
 												//done before a new calculation thread is started
+    void adjustErrorCounters(FILEINFO *pFileinfo, DWORD amount);
 };
 
 extern CSyncQueue SyncQueue;

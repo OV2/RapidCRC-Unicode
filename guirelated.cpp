@@ -399,8 +399,8 @@ public:
 };
 
 /*****************************************************************************
-void RemoveItems(CONST HWND hListView,list<FILEINFO*> *finalList)
-	hListView	: (IN) HWND of the listview
+void RemoveItems(CONST HWND arrHwnd[ID_NUM_WINDOWS],list<FILEINFO*> *finalList)
+	arrHwnd	    : (IN) array with window handles
 	finalList	: (IN) list of FILEINFO pointers whose FILEINFOs should be removed
 					   from the listview and from their jobs
 
@@ -408,7 +408,7 @@ Notes:
 	This function removes the currently selected items from the listview and their
 	corresponding FILEINFOs in the finalList
 *****************************************************************************/
-void RemoveItems(CONST HWND hListView,list<FILEINFO*> *finalList)
+void RemoveItems(CONST HWND arrHwnd[ID_NUM_WINDOWS],list<FILEINFO*> *finalList)
 {
 	FILEINFO *pFileinfo;
 	lFILEINFO *pList;
@@ -417,26 +417,29 @@ void RemoveItems(CONST HWND hListView,list<FILEINFO*> *finalList)
 
 	lvitem.mask = LVIF_STATE;
 	lvitem.stateMask = LVIS_SELECTED;
-	for(int i=ListView_GetItemCount(hListView)-1;i>=0;i--) {
+	for(int i=ListView_GetItemCount(arrHwnd[ID_LISTVIEW])-1;i>=0;i--) {
 		lvitem.iItem = i;
-		ListView_GetItem(hListView,&lvitem);
+		ListView_GetItem(arrHwnd[ID_LISTVIEW],&lvitem);
 		if(lvitem.state & LVIS_SELECTED)
-			ListView_DeleteItem(hListView,i);
+			ListView_DeleteItem(arrHwnd[ID_LISTVIEW],i);
 	}
 
 	doneList = SyncQueue.getDoneList();
+    SyncQueue.dwCountTotal -= finalList->size();
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 		pFileinfo = (*it);
 		pList = pFileinfo->parentList;
+        SyncQueue.adjustErrorCounters(pFileinfo,-1);
 		pList->fInfos.remove_if(ComparePtr(pFileinfo));
 		if(pList->fInfos.empty()) {
 			doneList->remove(pList);
 			if(g_program_options.bEnableQueue && g_pstatus.bHaveComCtrlv6)
-				ListView_RemoveGroup(hListView,pList->iGroupId);
+				ListView_RemoveGroup(arrHwnd[ID_LISTVIEW],pList->iGroupId);
 			delete pList;
 		}
 	}
 	SyncQueue.releaseDoneList();
+    DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 }
 
 /*****************************************************************************
@@ -537,7 +540,7 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 									break;
 		case IDM_CLEAR_LIST:		ClearAllItems(arrHwnd,pshowresult_params);
 									break;
-		case IDM_REMOVE_ITEMS:		RemoveItems(arrHwnd[ID_LISTVIEW],&finalList);
+		case IDM_REMOVE_ITEMS:		RemoveItems(arrHwnd,&finalList);
 									break;
         case IDM_HIDE_VERIFIED:     if(g_pstatus.bHideVerified)
                                         RestoreVerifiedItems(arrHwnd);
@@ -1130,58 +1133,60 @@ VOID DisplayStatusOverview(CONST HWND hEditStatus)
 {
 	TCHAR szLine[MAX_LINE_LENGTH];
 	TCHAR szLineTmp[MAX_LINE_LENGTH];
-	lFILEINFO *fileList;
+	/*lFILEINFO *fileList;
 	FILEINFO *pFileinfo;
-	list<lFILEINFO*> *doneList;
-	DWORD dwCountOK, dwCountNotOK, dwCountNoCrcFound, dwCountNotFound, dwCountErrors;
+	list<lFILEINFO*> *doneList;*/
+	//DWORD dwCountOK, dwCountNotOK, dwCountNoCrcFound, dwCountNotFound, dwCountErrors;
 	size_t stLength;
 
-	dwCountOK = dwCountNotOK = dwCountNoCrcFound = dwCountNotFound = dwCountErrors = 0;
-	//pFileinfo = g_fileinfo_list_first_item;
-	doneList = SyncQueue.getDoneList();
-	//while(pFileinfo != NULL){
-	for(list<lFILEINFO*>::iterator it=doneList->begin();it!=doneList->end();it++) {
-		fileList = *it;
-		for(list<FILEINFO>::iterator fInfoIt=fileList->fInfos.begin();fInfoIt!=fileList->fInfos.end();fInfoIt++) {
-			pFileinfo = &(*fInfoIt);
-			switch(InfoToIntValue(pFileinfo)) {
-				case 1: dwCountOK++;
-						break;
-				case 2: dwCountNotOK++;
-						break;
-				case 3: dwCountNoCrcFound++;
-						break;
-				case 4: if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND)
-							dwCountNotFound++;
-						else
-							dwCountErrors++;
-						break;
-				default: dwCountNoCrcFound++;
-			}
-		}
-	}
+	//dwCountOK = dwCountNotOK = dwCountNoCrcFound = dwCountNotFound = dwCountErrors = 0;
+	////pFileinfo = g_fileinfo_list_first_item;
+	//doneList = SyncQueue.getDoneList();
+	////while(pFileinfo != NULL){
+	//for(list<lFILEINFO*>::iterator it=doneList->begin();it!=doneList->end();it++) {
+	//	fileList = *it;
+	//	for(list<FILEINFO>::iterator fInfoIt=fileList->fInfos.begin();fInfoIt!=fileList->fInfos.end();fInfoIt++) {
+	//		pFileinfo = &(*fInfoIt);
+	//		switch(InfoToIntValue(pFileinfo)) {
+	//			case 1: dwCountOK++;
+	//					break;
+	//			case 2: dwCountNotOK++;
+	//					break;
+	//			case 3: dwCountNoCrcFound++;
+	//					break;
+	//			case 4: if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND)
+	//						dwCountNotFound++;
+	//					else
+	//						dwCountErrors++;
+	//					break;
+	//			default: dwCountNoCrcFound++;
+	//		}
+	//	}
+	//}
 
-	SyncQueue.releaseDoneList();
+	//SyncQueue.releaseDoneList();
 
 	StringCchCopy(szLine, MAX_LINE_LENGTH, TEXT(""));
-	if(dwCountOK > 0){
-		StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux file OK,"), dwCountOK);
+    StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux/%ux done,"), SyncQueue.dwCountDone, SyncQueue.dwCountTotal);
+	StringCchCat(szLine, MAX_LINE_LENGTH, szLineTmp);
+	if(SyncQueue.dwCountOK > 0){
+        StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux file OK,"), SyncQueue.dwCountOK);
 		StringCchCat(szLine, MAX_LINE_LENGTH, szLineTmp);
 	}
-	if(dwCountNotOK > 0){
-		StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux file corrupt,"), dwCountNotOK);
+	if(SyncQueue.dwCountNotOK > 0){
+		StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux file corrupt,"), SyncQueue.dwCountNotOK);
 		StringCchCat(szLine, MAX_LINE_LENGTH, szLineTmp);
 	}
-	if(dwCountNoCrcFound > 0){
-		StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux no CRC found in filename,"), dwCountNoCrcFound);
+	if(SyncQueue.dwCountNoCrcFound > 0){
+		StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux no CRC found,"), SyncQueue.dwCountNoCrcFound);
 		StringCchCat(szLine, MAX_LINE_LENGTH, szLineTmp);
 	}
-	if(dwCountNotFound > 0){
-		StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux not found,"), dwCountNotFound);
+	if(SyncQueue.dwCountNotFound > 0){
+		StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux not found,"), SyncQueue.dwCountNotFound);
 		StringCchCat(szLine, MAX_LINE_LENGTH, szLineTmp);
 	}
-	if(dwCountErrors > 0){
-		StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux with errors,"), dwCountErrors);
+	if(SyncQueue.dwCountErrors > 0){
+		StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux with errors,"), SyncQueue.dwCountErrors);
 		StringCchCat(szLine, MAX_LINE_LENGTH, szLineTmp);
 	}
 
@@ -1336,5 +1341,5 @@ VOID ClearAllItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshow
 	if(g_pstatus.bHaveComCtrlv6)
 		ListView_RemoveAllGroups(arrHwnd[ID_LISTVIEW]);
 	ShowResult(arrHwnd,NULL,pshowresult_params);
-	SetWindowText(arrHwnd[ID_EDIT_STATUS],TEXT(""));
+	DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 }
