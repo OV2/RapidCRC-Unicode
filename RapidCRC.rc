@@ -48,8 +48,8 @@ BEGIN
     CONTROL         "Sort filenames on load",IDC_CHECK_SORT_LIST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,87,87,10
     CONTROL         "Auto-Scroll ListView",IDC_CHECK_AUTO_SCROLL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,98,78,10
     CONTROL         "Enable Job Queueing",IDC_ENABLE_QUEUE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,109,83,10
-    CONTROL         "Default to UTF-8 when opening",IDC_DEFAULT_OPEN_UTF8,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,120,116,10
+    CONTROL         "Default to codepage when opening:",IDC_USE_DEFAULT_CP,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,120,125,10
     GROUPBOX        "File Creation",IDC_STATIC,4,135,216,54
     CONTROL         "Create WinSFV-compatible SFV files",IDC_CHECK_WINSFV_COMP,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,144,129,10
@@ -59,7 +59,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,164,117,11
     CONTROL         "Create Unicode Files",IDC_CHECK_CREATE_UNICODE_FILES,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,176,106,8
-    COMBOBOX        IDC_UNICODE_TYPE,131,175,81,54,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_UNICODE_TYPE,140,175,74,54,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     GROUPBOX        "Exclude the following extensions",IDC_STATIC,223,2,216,39
     LTEXT           "Separate extension with "";""",IDC_STATIC,227,12,89,8
     EDITTEXT        IDC_EDIT_EXCLUDE_LIST,227,23,203,14,ES_AUTOHSCROLL
@@ -75,6 +75,7 @@ BEGIN
     LTEXT           "C:\\MyFile.txt =>",IDC_STATIC,228,150,58,8
     LTEXT           "",IDC_STATIC_FILENAME_EXAMPLE,286,150,147,8
     PUSHBUTTON      "Defaults",IDC_BTN_DEFAULT,224,174,50,14
+    COMBOBOX        IDC_DEFAULT_CP,140,118,74,54,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 END
 
 IDD_DLG_FILE_CREATION DIALOGEX 0, 0, 251, 121

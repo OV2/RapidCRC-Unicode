@@ -40,6 +40,7 @@
 #define IDC_RADIO_ONE_PER_FILE          1033
 #define IDC_ENABLE_QUEUE2               1033
 #define IDC_DEFAULT_OPEN_UTF8           1033
+#define IDC_USE_DEFAULT_CP              1033
 #define IDC_RADIO_ONE_PER_DIR           1034
 #define IDC_CHECK_SHA1_DEFAULT          1034
 #define IDC_RADIO_ONE_FILE              1035
@@ -57,6 +58,7 @@
 #define IDC_EDIT_FILENAME_CHECKSUM      1040
 #define IDC_CHECK_CREATE_UNICODE_FILES  1042
 #define IDC_UNICODE_TYPE                1043
+#define IDC_DEFAULT_CP                  1044
 
 // Next default values for new objects
 // 

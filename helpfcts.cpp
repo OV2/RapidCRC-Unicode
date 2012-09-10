@@ -536,12 +536,13 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	pprogram_options->uiWndLeft = 10;
 	pprogram_options->uiWndTop = 10;
 	pprogram_options->bEnableQueue = FALSE;
-	pprogram_options->bDefaultOpenUTF8 = FALSE;
+	pprogram_options->bUseDefaultCP = FALSE;
 	pprogram_options->bCalcSha1PerDefault= FALSE;
 	pprogram_options->bDisplaySha1InListView = FALSE;
 	StringCchCopy(pprogram_options->szCRCStringDelims, MAX_PATH_EX, TEXT("{[(_)]}") );
 	pprogram_options->bAllowCrcAnywhere = false;
     pprogram_options->bIncludeFileComments = false;
+    pprogram_options->uiDefaultCP = CP_UTF8;
 	return;
 }
 

@@ -332,7 +332,7 @@ typedef struct{
 	UINT			uiWndLeft;
 	UINT			uiWndTop;
 	BOOL			bEnableQueue;
-	BOOL			bDefaultOpenUTF8;
+	BOOL			bUseDefaultCP;
 	BOOL			bCalcSha1PerDefault;
 	BOOL			bDisplaySha1InListView;
 	TCHAR			szCRCStringDelims[MAX_PATH];
@@ -340,6 +340,7 @@ typedef struct{
 	UINT			uiCreateFileModeSha1;
 	TCHAR			szFilenameSha1[MAX_PATH];
     BOOL            bIncludeFileComments;
+    UINT            uiDefaultCP;
 }PROGRAM_OPTIONS;
 
 typedef struct{

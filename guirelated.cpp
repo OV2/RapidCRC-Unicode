@@ -1229,7 +1229,8 @@ Notes:
 *****************************************************************************/
 VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST PROGRAM_OPTIONS * pprogram_options)
 {
-	TCHAR szGenFilename[MAX_PATH_EX];
+    TCHAR szGenFilename[MAX_PATH_EX];
+    HWND dlgItem;
 
 	CheckDlgButton(hDlg, IDC_CHECK_CRC_DEFAULT, pprogram_options->bCalcCrcPerDefault ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_MD5_DEFAULT, pprogram_options->bCalcMd5PerDefault ? BST_CHECKED : BST_UNCHECKED);
@@ -1243,13 +1244,22 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 	CheckDlgButton(hDlg, IDC_CHECK_CREATE_UNICODE_FILES, pprogram_options->bCreateUnicodeFiles ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_MD5_IN_LIST, pprogram_options->bDisplayMd5InListView ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_ENABLE_QUEUE, pprogram_options->bEnableQueue ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(hDlg, IDC_DEFAULT_OPEN_UTF8, pprogram_options->bDefaultOpenUTF8 ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(hDlg, IDC_USE_DEFAULT_CP, pprogram_options->bUseDefaultCP ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_SHA1_DEFAULT, pprogram_options->bCalcSha1PerDefault ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_SHA1_IN_LIST, pprogram_options->bDisplaySha1InListView ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_ALLOW_CRC_ANYWHERE, pprogram_options->bAllowCrcAnywhere ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(hDlg, IDC_CHECK_INCLUDE_COMMENTS, pprogram_options->bIncludeFileComments ? BST_CHECKED : BST_UNCHECKED);
 
-    ComboBox_SetCurSel(GetDlgItem(hDlg,IDC_UNICODE_TYPE),pprogram_options->iUnicodeSaveType);
+    dlgItem = GetDlgItem(hDlg,IDC_UNICODE_TYPE);
+    for(int i=0;i<ComboBox_GetCount(dlgItem);i++) {
+        if(ComboBox_GetItemData(dlgItem,i)==pprogram_options->iUnicodeSaveType)
+            ComboBox_SetCurSel(dlgItem,i);
+    }
+    dlgItem = GetDlgItem(hDlg,IDC_DEFAULT_CP);
+    for(int i=0;i<ComboBox_GetCount(dlgItem);i++) {
+        if(ComboBox_GetItemData(dlgItem,i)==pprogram_options->uiDefaultCP)
+            ComboBox_SetCurSel(dlgItem,i);
+    }
 	
 	GenerateNewFilename(szGenFilename, TEXT("C:\\MyFile.txt"), 0xAB01FB5D, pprogram_options->szFilenamePattern);
 	SetWindowText(GetDlgItem(hDlg, IDC_STATIC_FILENAME_EXAMPLE), szGenFilename);

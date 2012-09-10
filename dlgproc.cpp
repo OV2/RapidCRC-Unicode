@@ -374,15 +374,21 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 	static PROGRAM_OPTIONS program_options_temp;
 	TCHAR szFilenamePattern[MAX_PATH_EX];
 	size_t szLen;
+    HWND dlgItem;
 
 	switch (message)
 	{
 	case WM_INITDIALOG :
-		// copy current options to local copy
-		ComboBox_AddString(GetDlgItem(hDlg,IDC_UNICODE_TYPE),TEXT("UTF-8 with BOM"));
-        ComboBox_AddString(GetDlgItem(hDlg,IDC_UNICODE_TYPE),TEXT("UTF-16 LE"));
-        ComboBox_AddString(GetDlgItem(hDlg,IDC_UNICODE_TYPE),TEXT("UTF-8"));
+        dlgItem = GetDlgItem(hDlg,IDC_UNICODE_TYPE);
+        ComboBox_SetItemData(dlgItem,ComboBox_AddString(dlgItem,TEXT("UTF-8 with BOM")),UTF_8_BOM);
+        ComboBox_SetItemData(dlgItem,ComboBox_AddString(dlgItem,TEXT("UTF-16 LE")),UTF_16LE);
+        ComboBox_SetItemData(dlgItem,ComboBox_AddString(dlgItem,TEXT("UTF-8")),UTF_8);
 
+        dlgItem = GetDlgItem(hDlg,IDC_DEFAULT_CP);
+        ComboBox_SetItemData(dlgItem,ComboBox_AddString(dlgItem,TEXT("System Codepage")),CP_ACP);
+        ComboBox_SetItemData(dlgItem,ComboBox_AddString(dlgItem,TEXT("UTF-8")),CP_UTF8);
+
+        // copy current options to local copy
 		CopyJustProgramOptions(& g_program_options, & program_options_temp);
 
 		UpdateOptionsDialogControls(hDlg, TRUE, & program_options_temp);
@@ -481,9 +487,9 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 			break;
-		case IDC_DEFAULT_OPEN_UTF8:
+		case IDC_USE_DEFAULT_CP:
 			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bDefaultOpenUTF8 = (IsDlgButtonChecked(hDlg, IDC_DEFAULT_OPEN_UTF8) == BST_CHECKED);
+				program_options_temp.bUseDefaultCP = (IsDlgButtonChecked(hDlg, IDC_USE_DEFAULT_CP) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
@@ -555,9 +561,18 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			break;
         case IDC_UNICODE_TYPE:
             if(HIWORD(wParam) == CBN_SELCHANGE){
-                program_options_temp.iUnicodeSaveType = (UNICODE_TYPE)ComboBox_GetCurSel(GetDlgItem(hDlg, IDC_UNICODE_TYPE));
+                dlgItem = GetDlgItem(hDlg, IDC_UNICODE_TYPE);
+                program_options_temp.iUnicodeSaveType = (UNICODE_TYPE)ComboBox_GetItemData(dlgItem, ComboBox_GetCurSel(dlgItem));
                 return TRUE;
             }
+            break;
+        case IDC_DEFAULT_CP:
+            if(HIWORD(wParam) == CBN_SELCHANGE){
+                dlgItem = GetDlgItem(hDlg, IDC_DEFAULT_CP);
+                program_options_temp.uiDefaultCP = (UINT)ComboBox_GetItemData(dlgItem, ComboBox_GetCurSel(dlgItem));
+                return TRUE;
+            }
+            break;
 		}
 		break;
 	}

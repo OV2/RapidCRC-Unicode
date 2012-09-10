@@ -88,8 +88,10 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 	detectedBOM = CheckForBOM(hFile);
 	fileIsUTF16 = (detectedBOM == UTF_16LE);
 	if(!fileIsUTF16) {
-		if(detectedBOM==UTF_8_BOM || g_program_options.bDefaultOpenUTF8)
+		if(detectedBOM==UTF_8_BOM)
 			codePage = CP_UTF8;
+        else if(g_program_options.bUseDefaultCP)
+            codePage = g_program_options.uiDefaultCP;
 		else
 			codePage = DetermineFileCP(hFile);
 	}
@@ -461,8 +463,10 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 	detectedBOM = CheckForBOM(hFile);
 	fileIsUTF16 = (detectedBOM == UTF_16LE);
 	if(!fileIsUTF16) {
-		if(detectedBOM==UTF_8_BOM || g_program_options.bDefaultOpenUTF8)
-			codePage = CP_UTF8;
+		if(detectedBOM==UTF_8_BOM)
+            codePage = CP_UTF8;
+        else if(g_program_options.bUseDefaultCP)
+            codePage = g_program_options.uiDefaultCP;
 		else
 			codePage = DetermineFileCP(hFile);
 	}
@@ -699,8 +703,10 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 	detectedBOM = CheckForBOM(hFile);
 	fileIsUTF16 = (detectedBOM == UTF_16LE);
 	if(!fileIsUTF16) {
-		if(detectedBOM==UTF_8_BOM || g_program_options.bDefaultOpenUTF8)
-			codePage = CP_UTF8;
+		if(detectedBOM==UTF_8_BOM)
+            codePage = CP_UTF8;
+        else if(g_program_options.bUseDefaultCP)
+			codePage = g_program_options.uiDefaultCP;
 		else
 			codePage = DetermineFileCP(hFile);
 	}
