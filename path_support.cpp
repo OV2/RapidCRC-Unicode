@@ -629,15 +629,18 @@ Notes:
 VOID MakePathsAbsolute(lFILEINFO *fileList)
 {
 	TCHAR szFilenameTemp[MAX_PATH_EX];
+    TCHAR *szFilenameStart;
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
-		//StringCchCopy(szFilenameTemp, MAX_PATH_EX, (*it).szFilename);
-        //StringCchCopy(szFilenameTemp, MAX_PATH_EX, TEXT("\\\\?\\"));
-        //StringCchCat(szFilenameTemp, MAX_PATH_EX, (*it).szFilename);
 		ReplaceChar((*it).szFilename, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
 		GetFullPathName((*it).szFilename, MAX_PATH_EX, szFilenameTemp, NULL);
+        szFilenameStart = szFilenameTemp;
         StringCchCopy((*it).szFilename, MAX_PATH_EX, TEXT("\\\\?\\"));
-        StringCchCat((*it).szFilename, MAX_PATH_EX, szFilenameTemp);
+        if(lstrlen(szFilenameTemp) && szFilenameTemp[0]== TEXT('\\') && szFilenameTemp[1]== TEXT('\\')) {
+            szFilenameStart += 2;
+            StringCchCat((*it).szFilename, MAX_PATH_EX, TEXT("UNC\\"));
+        }
+        StringCchCat((*it).szFilename, MAX_PATH_EX, szFilenameStart);
         GetLongPathName((*it).szFilename, (*it).szFilename, MAX_PATH_EX);
 	}
 
