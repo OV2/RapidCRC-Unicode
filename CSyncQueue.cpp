@@ -132,7 +132,7 @@ void CSyncQueue::adjustErrorCounters(FILEINFO *pFileinfo, DWORD amount)
 			    break;
 	    case 3: dwCountNoCrcFound += amount;
 			    break;
-	    case 4: if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND)
+        case 4: if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND || pFileinfo->dwError == ERROR_PATH_NOT_FOUND)
 				    dwCountNotFound += amount;
 			    else
 				    dwCountErrors += amount;

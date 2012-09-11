@@ -991,7 +991,7 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 			SetWindowText(arrHwnd[ID_EDIT_SHA1_VALUE], TEXT(""));
 			if(pFileinfo->dwError == APPL_ERROR_ILLEGAL_CRC)
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("The found checksum for this file was not valid"), pFileinfo->dwError);
-			else if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND)
+            else if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND || pFileinfo->dwError == ERROR_PATH_NOT_FOUND)
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("The file could not be found"), pFileinfo->dwError);
 			else
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("Error %d occured with this file"), pFileinfo->dwError);

@@ -177,7 +177,7 @@ Return Value:
 *****************************************************************************/
 UINT DetermineFileCP(CONST HANDLE hFile) {
     IMultiLanguage2 *ml2;
-    char testbuffer[TESTBUFFER_SIZE];
+    char *testbuffer = new char[TESTBUFFER_SIZE];
     DWORD dwBytesRead;
     DetectEncodingInfo deInfo;
     int scores=1;
@@ -185,6 +185,7 @@ UINT DetermineFileCP(CONST HANDLE hFile) {
 
 	ReadFile(hFile, testbuffer, TESTBUFFER_SIZE, &dwBytesRead, NULL);
 	if(dwBytesRead == 0){
+        delete [] testbuffer;
         // nothing in the file, so use current codepage
         return CP_ACP;
 	}
@@ -198,6 +199,8 @@ UINT DetermineFileCP(CONST HANDLE hFile) {
 	ml2->DetectInputCodepage(MLDETECTCP_8BIT,0,testbuffer,&bufferFillSize,&deInfo,&scores);
     ml2->Release();
     CoUninitialize();
+
+    delete [] testbuffer;
 
     return deInfo.nCodePage;
 }
