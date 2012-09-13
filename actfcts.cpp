@@ -600,7 +600,7 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 			if(lstrcmpi(szPreviousDir, szCurrentDir) != 0){
 				CloseHandle(hFile);
 				StringCchCopy(szPreviousDir, MAX_PATH_EX, szCurrentDir);
-				StringCchPrintf(szCurChecksumFilename, MAX_PATH_EX, TEXT("%s\\%s"), szCurrentDir, szChkSumFilename);
+				StringCchPrintf(szCurChecksumFilename, MAX_PATH_EX, TEXT("%s//%s"), szCurrentDir, szChkSumFilename);
 				hFile = CreateFile(szCurChecksumFilename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 				if(hFile == INVALID_HANDLE_VALUE){
 					return GetLastError();
@@ -617,6 +617,21 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 						return dwResult;
 					}
 				}
+                if(g_program_options.bIncludeFileComments) {
+                    list<FILEINFO*>::iterator commentIt = it;
+                    do
+                    {
+                        if((*commentIt)->dwError == NO_ERROR) {
+                            WriteFileComment(hFile, (*commentIt), GetFilenameWithoutPathPointer((*commentIt)->szFilenameShort) - (*commentIt)->szFilename);
+                        }
+                        commentIt++;
+                        if(commentIt == finalList->end())
+                            break;
+                        StringCchCopy(szCurrentDir, MAX_PATH_EX, (*commentIt)->szFilename);
+			            ReduceToPath(szCurrentDir);
+                    }
+                    while(lstrcmpi(szPreviousDir, szCurrentDir) == 0);
+                }
 			}
 
 			switch(uiMode) {
@@ -719,7 +734,8 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	}
 
 	if(finalList->size()==1) {
-        WriteFileComment(hFile, finalList->front(), finalList->front()->szFilenameShort - finalList->front()->szFilename);
+        if(g_program_options.bIncludeFileComments)
+            WriteFileComment(hFile, finalList->front(), finalList->front()->szFilenameShort - finalList->front()->szFilename);
 		switch(uiMode) {
 			case MODE_MD5:
 				dwResult = WriteMd5Line(hFile, finalList->front()->szFilenameShort, finalList->front()->abMd5Result);

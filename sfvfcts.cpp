@@ -390,6 +390,9 @@ DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo)
 		return GetLastError();
 #endif
 
+    if(g_program_options.bIncludeFileComments)
+        WriteFileComment(hFile, pFileinfo, GetFilenameWithoutPathPointer(pFileinfo->szFilename) - pFileinfo->szFilename);
+
 	dwResult = WriteMd5Line(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), pFileinfo->abMd5Result);
 
 	CloseHandle(hFile);
