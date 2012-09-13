@@ -600,7 +600,7 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 			if(lstrcmpi(szPreviousDir, szCurrentDir) != 0){
 				CloseHandle(hFile);
 				StringCchCopy(szPreviousDir, MAX_PATH_EX, szCurrentDir);
-				StringCchPrintf(szCurChecksumFilename, MAX_PATH_EX, TEXT("%s//%s"), szCurrentDir, szChkSumFilename);
+				StringCchPrintf(szCurChecksumFilename, MAX_PATH_EX, TEXT("%s%s"), szCurrentDir, szChkSumFilename);
 				hFile = CreateFile(szCurChecksumFilename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 				if(hFile == INVALID_HANDLE_VALUE){
 					return GetLastError();
