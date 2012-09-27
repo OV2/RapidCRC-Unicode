@@ -125,30 +125,16 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		break;
 	case WM_CTLCOLORSTATIC:
-		if(showresult_params.bCrcIsWrong){
-			if((HWND)lParam == arrHwnd[ID_EDIT_CRC_VALUE]){
-				SetTextColor((HDC)wParam, GetSysColor(COLOR_HIGHLIGHTTEXT));
-				SetBkColor((HDC)wParam, GetSysColor(COLOR_HIGHLIGHT));
+        for(int i=0;i<NUM_HASH_TYPES;i++) {
+		    if(showresult_params.bHashIsWrong[i]){
+			    if((HWND)lParam == arrHwnd[ID_EDIT_CRC_VALUE + i]){
+				    SetTextColor((HDC)wParam, GetSysColor(COLOR_HIGHLIGHTTEXT));
+				    SetBkColor((HDC)wParam, GetSysColor(COLOR_HIGHLIGHT));
 
-				return (LRESULT)GetSysColorBrush(COLOR_HIGHLIGHT);
-			}
-		}
-		if(showresult_params.bMd5IsWrong){
-			if((HWND)lParam == arrHwnd[ID_EDIT_MD5_VALUE]){
-				SetTextColor((HDC)wParam, GetSysColor(COLOR_HIGHLIGHTTEXT));
-				SetBkColor((HDC)wParam, GetSysColor(COLOR_HIGHLIGHT));
-
-				return (LRESULT)GetSysColorBrush(COLOR_HIGHLIGHT);
-			}
-		}
-		if(showresult_params.bSha1IsWrong){
-			if((HWND)lParam == arrHwnd[ID_EDIT_SHA1_VALUE]){
-				SetTextColor((HDC)wParam, GetSysColor(COLOR_HIGHLIGHTTEXT));
-				SetBkColor((HDC)wParam, GetSysColor(COLOR_HIGHLIGHT));
-
-				return (LRESULT)GetSysColorBrush(COLOR_HIGHLIGHT);
-			}
-		}
+				    return (LRESULT)GetSysColorBrush(COLOR_HIGHLIGHT);
+			    }
+		    }
+        }
 		break;
 	case WM_GETMINMAXINFO:
 		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 131;
@@ -801,13 +787,13 @@ __inline VOID ProcessTextQuery(NMLVDISPINFO * pnmlvdispinfo)
 		if(pnmlvdispinfo->item.iSubItem==0) {
 			pnmlvdispinfo->item.pszText = pFileinfo->szFilenameShort;
 		} else if(pnmlvdispinfo->item.iSubItem==sha1Num) {
-			pnmlvdispinfo->item.pszText = pFileinfo->szSha1Result;
+			pnmlvdispinfo->item.pszText = SHA1I(pFileinfo).szResult;
 		} else if(pnmlvdispinfo->item.iSubItem==ed2kNum) {
-			pnmlvdispinfo->item.pszText = pFileinfo->szEd2kResult;
+			pnmlvdispinfo->item.pszText = ED2KI(pFileinfo).szResult;
 		} else if(pnmlvdispinfo->item.iSubItem==md5Num) {
-			pnmlvdispinfo->item.pszText = pFileinfo->szMd5Result;
+			pnmlvdispinfo->item.pszText = MD5I(pFileinfo).szResult;
 		} else if(pnmlvdispinfo->item.iSubItem==crcNum) {
-			pnmlvdispinfo->item.pszText = pFileinfo->szCrcResult;
+			pnmlvdispinfo->item.pszText = CRCI(pFileinfo).szResult;
 		} else {
 			pnmlvdispinfo->item.pszText = pFileinfo->szInfo;
 		}

@@ -136,8 +136,8 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 					if(! IsLegalHexSymbol(szLine[uiStringLength-i]))
 						bCrcOK = FALSE;
 				if(bCrcOK){
-					fileinfoTmp.dwCrcFound = CRC_FOUND_SFV;
-					fileinfoTmp.dwCrc32Found = HexToDword(szLine + uiStringLength - 8, 8);
+                    fileinfoTmp.hashInfo[HASH_TYPE_CRC32].dwFound = CRC_FOUND_SFV;
+                    fileinfoTmp.hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found = HexToDword(szLine + uiStringLength - 8, 8);
 					fileinfoTmp.dwError = NOERROR;
 				}
 				else
@@ -297,7 +297,7 @@ DWORD WriteSingleLineSfvFile(CONST FILEINFO * pFileinfo)
 		}
 	}
 
-	dwResult = WriteSfvLine(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), pFileinfo->dwCrc32Result);
+	dwResult = WriteSfvLine(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), CRCI(pFileinfo).r.dwCrc32Result);
 
 	CloseHandle(hFile);
 	return dwResult;
@@ -393,7 +393,7 @@ DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo)
     if(g_program_options.bIncludeFileComments)
         WriteFileComment(hFile, pFileinfo, GetFilenameWithoutPathPointer(pFileinfo->szFilename) - pFileinfo->szFilename);
 
-	dwResult = WriteMd5Line(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), pFileinfo->abMd5Result);
+	dwResult = WriteMd5Line(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), MD5I(pFileinfo).r.abMd5Result);
 
 	CloseHandle(hFile);
 	return dwResult;
@@ -508,9 +508,9 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 					if(! IsLegalHexSymbol(szLine[uiIndex]))
 						bMd5OK = FALSE;
 				if(bMd5OK){
-					fileinfoTmp.bMd5Found = TRUE;
+                    fileinfoTmp.hashInfo[HASH_TYPE_MD5].dwFound = TRUE;
 					for(uiIndex=0; uiIndex < 16; ++uiIndex)
-						fileinfoTmp.abMd5Found[uiIndex] = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
+						fileinfoTmp.hashInfo[HASH_TYPE_MD5].f.abMd5Found[uiIndex] = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
 					fileinfoTmp.dwError = NOERROR;
 				}
 				else
@@ -633,7 +633,7 @@ DWORD WriteSingleLineSha1File(CONST FILEINFO * pFileinfo)
 		return GetLastError();
 #endif
 
-	dwResult = WriteSha1Line(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), pFileinfo->abSha1Result);
+	dwResult = WriteSha1Line(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), SHA1I(pFileinfo).r.abSha1Result);
 
 	CloseHandle(hFile);
 	return dwResult;
@@ -748,9 +748,9 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 					if(! IsLegalHexSymbol(szLine[uiIndex]))
 						bSha1OK = FALSE;
 				if(bSha1OK){
-					fileinfoTmp.bSha1Found = TRUE;
+					fileinfoTmp.hashInfo[HASH_TYPE_SHA1].dwFound = TRUE;
 					for(uiIndex=0; uiIndex < 20; ++uiIndex)
-						fileinfoTmp.abSha1Found[uiIndex] = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
+						fileinfoTmp.hashInfo[HASH_TYPE_SHA1].f.abSha1Found[uiIndex] = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
 					fileinfoTmp.dwError = NOERROR;
 				}
 				else

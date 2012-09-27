@@ -325,7 +325,7 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 				CloseClipboard();
 				return;
 			}
-			StringCchPrintf(curEd2kLink,MAX_ED2K_LINK_ENCODED_SIZE,TEXT("ed2k://|file|%s|%I64i|%s|/\r\n"),curEncodedFileName,(*it)->qwFilesize,(*it)->szEd2kResult);
+			StringCchPrintf(curEd2kLink,MAX_ED2K_LINK_ENCODED_SIZE,TEXT("ed2k://|file|%s|%I64i|%s|/\r\n"),curEncodedFileName,(*it)->qwFilesize,ED2KI(*it).szResult);
 			StringCchCat(ed2k_links,max_ed2k_str_size,curEd2kLink);
 		}
 		StringCchLength(ed2k_links,max_ed2k_str_size,&ed2kStrSize);
@@ -358,22 +358,22 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 		curpos = clip;
 		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 			switch(menuid) {
-				case IDM_COPY_CRC:	memcpy(curpos,(*it)->szCrcResult,CRC_AS_STRING_LENGHT * sizeof(TCHAR));
+				case IDM_COPY_CRC:	memcpy(curpos,CRCI(*it).szResult,CRC_AS_STRING_LENGHT * sizeof(TCHAR));
 									curpos[CRC_AS_STRING_LENGHT-1] = TEXT('\r');
 									curpos[CRC_AS_STRING_LENGHT] = TEXT('\n');
 									curpos += CRC_AS_STRING_LENGHT+1;
 									break;
-				case IDM_COPY_MD5:	memcpy(curpos,(*it)->szMd5Result,MD5_AS_STRING_LENGHT * sizeof(TCHAR));
+				case IDM_COPY_MD5:	memcpy(curpos,MD5I(*it).szResult,MD5_AS_STRING_LENGHT * sizeof(TCHAR));
 									curpos[MD5_AS_STRING_LENGHT-1] = TEXT('\r');
 									curpos[MD5_AS_STRING_LENGHT] = TEXT('\n');
 									curpos += MD5_AS_STRING_LENGHT+1;
 									break;
-				case IDM_COPY_ED2K: memcpy(curpos,(*it)->szEd2kResult,ED2K_AS_STRING_LENGHT * sizeof(TCHAR));
+				case IDM_COPY_ED2K: memcpy(curpos,ED2KI(*it).szResult,ED2K_AS_STRING_LENGHT * sizeof(TCHAR));
 									curpos[ED2K_AS_STRING_LENGHT-1] = TEXT('\r');
 									curpos[ED2K_AS_STRING_LENGHT] = TEXT('\n');
 									curpos += ED2K_AS_STRING_LENGHT+1;
 									break;
-				case IDM_COPY_SHA1: memcpy(curpos,(*it)->szSha1Result,SHA1_AS_STRING_LENGHT * sizeof(TCHAR));
+				case IDM_COPY_SHA1: memcpy(curpos,SHA1I(*it).szResult,SHA1_AS_STRING_LENGHT * sizeof(TCHAR));
 									curpos[SHA1_AS_STRING_LENGHT-1] = TEXT('\r');
 									curpos[SHA1_AS_STRING_LENGHT] = TEXT('\n');
 									curpos += SHA1_AS_STRING_LENGHT+1;
@@ -508,10 +508,10 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,uiSelected);
 
 	for(list<FILEINFO*>::iterator it=finalList.begin();it!=finalList.end();it++) {
-		if(!(*it)->parentList->bCrcCalculated) bCrc = false;
-		if(!(*it)->parentList->bMd5Calculated) bMd5 = false;
-		if(!(*it)->parentList->bSha1Calculated) bSha1 = false;
-		if(!(*it)->parentList->bEd2kCalculated) bEd2k = false;
+		if(!(*it)->parentList->bCalculated[HASH_TYPE_CRC32]) bCrc = false;
+		if(!(*it)->parentList->bCalculated[HASH_TYPE_MD5]) bMd5 = false;
+		if(!(*it)->parentList->bCalculated[HASH_TYPE_SHA1]) bSha1 = false;
+		if(!(*it)->parentList->bCalculated[HASH_TYPE_ED2K]) bEd2k = false;
 	}
 	if(finalList.empty()) {
 		bCrc = false;
@@ -964,9 +964,9 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 	DOUBLE fSize;
 	BOOL bAreHashesEqual;
 
-	pshowresult_params->bCrcIsWrong = FALSE;
-	pshowresult_params->bMd5IsWrong = FALSE;
-	pshowresult_params->bSha1IsWrong = FALSE;
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        pshowresult_params->bHashIsWrong[i] = FALSE;
+    }
 
 	if(pFileinfo == NULL){
 		SetWindowText(arrHwnd[ID_EDIT_FILENAME], TEXT(""));
@@ -1004,20 +1004,20 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 
 		}
 		else{
-			if(pFileinfo->parentList->bCrcCalculated){
-				if( (pFileinfo->dwCrcFound) && (pFileinfo->dwCrc32Result != pFileinfo->dwCrc32Found)){
+            if(pFileinfo->parentList->bCalculated[HASH_TYPE_CRC32]){
+                if( (CRCI(pFileinfo).dwFound) && (CRCI(pFileinfo).r.dwCrc32Result != CRCI(pFileinfo).f.dwCrc32Found)){
 					if(pFileinfo->parentList->uiRapidCrcMode == MODE_SFV)
-						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX  =>  %08LX found in SFV file"), pFileinfo->dwCrc32Result, pFileinfo->dwCrc32Found );
+						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX  =>  %08LX found in SFV file"), CRCI(pFileinfo).r.dwCrc32Result, CRCI(pFileinfo).f.dwCrc32Found );
 					else
-						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX  =>  %08LX found in filename/stream"), pFileinfo->dwCrc32Result, pFileinfo->dwCrc32Found );
-					pshowresult_params->bCrcIsWrong = TRUE;
+						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX  =>  %08LX found in filename/stream"), CRCI(pFileinfo).r.dwCrc32Result, CRCI(pFileinfo).f.dwCrc32Found );
+					pshowresult_params->bHashIsWrong[HASH_TYPE_CRC32] = TRUE;
 				}
 				else
-					StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX"), pFileinfo->dwCrc32Result );
+					StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08LX"), CRCI(pFileinfo).r.dwCrc32Result );
 			}
-			else if(pFileinfo->dwCrcFound)
+			else if(CRCI(pFileinfo).dwFound)
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE,
-					(pFileinfo->dwCrcFound == CRC_FOUND_FILENAME ?
+					(CRCI(pFileinfo).dwFound == CRC_FOUND_FILENAME ?
 					TEXT("CRC found in filename"):
 					TEXT("CRC found in stream"))
 				);
@@ -1025,23 +1025,23 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
 			SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE], szTemp1);
 
-			if(pFileinfo->parentList->bMd5Calculated){
-				StringCchCopy(szTemp1,MAX_RESULT_LINE,pFileinfo->szMd5Result);
-				if(pFileinfo->bMd5Found){
+			if(pFileinfo->parentList->bCalculated[HASH_TYPE_MD5]){
+				StringCchCopy(szTemp1,MAX_RESULT_LINE,MD5I(pFileinfo).szResult);
+				if(MD5I(pFileinfo).dwFound){
 					bAreHashesEqual = TRUE;
 					for(INT i = 0; i < 16; ++i)
-						if(pFileinfo->abMd5Result[i] != pFileinfo->abMd5Found[i])
+						if(MD5I(pFileinfo).r.abMd5Result[i] != MD5I(pFileinfo).f.abMd5Found[i])
 							bAreHashesEqual = FALSE;
 					if(!bAreHashesEqual){
 						StringCchPrintf(szTemp2, MAX_RESULT_LINE, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
-							pFileinfo->abMd5Found[0], pFileinfo->abMd5Found[1], pFileinfo->abMd5Found[2], pFileinfo->abMd5Found[3], 
-							pFileinfo->abMd5Found[4], pFileinfo->abMd5Found[5], pFileinfo->abMd5Found[6], pFileinfo->abMd5Found[7], 
-							pFileinfo->abMd5Found[8], pFileinfo->abMd5Found[9], pFileinfo->abMd5Found[10], pFileinfo->abMd5Found[11], 
-							pFileinfo->abMd5Found[12], pFileinfo->abMd5Found[13], pFileinfo->abMd5Found[14], pFileinfo->abMd5Found[15]);
+							MD5I(pFileinfo).f.abMd5Found[0], MD5I(pFileinfo).f.abMd5Found[1], MD5I(pFileinfo).f.abMd5Found[2], MD5I(pFileinfo).f.abMd5Found[3], 
+							MD5I(pFileinfo).f.abMd5Found[4], MD5I(pFileinfo).f.abMd5Found[5], MD5I(pFileinfo).f.abMd5Found[6], MD5I(pFileinfo).f.abMd5Found[7], 
+							MD5I(pFileinfo).f.abMd5Found[8], MD5I(pFileinfo).f.abMd5Found[9], MD5I(pFileinfo).f.abMd5Found[10], MD5I(pFileinfo).f.abMd5Found[11], 
+							MD5I(pFileinfo).f.abMd5Found[12], MD5I(pFileinfo).f.abMd5Found[13], MD5I(pFileinfo).f.abMd5Found[14], MD5I(pFileinfo).f.abMd5Found[15]);
 						StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT("  =>  "));
 						StringCchCat(szTemp1, MAX_RESULT_LINE, szTemp2);
 						StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT(" found in MD5 file"));
-						pshowresult_params->bMd5IsWrong = TRUE;
+						pshowresult_params->bHashIsWrong[HASH_TYPE_MD5] = TRUE;
 					}
 				}
 			}
@@ -1049,31 +1049,31 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
 			SetWindowText(arrHwnd[ID_EDIT_MD5_VALUE], szTemp1);
 
-			if(pFileinfo->parentList->bEd2kCalculated){
-				StringCchCopy(szTemp1,MAX_RESULT_LINE,pFileinfo->szEd2kResult);
+			if(pFileinfo->parentList->bCalculated[HASH_TYPE_ED2K]){
+				StringCchCopy(szTemp1,MAX_RESULT_LINE,ED2KI(pFileinfo).szResult);
 			}
 			else
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
 			SetWindowText(arrHwnd[ID_EDIT_ED2K_VALUE], szTemp1);
 
-			if(pFileinfo->parentList->bSha1Calculated){
-				StringCchCopy(szTemp1,MAX_RESULT_LINE,pFileinfo->szSha1Result);
-				if(pFileinfo->bSha1Found){
+			if(pFileinfo->parentList->bCalculated[HASH_TYPE_SHA1]){
+				StringCchCopy(szTemp1,MAX_RESULT_LINE,SHA1I(pFileinfo).szResult);
+				if(SHA1I(pFileinfo).dwFound){
 					bAreHashesEqual = TRUE;
 					for(INT i = 0; i < 20; ++i)
-						if(pFileinfo->abSha1Result[i] != pFileinfo->abSha1Found[i])
+						if(SHA1I(pFileinfo).r.abSha1Result[i] != SHA1I(pFileinfo).f.abSha1Found[i])
 							bAreHashesEqual = FALSE;
 					if(!bAreHashesEqual){
 						StringCchPrintf(szTemp2, MAX_RESULT_LINE, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
-							pFileinfo->abSha1Found[0], pFileinfo->abSha1Found[1], pFileinfo->abSha1Found[2], pFileinfo->abSha1Found[3], 
-							pFileinfo->abSha1Found[4], pFileinfo->abSha1Found[5], pFileinfo->abSha1Found[6], pFileinfo->abSha1Found[7], 
-							pFileinfo->abSha1Found[8], pFileinfo->abSha1Found[9], pFileinfo->abSha1Found[10], pFileinfo->abSha1Found[11], 
-							pFileinfo->abSha1Found[12], pFileinfo->abSha1Found[13], pFileinfo->abSha1Found[14], pFileinfo->abSha1Found[15],
-							pFileinfo->abSha1Found[16], pFileinfo->abSha1Found[17], pFileinfo->abSha1Found[18], pFileinfo->abSha1Found[19]);
+							SHA1I(pFileinfo).f.abSha1Found[0], SHA1I(pFileinfo).f.abSha1Found[1], SHA1I(pFileinfo).f.abSha1Found[2], SHA1I(pFileinfo).f.abSha1Found[3], 
+							SHA1I(pFileinfo).f.abSha1Found[4], SHA1I(pFileinfo).f.abSha1Found[5], SHA1I(pFileinfo).f.abSha1Found[6], SHA1I(pFileinfo).f.abSha1Found[7], 
+							SHA1I(pFileinfo).f.abSha1Found[8], SHA1I(pFileinfo).f.abSha1Found[9], SHA1I(pFileinfo).f.abSha1Found[10], SHA1I(pFileinfo).f.abSha1Found[11], 
+							SHA1I(pFileinfo).f.abSha1Found[12], SHA1I(pFileinfo).f.abSha1Found[13], SHA1I(pFileinfo).f.abSha1Found[14], SHA1I(pFileinfo).f.abSha1Found[15],
+							SHA1I(pFileinfo).f.abSha1Found[16], SHA1I(pFileinfo).f.abSha1Found[17], SHA1I(pFileinfo).f.abSha1Found[18], SHA1I(pFileinfo).f.abSha1Found[19]);
 						StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT("  =>  "));
 						StringCchCat(szTemp1, MAX_RESULT_LINE, szTemp2);
 						StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT(" found in SHA1 file"));
-						pshowresult_params->bSha1IsWrong = TRUE;
+						pshowresult_params->bHashIsWrong[HASH_TYPE_SHA1] = TRUE;
 					}
 				}
 			}

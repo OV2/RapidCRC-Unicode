@@ -74,12 +74,25 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MAX_LINE_LENGTH MAX_PATH_EX + 100
 #define MAX_UTF8_PATH (MAX_PATH_EX * 4)
 #define MAX_RESULT_LINE 200
+#define RESULT_AS_STRING_MAX_LENGTH 41
+
 #define CRC_AS_STRING_LENGHT 9
 #define MD5_AS_STRING_LENGHT 33
 #define SHA1_AS_STRING_LENGHT 41
 #define ED2K_AS_STRING_LENGHT 33
-#define INFOTEXT_STRING_LENGHT 30
+#define INFOTEXT_STRING_LENGTH 30
 
+// hash types
+#define HASH_TYPE_CRC32 0
+#define HASH_TYPE_MD5 1
+#define HASH_TYPE_ED2K 2
+#define HASH_TYPE_SHA1 3
+#define NUM_HASH_TYPES 4
+
+#define CRCI(x) (x)->hashInfo[HASH_TYPE_CRC32]
+#define MD5I(x) (x)->hashInfo[HASH_TYPE_MD5]
+#define SHA1I(x) (x)->hashInfo[HASH_TYPE_SHA1]
+#define ED2KI(x) (x)->hashInfo[HASH_TYPE_ED2K]
 
 // special error codes ("Bit 29 is reserved for application-defined error codes; no system
 // error code has this bit set. If you are defining an error code for your application, set
@@ -222,56 +235,52 @@ struct _lFILEINFO;
 typedef struct _FILEINFO{
 	QWORD	qwFilesize;
 	FLOAT	fSeconds;
-	DWORD	dwCrc32Result;
-	DWORD	dwCrc32Found;
-	DWORD	dwError;
-	DWORD	dwCrcFound;
-	BOOL	bMd5Found;
-	BOOL	bSha1Found;
-	_lFILEINFO * parentList;
+    FILETIME ftModificationTime;
+    DWORD	dwError;
+    TCHAR	szInfo[INFOTEXT_STRING_LENGTH];
 	TCHAR	szFilename[MAX_PATH_EX];
 	TCHAR *	szFilenameShort;
-	TCHAR	szCrcResult[CRC_AS_STRING_LENGHT];
-	TCHAR	szMd5Result[MD5_AS_STRING_LENGHT];
-	TCHAR	szSha1Result[SHA1_AS_STRING_LENGHT];
-	TCHAR	szInfo[INFOTEXT_STRING_LENGHT];
-	BYTE	abMd5Result[16];
-	BYTE	abMd5Found[16];
-	BYTE	abSha1Result[20];
-	BYTE	abSha1Found[20];
-	BYTE	abEd2kResult[16];
-	TCHAR	szEd2kResult[ED2K_AS_STRING_LENGHT];
-    FILETIME ftModificationTime;
+    _lFILEINFO * parentList;
+    struct _hashInfo {
+        union {
+            DWORD   dwCrc32Result;
+            BYTE	abMd5Result[16];
+            BYTE	abSha1Result[20];
+            BYTE	abEd2kResult[16];
+        } r;
+        union {
+            DWORD   dwCrc32Found;
+            BYTE	abMd5Found[16];
+            BYTE	abSha1Found[20];
+        } f;
+        TCHAR   szResult[RESULT_AS_STRING_MAX_LENGTH];
+        DWORD   dwFound;
+
+    } hashInfo[NUM_HASH_TYPES];
 }FILEINFO;
 
 typedef struct _lFILEINFO {
 	list<FILEINFO> fInfos;
 	QWORD qwFilesizeSum;
-	bool bCrcCalculated;
-	bool bMd5Calculated;
-	bool bSha1Calculated;
-	bool bEd2kCalculated;
-	bool bCalculateCrc;
-	bool bCalculateMd5;
-	bool bCalculateSha1;
-	bool bCalculateEd2k;
+	bool bCalculated[NUM_HASH_TYPES];
+	bool bDoCalculate[NUM_HASH_TYPES];
 	UINT uiCmdOpts;
 	UINT uiRapidCrcMode;
 	int iGroupId;
 	TCHAR g_szBasePath[MAX_PATH_EX];
-	_lFILEINFO() {qwFilesizeSum=0;bCrcCalculated=false;bMd5Calculated=false;bSha1Calculated=false;
-				  bEd2kCalculated=false;bCalculateCrc=false;bCalculateMd5=false;bCalculateSha1=false;
-				  bCalculateEd2k=false;uiCmdOpts=CMD_NORMAL;
-				  uiRapidCrcMode=MODE_NORMAL;iGroupId=0;g_szBasePath[0]=TEXT('\0');}
+	_lFILEINFO() {qwFilesizeSum=0;uiCmdOpts=CMD_NORMAL;
+				  uiRapidCrcMode=MODE_NORMAL;iGroupId=0;g_szBasePath[0]=TEXT('\0');
+                  for(int i=0;i<NUM_HASH_TYPES;i++){
+                      bCalculated[i] = false;
+                      bDoCalculate[i] = false;
+                  }}
 }lFILEINFO;
 
 // main window has such a struct. A pointer it is always passed to calls
 // to ShowResult(). ShowResult() insert the values then into this struct
 typedef struct{
 	FILEINFO	* pFileinfo_cur_displayed;
-	BOOL		bCrcIsWrong;
-	BOOL		bMd5IsWrong;
-	BOOL		bSha1IsWrong;
+	BOOL		bHashIsWrong[NUM_HASH_TYPES];
 }SHOWRESULT_PARAMS;
 
 typedef struct{

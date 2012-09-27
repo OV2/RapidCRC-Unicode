@@ -39,6 +39,15 @@
 	calcBuffer=tempBuffer;\
 	dwBytesReadCb=dwBytesReadTb
 
+typedef DWORD (*threadfunc)(VOID * pParam);
+
+threadfunc hash_function[] = {
+    ThreadProc_CrcCalc,
+    ThreadProc_Md5Calc,
+    ThreadProc_Ed2kCalc,
+    ThreadProc_Sha1Calc
+};
+
 /*****************************************************************************
 UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	pParam	: (IN/OUT) THREAD_PARAMS_CALC struct pointer special for this thread
@@ -52,7 +61,7 @@ Notes:
 - performs asynchronous I/O with two buffers -> one buffer is filled while the hash-threads
   work on the other buffer
 - if an error occured, GetLastError() is saved in the current pFileinfo->dwError
-- what has be calculated is determined by bCalculateCrc/bCalculateMd5/bCalculateEd2k of the
+- what has be calculated is determined by bDoCalculate[HASH_TYPE_CRC32]/bDoCalculate[HASH_TYPE_MD5]/bDoCalculate[HASH_TYPE_ED2K] of the
   current job
 *****************************************************************************/
 UINT __stdcall ThreadProc_Calc(VOID * pParam)
@@ -61,10 +70,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	CONST HWND * CONST arrHwnd = pthread_params_calc->arrHwnd;
 	SHOWRESULT_PARAMS * CONST pshowresult_params = pthread_params_calc->pshowresult_params;
 
-	BOOL bCalculateCrc;
-	BOOL bCalculateMd5;
-	BOOL bCalculateSha1;
-	BOOL bCalculateEd2k;
+	BOOL bDoCalculate[NUM_HASH_TYPES];
 
 	QWORD qwStart, qwStop, wqFreq;
 	HANDLE hFile;
@@ -79,31 +85,34 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	BOOL bFileDone;
 	BOOL bAsync;
 
-	HANDLE hEvtThreadMd5Go;
+    HANDLE hEvtThreadGo[NUM_HASH_TYPES];
+    HANDLE hEvtThreadReady[NUM_HASH_TYPES];
+	/*HANDLE hEvtThreadMd5Go;
 	HANDLE hEvtThreadSha1Go;
 	HANDLE hEvtThreadEd2kGo;
 	HANDLE hEvtThreadCrcGo;
 	HANDLE hEvtThreadMd5Ready;
 	HANDLE hEvtThreadSha1Ready;
 	HANDLE hEvtThreadEd2kReady;
-	HANDLE hEvtThreadCrcReady;
+	HANDLE hEvtThreadCrcReady;*/
 
 	HANDLE hEvtReadDone;
 	OVERLAPPED olp;
 	ZeroMemory(&olp,sizeof(olp));
 
-	HANDLE hThreadMd5;
+    HANDLE hThread[NUM_HASH_TYPES];
+	/*HANDLE hThreadMd5;
 	HANDLE hThreadSha1;
 	HANDLE hThreadEd2k;
-	HANDLE hThreadCrc;
+	HANDLE hThreadCrc;*/
 	
-	HANDLE hEvtReadyHandles[4];
+	HANDLE hEvtReadyHandles[NUM_HASH_TYPES];
 	DWORD cEvtReadyHandles;
 
-	THREAD_PARAMS_HASHCALC md5CalcParams;
-	THREAD_PARAMS_HASHCALC sha1CalcParams;
+    THREAD_PARAMS_HASHCALC calcParams[NUM_HASH_TYPES];
+	/*THREAD_PARAMS_HASHCALC sha1CalcParams;
 	THREAD_PARAMS_HASHCALC ed2kCalcParams;
-	THREAD_PARAMS_HASHCALC crcCalcParams;
+	THREAD_PARAMS_HASHCALC crcCalcParams;*/
 
 	lFILEINFO *fileList;
 	list<FILEINFO*> finalList;
@@ -122,15 +131,36 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	
 	while((fileList = SyncQueue.popQueue()) != NULL) {
 
-		bCalculateCrc	= !fileList->bCrcCalculated && fileList->bCalculateCrc;
-		bCalculateMd5	= !fileList->bMd5Calculated && fileList->bCalculateMd5;
-		bCalculateSha1	= !fileList->bSha1Calculated && fileList->bCalculateSha1;
-		bCalculateEd2k  = !fileList->bEd2kCalculated && fileList->bCalculateEd2k;
+        cEvtReadyHandles = 0;
 
-		cEvtReadyHandles = 0;
+        for(int i=0;i<NUM_HASH_TYPES;i++) {
+		    bDoCalculate[i]	= !fileList->bCalculated[i] && fileList->bDoCalculate[i];
 
-		if(bCalculateCrc) {
-			fileList->bCrcCalculated = TRUE;
+            if(bDoCalculate[i]) {
+			    fileList->bCalculated[i] = TRUE;
+			    hEvtThreadGo[i] = CreateEvent(NULL,FALSE,FALSE,NULL);
+			    hEvtThreadReady[i] = CreateEvent(NULL,FALSE,FALSE,NULL);
+			    if(hEvtThreadGo[i] == NULL || hEvtThreadReady[i] == NULL) {
+				    ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+				    ExitProcess(1);
+			    }
+			    hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadReady[i];
+			    cEvtReadyHandles++;
+			    calcParams[i].bFileDone = &bFileDone;
+			    calcParams[i].hHandleGo = hEvtThreadGo[i];
+			    calcParams[i].hHandleReady = hEvtThreadReady[i];
+			    calcParams[i].buffer = &calcBuffer;
+			    calcParams[i].dwBytesRead = &dwBytesReadCb;
+		    }
+        }
+
+
+		/*bDoCalculate[HASH_TYPE_MD5]	= !fileList->bCalculated[HASH_TYPE_MD5] && fileList->bDoCalculate[HASH_TYPE_MD5];
+		bDoCalculate[HASH_TYPE_SHA1]	= !fileList->bCalculated[HASH_TYPE_SHA1] && fileList->bDoCalculate[HASH_TYPE_SHA1];
+		bDoCalculate[HASH_TYPE_ED2K]  = !fileList->bCalculated[HASH_TYPE_ED2K] && fileList->bDoCalculate[HASH_TYPE_ED2K];*/
+
+		/*if(bDoCalculate[HASH_TYPE_CRC32]) {
+			fileList->bCalculated[HASH_TYPE_CRC32] = TRUE;
 			hEvtThreadCrcGo = CreateEvent(NULL,FALSE,FALSE,NULL);
 			hEvtThreadCrcReady = CreateEvent(NULL,FALSE,FALSE,NULL);
 			if(hEvtThreadCrcGo == NULL || hEvtThreadCrcReady == NULL) {
@@ -146,8 +176,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			crcCalcParams.dwBytesRead = &dwBytesReadCb;
 		}
 
-		if(bCalculateMd5) {
-			fileList->bMd5Calculated = TRUE;
+		if(bDoCalculate[HASH_TYPE_MD5]) {
+			fileList->bCalculated[HASH_TYPE_MD5] = TRUE;
 			hEvtThreadMd5Go = CreateEvent(NULL,FALSE,FALSE,NULL);
 			hEvtThreadMd5Ready = CreateEvent(NULL,FALSE,FALSE,NULL);
 			if(hEvtThreadMd5Go == NULL || hEvtThreadMd5Ready == NULL) {
@@ -163,8 +193,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			md5CalcParams.dwBytesRead = &dwBytesReadCb;
 		}
 
-		if(bCalculateSha1) {
-			fileList->bSha1Calculated = TRUE;
+		if(bDoCalculate[HASH_TYPE_SHA1]) {
+			fileList->bCalculated[HASH_TYPE_SHA1] = TRUE;
 			hEvtThreadSha1Go = CreateEvent(NULL,FALSE,FALSE,NULL);
 			hEvtThreadSha1Ready = CreateEvent(NULL,FALSE,FALSE,NULL);
 			if(hEvtThreadSha1Go == NULL || hEvtThreadSha1Ready == NULL) {
@@ -180,8 +210,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			sha1CalcParams.dwBytesRead = &dwBytesReadCb;
 		}
 
-		if(bCalculateEd2k) {
-			fileList->bEd2kCalculated = TRUE;
+		if(bDoCalculate[HASH_TYPE_ED2K]) {
+			fileList->bCalculated[HASH_TYPE_ED2K] = TRUE;
 			hEvtThreadEd2kGo = CreateEvent(NULL,FALSE,FALSE,NULL);
 			hEvtThreadEd2kReady = CreateEvent(NULL,FALSE,FALSE,NULL);
 			if(hEvtThreadEd2kGo == NULL || hEvtThreadEd2kReady == NULL) {
@@ -195,7 +225,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			ed2kCalcParams.hHandleReady = hEvtThreadEd2kReady;
 			ed2kCalcParams.buffer = &calcBuffer;
 			ed2kCalcParams.dwBytesRead = &dwBytesReadCb;
-		}
+		}*/
 
 		hEvtReadDone = CreateEvent(NULL,FALSE,FALSE,NULL);
 		if(hEvtReadDone == NULL) {
@@ -219,7 +249,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			
 			FILEINFO& curFileInfo = (*it);
 
-			if ( (curFileInfo.dwError == NO_ERROR) /*&& (curFileInfo.qwFilesize != 0)*/ && (bCalculateCrc || bCalculateMd5 || bCalculateEd2k || bCalculateSha1))
+			if ( (curFileInfo.dwError == NO_ERROR) /*&& (curFileInfo.qwFilesize != 0)*/ && cEvtReadyHandles > 0)
 			{
 
 				//SetWindowText(arrHwnd[ID_EDIT_STATUS], curFileInfo.szFilename + 4);
@@ -234,7 +264,20 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 				    bFileDone = FALSE;
 
-				    if(bCalculateCrc) {
+                    for(int i=0;i<NUM_HASH_TYPES;i++) {
+                        if(bDoCalculate[i]) {
+                            ResetEvent(hEvtThreadGo[i]);
+                            ResetEvent(hEvtThreadReady[i]);
+                            calcParams[i].result = &curFileInfo.hashInfo[i].r;
+					        hThread[i] = CreateThread(NULL,0,hash_function[i],&calcParams[i],0,NULL);
+					        if(hThread[i] == NULL) {
+						        ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
+						        ExitProcess(1);
+					        }
+                        }
+				    }
+
+				    /*if(bDoCalculate[HASH_TYPE_CRC32]) {
 					    ResetEvent(hEvtThreadCrcGo);
 					    ResetEvent(hEvtThreadCrcReady);
 					    crcCalcParams.result = &curFileInfo.dwCrc32Result;
@@ -244,7 +287,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 						    ExitProcess(1);
 					    }
 				    }
-				    if(bCalculateMd5) {
+				    if(bDoCalculate[HASH_TYPE_MD5]) {
 					    ResetEvent(hEvtThreadMd5Go);
 					    ResetEvent(hEvtThreadMd5Ready);
 					    md5CalcParams.result = &curFileInfo.abMd5Result;
@@ -254,7 +297,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 						    ExitProcess(1);
 					    }
 				    }
-				    if(bCalculateSha1) {
+				    if(bDoCalculate[HASH_TYPE_SHA1]) {
 					    ResetEvent(hEvtThreadSha1Go);
 					    ResetEvent(hEvtThreadSha1Ready);
 					    sha1CalcParams.result = &curFileInfo.abSha1Result;
@@ -264,7 +307,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 						    ExitProcess(1);
 					    }
 				    }
-				    if(bCalculateEd2k) {
+				    if(bDoCalculate[HASH_TYPE_ED2K]) {
 					    ResetEvent(hEvtThreadEd2kGo);
 					    ResetEvent(hEvtThreadEd2kReady);
 					    ed2kCalcParams.result = &curFileInfo.abEd2kResult;
@@ -273,7 +316,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 						    ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
 						    ExitProcess(1);
 					    }
-				    }
+				    }*/
 
 				    ZeroMemory(&olp,sizeof(olp));
 				    olp.hEvent = hEvtReadDone;
@@ -309,17 +352,10 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 					    if(*dwBytesReadCb<MAX_BUFFER_SIZE_CALC || pthread_params_calc->signalExit)
 						    bFileDone=TRUE;
 
-					    if(bCalculateCrc)
-						    SetEvent(hEvtThreadCrcGo);
-
-					    if(bCalculateMd5)
-						    SetEvent(hEvtThreadMd5Go);
-
-					    if(bCalculateSha1)
-						    SetEvent(hEvtThreadSha1Go);
-    					
-					    if(bCalculateEd2k)
-						    SetEvent(hEvtThreadEd2kGo);
+                        for(int i=0;i<NUM_HASH_TYPES;i++) {
+                            if(bDoCalculate[i])
+						        SetEvent(hEvtThreadGo[i]);
+                        }
 
 				    } while(!bFileDone);
 
@@ -328,14 +364,10 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				    if(hFile != NULL)
 					    CloseHandle(hFile);
 
-				    if(bCalculateMd5)
-					    CloseHandle(hThreadMd5);
-				    if(bCalculateSha1)
-					    CloseHandle(hThreadSha1);
-				    if(bCalculateEd2k)
-					    CloseHandle(hThreadEd2k);
-				    if(bCalculateCrc)
-					    CloseHandle(hThreadCrc);
+                    for(int i=0;i<NUM_HASH_TYPES;i++) {
+                        if(bDoCalculate[i])
+					        CloseHandle(hThread[i]);
+                    }
 
 				    if(pthread_params_calc->signalExit)
 					    break;
@@ -360,22 +392,12 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			ShowResult(arrHwnd, &curFileInfo, pshowresult_params);
 		}
 
-		if(bCalculateMd5) {
-			CloseHandle(hEvtThreadMd5Go);
-			CloseHandle(hEvtThreadMd5Ready);
-		}
-		if(bCalculateSha1) {
-			CloseHandle(hEvtThreadSha1Go);
-			CloseHandle(hEvtThreadSha1Ready);
-		}
-		if(bCalculateEd2k) {
-			CloseHandle(hEvtThreadEd2kGo);
-			CloseHandle(hEvtThreadEd2kReady);
-		}
-		if(bCalculateCrc) {
-			CloseHandle(hEvtThreadCrcGo);
-			CloseHandle(hEvtThreadCrcReady);
-		}
+        for(int i=0;i<NUM_HASH_TYPES;i++) {
+            if(bDoCalculate[i]) {
+		        CloseHandle(hEvtThreadGo[i]);
+			    CloseHandle(hEvtThreadReady[i]);
+            }
+        }
 
 		if(pthread_params_calc->signalExit)
 			break;

@@ -88,11 +88,11 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<F
 		bAFileWasProcessed = FALSE;
 		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 			pFileinfo = (*it);
-			if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(pFileinfo->dwCrcFound)) ){
+            if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(CRCI(pFileinfo).dwFound)) ){
 					bAFileWasProcessed = TRUE;
-					if(SaveCRCIntoStream(pFileinfo->szFilename,pFileinfo->dwCrc32Result)){
-						pFileinfo->dwCrc32Found = pFileinfo->dwCrc32Result;
-						pFileinfo->dwCrcFound = CRC_FOUND_STREAM;
+					if(SaveCRCIntoStream(pFileinfo->szFilename,CRCI(pFileinfo).r.dwCrc32Result)){
+						CRCI(pFileinfo).f.dwCrc32Found = CRCI(pFileinfo).r.dwCrc32Result;
+						CRCI(pFileinfo).dwFound = CRC_FOUND_STREAM;
 					}
 					else{
 						pFileinfo->dwError = GetLastError();
@@ -200,14 +200,14 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list
 		bAFileWasProcessed = FALSE;
 		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 			pFileinfo = (*it);
-			if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(pFileinfo->dwCrcFound)) ){
+			if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(CRCI(pFileinfo).dwFound)) ){
 					bAFileWasProcessed = TRUE;
-					GenerateNewFilename(szFilenameTemp, pFileinfo->szFilename, pFileinfo->dwCrc32Result, g_program_options.szFilenamePattern);
+					GenerateNewFilename(szFilenameTemp, pFileinfo->szFilename, CRCI(pFileinfo).r.dwCrc32Result, g_program_options.szFilenamePattern);
 					if(MoveFile(pFileinfo->szFilename, szFilenameTemp)){
 						StringCchCopy(pFileinfo->szFilename, MAX_PATH_EX, szFilenameTemp);
 						// this updates pFileinfo->szFilenameShort automatically
-						pFileinfo->dwCrc32Found = pFileinfo->dwCrc32Result;
-						pFileinfo->dwCrcFound = CRC_FOUND_FILENAME;
+						CRCI(pFileinfo).f.dwCrc32Found = CRCI(pFileinfo).r.dwCrc32Result;
+						CRCI(pFileinfo).dwFound = CRC_FOUND_FILENAME;
 					}
 					else{
 						pFileinfo->dwError = GetLastError();
@@ -637,15 +637,15 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 			switch(uiMode) {
 				case MODE_MD5:
 					dwResult = WriteMd5Line(hFile, GetFilenameWithoutPathPointer((*it)->szFilenameShort),
-										(*it)->abMd5Result);
+										MD5I(*it).r.abMd5Result);
 					break;
 				case MODE_SHA1:
 					dwResult = WriteSha1Line(hFile, GetFilenameWithoutPathPointer((*it)->szFilenameShort),
-										(*it)->abSha1Result);
+										SHA1I(*it).r.abSha1Result);
 					break;
 				default:
 					dwResult = WriteSfvLine(hFile, GetFilenameWithoutPathPointer((*it)->szFilenameShort),
-										(*it)->dwCrc32Result);
+										CRCI(*it).r.dwCrc32Result);
 					break;
 
 			}
@@ -738,13 +738,13 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
             WriteFileComment(hFile, finalList->front(), finalList->front()->szFilenameShort - finalList->front()->szFilename);
 		switch(uiMode) {
 			case MODE_MD5:
-				dwResult = WriteMd5Line(hFile, finalList->front()->szFilenameShort, finalList->front()->abMd5Result);
+				dwResult = WriteMd5Line(hFile, finalList->front()->szFilenameShort, MD5I(finalList->front()).r.abMd5Result);
 				break;
 			case MODE_SHA1:
-				dwResult = WriteSha1Line(hFile, finalList->front()->szFilenameShort, finalList->front()->abSha1Result);
+				dwResult = WriteSha1Line(hFile, finalList->front()->szFilenameShort, SHA1I(finalList->front()).r.abSha1Result);
 				break;
 			default:
-				dwResult = WriteSfvLine(hFile, finalList->front()->szFilenameShort, finalList->front()->dwCrc32Result);
+				dwResult = WriteSfvLine(hFile, finalList->front()->szFilenameShort, CRCI(finalList->front()).r.dwCrc32Result);
 				break;
 		}
 
@@ -768,13 +768,13 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 		switch(uiMode) {
 			case MODE_MD5:
-				dwResult = WriteMd5Line(hFile, (*it)->szFilename + uiSameCharCount, (*it)->abMd5Result);
+				dwResult = WriteMd5Line(hFile, (*it)->szFilename + uiSameCharCount, MD5I(*it).r.abMd5Result);
 				break;
 			case MODE_SHA1:
-				dwResult = WriteSha1Line(hFile, (*it)->szFilename + uiSameCharCount, (*it)->abSha1Result);
+				dwResult = WriteSha1Line(hFile, (*it)->szFilename + uiSameCharCount, SHA1I(*it).r.abSha1Result);
 				break;
 			default:
-				dwResult = WriteSfvLine(hFile, (*it)->szFilename + uiSameCharCount, (*it)->dwCrc32Result);
+				dwResult = WriteSfvLine(hFile, (*it)->szFilename + uiSameCharCount, CRCI(*it).r.dwCrc32Result);
 				break;
 		}
 		
@@ -853,9 +853,9 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 	if(ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW])==0) {
 		doneList = SyncQueue.getDoneList();
 		for(list<lFILEINFO*>::iterator it=doneList->begin();it!=doneList->end();it++) {
-			if( (uiMode == MODE_SFV) && !(*it)->bCrcCalculated ||
-			    (uiMode == MODE_MD5) && !(*it)->bMd5Calculated ||
-			    (uiMode == MODE_SHA1) && !(*it)->bSha1Calculated )
+            if( (uiMode == MODE_SFV) && !(*it)->bCalculated[HASH_TYPE_CRC32] ||
+			    (uiMode == MODE_MD5) && !(*it)->bCalculated[HASH_TYPE_MD5] ||
+			    (uiMode == MODE_SHA1) && !(*it)->bCalculated[HASH_TYPE_SHA1] )
 				rehashList.push_back(*it);
 		}
 		SyncQueue.releaseDoneList();
@@ -866,9 +866,9 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 			lvitem.iItem = uiIndex;
 			ListView_GetItem(arrHwnd[ID_LISTVIEW],&lvitem);
 			pList = ((FILEINFO *)lvitem.lParam)->parentList;
-			if( (uiMode == MODE_SFV) && !pList->bCrcCalculated ||
-				(uiMode == MODE_MD5) && !pList->bMd5Calculated ||
-				(uiMode == MODE_SHA1) && !pList->bSha1Calculated )
+			if( (uiMode == MODE_SFV) && !pList->bCalculated[HASH_TYPE_CRC32] ||
+				(uiMode == MODE_MD5) && !pList->bCalculated[HASH_TYPE_MD5] ||
+				(uiMode == MODE_SHA1) && !pList->bCalculated[HASH_TYPE_SHA1] )
 				rehashList.push_back(pList);
 		} while((uiIndex = ListView_GetNextItem(arrHwnd[ID_LISTVIEW],uiIndex,LVNI_SELECTED))!=-1);
 		rehashList.sort();
@@ -897,13 +897,13 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 			SyncQueue.deleteFromList(*it);
 			switch(uiMode) {
 				case MODE_MD5:
-					(*it)->bCalculateMd5 = true;
+					(*it)->bDoCalculate[HASH_TYPE_MD5] = true;
 					break;
 				case MODE_SHA1:
-					(*it)->bCalculateSha1 = true;
+					(*it)->bDoCalculate[HASH_TYPE_SHA1] = true;
 					break;
 				default:
-					(*it)->bCalculateCrc = true;
+					(*it)->bDoCalculate[HASH_TYPE_CRC32] = true;
 					break;
 			}
 				

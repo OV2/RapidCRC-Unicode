@@ -401,7 +401,7 @@ Notes:
 4.) if we have an .sfv file we process the .sfv file
 5.) call ProcessFileProperties to get file properties like size etc...
 6.) eventually sort the list (this seems pointless, will check in a later version)
-7.) sets bCalculateCrc, bCalculateMd5 and bCalculateEd2k of the job structure depending on in which
+7.) sets bDoCalculate[HASH_TYPE_CRC32], bDoCalculate[HASH_TYPE_MD5] and bDoCalculate[HASH_TYPE_ED2K] of the job structure depending on in which
 	program mode we are and or if we want those by default. These values are passed by the caller to THREAD_CALC
 *****************************************************************************/
 VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
@@ -434,25 +434,25 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 
 	ProcessFileProperties(fileList);
 
-	fileList->bCalculateCrc	= ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcCrcPerDefault))
+	fileList->bDoCalculate[HASH_TYPE_CRC32]	= ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcCrcPerDefault))
 								|| (fileList->uiRapidCrcMode == MODE_SFV);
-	fileList->bCalculateMd5	= ((fileList->uiRapidCrcMode == MODE_NORMAL) &&	(g_program_options.bCalcMd5PerDefault))
+	fileList->bDoCalculate[HASH_TYPE_MD5]	= ((fileList->uiRapidCrcMode == MODE_NORMAL) &&	(g_program_options.bCalcMd5PerDefault))
 								|| (fileList->uiRapidCrcMode == MODE_MD5);
-	fileList->bCalculateEd2k  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcEd2kPerDefault));
-	fileList->bCalculateSha1  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcSha1PerDefault))
+	fileList->bDoCalculate[HASH_TYPE_ED2K]  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcEd2kPerDefault));
+	fileList->bDoCalculate[HASH_TYPE_SHA1]  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcSha1PerDefault))
 								|| (fileList->uiRapidCrcMode == MODE_SHA1);
 
 	switch(fileList->uiCmdOpts) {
 		case CMD_SFV:
 		case CMD_NAME:
 		case CMD_NTFS:
-			fileList->bCalculateCrc = true;
+			fileList->bDoCalculate[HASH_TYPE_CRC32] = true;
 			break;
 		case CMD_MD5:
-			fileList->bCalculateMd5 = true;
+			fileList->bDoCalculate[HASH_TYPE_MD5] = true;
 			break;
 		case CMD_SHA1:
-			fileList->bCalculateSha1 = true;
+			fileList->bDoCalculate[HASH_TYPE_SHA1] = true;
 			break;
 		default:
 			break;
@@ -600,13 +600,13 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 				fileList->qwFilesizeSum += (*it).qwFilesize;
 
 				if(fileList->uiRapidCrcMode == MODE_NORMAL)
-					if(GetCrcFromFilename((*it).szFilenameShort, & (*it).dwCrc32Found))
-						(*it).dwCrcFound = CRC_FOUND_FILENAME;
+                    if(GetCrcFromFilename((*it).szFilenameShort, & (*it).hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found))
+						(*it).hashInfo[HASH_TYPE_CRC32].dwFound = CRC_FOUND_FILENAME;
 					else
-						if(GetCrcFromStream((*it).szFilename, & (*it).dwCrc32Found))
-							(*it).dwCrcFound = CRC_FOUND_STREAM;
+						if(GetCrcFromStream((*it).szFilename, & (*it).hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found))
+							(*it).hashInfo[HASH_TYPE_CRC32].dwFound = CRC_FOUND_STREAM;
 						else
-							(*it).dwCrcFound = CRC_FOUND_NONE;
+							(*it).hashInfo[HASH_TYPE_CRC32].dwFound = CRC_FOUND_NONE;
 			}
 		}
 

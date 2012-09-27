@@ -89,7 +89,7 @@ descending
 int CALLBACK SortCrc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	// iResult == 1 if '>', iResult == -1 if not '>'
-	INT iResult = ((FILEINFO *)lParam1)->dwCrc32Result > ((FILEINFO *)lParam2)->dwCrc32Result;
+    INT iResult = CRCI((FILEINFO *)lParam1).r.dwCrc32Result > CRCI((FILEINFO *)lParam2).r.dwCrc32Result;
 	if(iResult == 0)
 		iResult = -1;
 
@@ -116,7 +116,7 @@ int CALLBACK SortMd5(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	int iResult;
 
-	iResult = memcmp( ((FILEINFO *)lParam1)->abMd5Result, ((FILEINFO *)lParam2)->abMd5Result, 16);
+	iResult = memcmp( MD5I((FILEINFO *)lParam1).r.abMd5Result, MD5I((FILEINFO *)lParam2).r.abMd5Result, 16);
 	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
 		return iResult;
 	else
@@ -141,7 +141,7 @@ int CALLBACK SortEd2k(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	int iResult;
 
-    iResult = memcmp( ((FILEINFO *)lParam1)->abEd2kResult, ((FILEINFO *)lParam2)->abEd2kResult, 16);
+    iResult = memcmp( ED2KI((FILEINFO *)lParam1).r.abEd2kResult, ED2KI((FILEINFO *)lParam2).r.abEd2kResult, 16);
 	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
 		return iResult;
 	else
@@ -166,7 +166,7 @@ int CALLBACK SortSha1(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	int iResult;
 
-    iResult = memcmp( ((FILEINFO *)lParam1)->abSha1Result, ((FILEINFO *)lParam2)->abSha1Result, 20);
+    iResult = memcmp( SHA1I((FILEINFO *)lParam1).r.abSha1Result, SHA1I((FILEINFO *)lParam2).r.abSha1Result, 20);
 	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
 		return iResult;
 	else
@@ -194,8 +194,8 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 		iResult = 4;
 	else{
 		if(pFileinfo->parentList->uiRapidCrcMode == MODE_MD5){
-			if( (pFileinfo->parentList->bMd5Calculated) && (pFileinfo->bMd5Found) ){
-				if(memcmp( pFileinfo->abMd5Result, pFileinfo->abMd5Found, 16) == 0)
+			if( (pFileinfo->parentList->bCalculated[HASH_TYPE_MD5]) && (MD5I(pFileinfo).dwFound) ){
+				if(memcmp( MD5I(pFileinfo).r.abMd5Result, MD5I(pFileinfo).f.abMd5Found, 16) == 0)
 					iResult = 1;
 				else
 					iResult = 2;
@@ -204,8 +204,8 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 				iResult = 3;
 		}
 		else if(pFileinfo->parentList->uiRapidCrcMode == MODE_SHA1){
-			if( (pFileinfo->parentList->bSha1Calculated) && (pFileinfo->bSha1Found) ){
-				if(memcmp( pFileinfo->abSha1Result, pFileinfo->abSha1Found, 20) == 0)
+			if( (pFileinfo->parentList->bCalculated[HASH_TYPE_SHA1]) && (SHA1I(pFileinfo).dwFound) ){
+				if(memcmp( SHA1I(pFileinfo).r.abSha1Result, SHA1I(pFileinfo).f.abSha1Found, 20) == 0)
 					iResult = 1;
 				else
 					iResult = 2;
@@ -214,14 +214,14 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 				iResult = 3;
 		}
 		else{ // MODE_SFV and MODE_NORMAL; the icon does not differ between these modes
-			if( pFileinfo->dwCrcFound ) {
-				if( pFileinfo->parentList->bCrcCalculated ){
-					if(pFileinfo->dwCrc32Result == pFileinfo->dwCrc32Found)
+			if( CRCI(pFileinfo).dwFound ) {
+				if( pFileinfo->parentList->bCalculated[HASH_TYPE_CRC32] ){
+					if(CRCI(pFileinfo).r.dwCrc32Result == CRCI(pFileinfo).f.dwCrc32Found)
 						iResult = 1;
 					else
 						iResult = 2;
 				} else {
-					iResult = pFileinfo->dwCrcFound == CRC_FOUND_FILENAME ? 5 : 6;
+					iResult = CRCI(pFileinfo).dwFound == CRC_FOUND_FILENAME ? 5 : 6;
 				}
 			}
 			else
