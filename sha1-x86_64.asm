@@ -44,7 +44,7 @@ $L$loop::
 	xor	eax,r12d
 	bswap	ebp
 	rol	ecx,5
-	lea	r13d,DWORD PTR[05a827999h+r13*1+rdx]
+	lea	r13d,DWORD PTR[1518500249+r13*1+rdx]
 	and	eax,edi
 	mov	DWORD PTR[4+rsp],ebp
 	add	r13d,ecx
@@ -57,7 +57,7 @@ $L$loop::
 	xor	eax,r11d
 	bswap	edx
 	rol	ecx,5
-	lea	r12d,DWORD PTR[05a827999h+r12*1+rbp]
+	lea	r12d,DWORD PTR[1518500249+r12*1+rbp]
 	and	eax,esi
 	mov	DWORD PTR[8+rsp],edx
 	add	r12d,ecx
@@ -70,7 +70,7 @@ $L$loop::
 	xor	eax,edi
 	bswap	ebp
 	rol	ecx,5
-	lea	r11d,DWORD PTR[05a827999h+r11*1+rdx]
+	lea	r11d,DWORD PTR[1518500249+r11*1+rdx]
 	and	eax,r13d
 	mov	DWORD PTR[12+rsp],ebp
 	add	r11d,ecx
@@ -83,7 +83,7 @@ $L$loop::
 	xor	eax,esi
 	bswap	edx
 	rol	ecx,5
-	lea	edi,DWORD PTR[05a827999h+rdi*1+rbp]
+	lea	edi,DWORD PTR[1518500249+rdi*1+rbp]
 	and	eax,r12d
 	mov	DWORD PTR[16+rsp],edx
 	add	edi,ecx
@@ -96,7 +96,7 @@ $L$loop::
 	xor	eax,r13d
 	bswap	ebp
 	rol	ecx,5
-	lea	esi,DWORD PTR[05a827999h+rsi*1+rdx]
+	lea	esi,DWORD PTR[1518500249+rsi*1+rdx]
 	and	eax,r11d
 	mov	DWORD PTR[20+rsp],ebp
 	add	esi,ecx
@@ -109,7 +109,7 @@ $L$loop::
 	xor	eax,r12d
 	bswap	edx
 	rol	ecx,5
-	lea	r13d,DWORD PTR[05a827999h+r13*1+rbp]
+	lea	r13d,DWORD PTR[1518500249+r13*1+rbp]
 	and	eax,edi
 	mov	DWORD PTR[24+rsp],edx
 	add	r13d,ecx
@@ -122,7 +122,7 @@ $L$loop::
 	xor	eax,r11d
 	bswap	ebp
 	rol	ecx,5
-	lea	r12d,DWORD PTR[05a827999h+r12*1+rdx]
+	lea	r12d,DWORD PTR[1518500249+r12*1+rdx]
 	and	eax,esi
 	mov	DWORD PTR[28+rsp],ebp
 	add	r12d,ecx
@@ -135,7 +135,7 @@ $L$loop::
 	xor	eax,edi
 	bswap	edx
 	rol	ecx,5
-	lea	r11d,DWORD PTR[05a827999h+r11*1+rbp]
+	lea	r11d,DWORD PTR[1518500249+r11*1+rbp]
 	and	eax,r13d
 	mov	DWORD PTR[32+rsp],edx
 	add	r11d,ecx
@@ -148,7 +148,7 @@ $L$loop::
 	xor	eax,esi
 	bswap	ebp
 	rol	ecx,5
-	lea	edi,DWORD PTR[05a827999h+rdi*1+rdx]
+	lea	edi,DWORD PTR[1518500249+rdi*1+rdx]
 	and	eax,r12d
 	mov	DWORD PTR[36+rsp],ebp
 	add	edi,ecx
@@ -161,7 +161,7 @@ $L$loop::
 	xor	eax,r13d
 	bswap	edx
 	rol	ecx,5
-	lea	esi,DWORD PTR[05a827999h+rsi*1+rbp]
+	lea	esi,DWORD PTR[1518500249+rsi*1+rbp]
 	and	eax,r11d
 	mov	DWORD PTR[40+rsp],edx
 	add	esi,ecx
@@ -174,7 +174,7 @@ $L$loop::
 	xor	eax,r12d
 	bswap	ebp
 	rol	ecx,5
-	lea	r13d,DWORD PTR[05a827999h+r13*1+rdx]
+	lea	r13d,DWORD PTR[1518500249+r13*1+rdx]
 	and	eax,edi
 	mov	DWORD PTR[44+rsp],ebp
 	add	r13d,ecx
@@ -187,7 +187,7 @@ $L$loop::
 	xor	eax,r11d
 	bswap	edx
 	rol	ecx,5
-	lea	r12d,DWORD PTR[05a827999h+r12*1+rbp]
+	lea	r12d,DWORD PTR[1518500249+r12*1+rbp]
 	and	eax,esi
 	mov	DWORD PTR[48+rsp],edx
 	add	r12d,ecx
@@ -200,7 +200,7 @@ $L$loop::
 	xor	eax,edi
 	bswap	ebp
 	rol	ecx,5
-	lea	r11d,DWORD PTR[05a827999h+r11*1+rdx]
+	lea	r11d,DWORD PTR[1518500249+r11*1+rdx]
 	and	eax,r13d
 	mov	DWORD PTR[52+rsp],ebp
 	add	r11d,ecx
@@ -213,7 +213,7 @@ $L$loop::
 	xor	eax,esi
 	bswap	edx
 	rol	ecx,5
-	lea	edi,DWORD PTR[05a827999h+rdi*1+rbp]
+	lea	edi,DWORD PTR[1518500249+rdi*1+rbp]
 	and	eax,r12d
 	mov	DWORD PTR[56+rsp],edx
 	add	edi,ecx
@@ -226,7 +226,7 @@ $L$loop::
 	xor	eax,r13d
 	bswap	ebp
 	rol	ecx,5
-	lea	esi,DWORD PTR[05a827999h+rsi*1+rdx]
+	lea	esi,DWORD PTR[1518500249+rsi*1+rdx]
 	and	eax,r11d
 	mov	DWORD PTR[60+rsp],ebp
 	add	esi,ecx
@@ -241,7 +241,7 @@ $L$loop::
 	rol	ecx,5
 	xor	edx,DWORD PTR[32+rsp]
 	and	eax,edi
-	lea	r13d,DWORD PTR[05a827999h+r13*1+rbp]
+	lea	r13d,DWORD PTR[1518500249+r13*1+rbp]
 	xor	edx,DWORD PTR[52+rsp]
 	xor	eax,r12d
 	rol	edx,1
@@ -257,7 +257,7 @@ $L$loop::
 	rol	ecx,5
 	xor	ebp,DWORD PTR[36+rsp]
 	and	eax,esi
-	lea	r12d,DWORD PTR[05a827999h+r12*1+rdx]
+	lea	r12d,DWORD PTR[1518500249+r12*1+rdx]
 	xor	ebp,DWORD PTR[56+rsp]
 	xor	eax,r11d
 	rol	ebp,1
@@ -273,7 +273,7 @@ $L$loop::
 	rol	ecx,5
 	xor	edx,DWORD PTR[40+rsp]
 	and	eax,r13d
-	lea	r11d,DWORD PTR[05a827999h+r11*1+rbp]
+	lea	r11d,DWORD PTR[1518500249+r11*1+rbp]
 	xor	edx,DWORD PTR[60+rsp]
 	xor	eax,edi
 	rol	edx,1
@@ -289,7 +289,7 @@ $L$loop::
 	rol	ecx,5
 	xor	ebp,DWORD PTR[44+rsp]
 	and	eax,r12d
-	lea	edi,DWORD PTR[05a827999h+rdi*1+rdx]
+	lea	edi,DWORD PTR[1518500249+rdi*1+rdx]
 	xor	ebp,DWORD PTR[rsp]
 	xor	eax,esi
 	rol	ebp,1
@@ -305,7 +305,7 @@ $L$loop::
 	rol	ecx,5
 	xor	edx,DWORD PTR[48+rsp]
 	and	eax,r11d
-	lea	esi,DWORD PTR[05a827999h+rsi*1+rbp]
+	lea	esi,DWORD PTR[1518500249+rsi*1+rbp]
 	xor	edx,DWORD PTR[4+rsp]
 	xor	eax,r13d
 	rol	edx,1
@@ -621,7 +621,7 @@ $L$loop::
 	mov	ecx,esi
 	xor	ebp,DWORD PTR[4+rsp]
 	xor	ebx,r12d
-	lea	r13d,DWORD PTR[08f1bbcdch+r13*1+rdx]
+	lea	r13d,DWORD PTR[((-1894007588))+r13*1+rdx]
 	rol	ecx,5
 	xor	ebp,DWORD PTR[24+rsp]
 	add	r13d,eax
@@ -639,7 +639,7 @@ $L$loop::
 	mov	ecx,r13d
 	xor	edx,DWORD PTR[8+rsp]
 	xor	ebx,r11d
-	lea	r12d,DWORD PTR[08f1bbcdch+r12*1+rbp]
+	lea	r12d,DWORD PTR[((-1894007588))+r12*1+rbp]
 	rol	ecx,5
 	xor	edx,DWORD PTR[28+rsp]
 	add	r12d,eax
@@ -657,7 +657,7 @@ $L$loop::
 	mov	ecx,r12d
 	xor	ebp,DWORD PTR[12+rsp]
 	xor	ebx,edi
-	lea	r11d,DWORD PTR[08f1bbcdch+r11*1+rdx]
+	lea	r11d,DWORD PTR[((-1894007588))+r11*1+rdx]
 	rol	ecx,5
 	xor	ebp,DWORD PTR[32+rsp]
 	add	r11d,eax
@@ -675,7 +675,7 @@ $L$loop::
 	mov	ecx,r11d
 	xor	edx,DWORD PTR[16+rsp]
 	xor	ebx,esi
-	lea	edi,DWORD PTR[08f1bbcdch+rdi*1+rbp]
+	lea	edi,DWORD PTR[((-1894007588))+rdi*1+rbp]
 	rol	ecx,5
 	xor	edx,DWORD PTR[36+rsp]
 	add	edi,eax
@@ -693,7 +693,7 @@ $L$loop::
 	mov	ecx,edi
 	xor	ebp,DWORD PTR[20+rsp]
 	xor	ebx,r13d
-	lea	esi,DWORD PTR[08f1bbcdch+rsi*1+rdx]
+	lea	esi,DWORD PTR[((-1894007588))+rsi*1+rdx]
 	rol	ecx,5
 	xor	ebp,DWORD PTR[40+rsp]
 	add	esi,eax
@@ -711,7 +711,7 @@ $L$loop::
 	mov	ecx,esi
 	xor	edx,DWORD PTR[24+rsp]
 	xor	ebx,r12d
-	lea	r13d,DWORD PTR[08f1bbcdch+r13*1+rbp]
+	lea	r13d,DWORD PTR[((-1894007588))+r13*1+rbp]
 	rol	ecx,5
 	xor	edx,DWORD PTR[44+rsp]
 	add	r13d,eax
@@ -729,7 +729,7 @@ $L$loop::
 	mov	ecx,r13d
 	xor	ebp,DWORD PTR[28+rsp]
 	xor	ebx,r11d
-	lea	r12d,DWORD PTR[08f1bbcdch+r12*1+rdx]
+	lea	r12d,DWORD PTR[((-1894007588))+r12*1+rdx]
 	rol	ecx,5
 	xor	ebp,DWORD PTR[48+rsp]
 	add	r12d,eax
@@ -747,7 +747,7 @@ $L$loop::
 	mov	ecx,r12d
 	xor	edx,DWORD PTR[32+rsp]
 	xor	ebx,edi
-	lea	r11d,DWORD PTR[08f1bbcdch+r11*1+rbp]
+	lea	r11d,DWORD PTR[((-1894007588))+r11*1+rbp]
 	rol	ecx,5
 	xor	edx,DWORD PTR[52+rsp]
 	add	r11d,eax
@@ -765,7 +765,7 @@ $L$loop::
 	mov	ecx,r11d
 	xor	ebp,DWORD PTR[36+rsp]
 	xor	ebx,esi
-	lea	edi,DWORD PTR[08f1bbcdch+rdi*1+rdx]
+	lea	edi,DWORD PTR[((-1894007588))+rdi*1+rdx]
 	rol	ecx,5
 	xor	ebp,DWORD PTR[56+rsp]
 	add	edi,eax
@@ -783,7 +783,7 @@ $L$loop::
 	mov	ecx,edi
 	xor	edx,DWORD PTR[40+rsp]
 	xor	ebx,r13d
-	lea	esi,DWORD PTR[08f1bbcdch+rsi*1+rbp]
+	lea	esi,DWORD PTR[((-1894007588))+rsi*1+rbp]
 	rol	ecx,5
 	xor	edx,DWORD PTR[60+rsp]
 	add	esi,eax
@@ -801,7 +801,7 @@ $L$loop::
 	mov	ecx,esi
 	xor	ebp,DWORD PTR[44+rsp]
 	xor	ebx,r12d
-	lea	r13d,DWORD PTR[08f1bbcdch+r13*1+rdx]
+	lea	r13d,DWORD PTR[((-1894007588))+r13*1+rdx]
 	rol	ecx,5
 	xor	ebp,DWORD PTR[rsp]
 	add	r13d,eax
@@ -819,7 +819,7 @@ $L$loop::
 	mov	ecx,r13d
 	xor	edx,DWORD PTR[48+rsp]
 	xor	ebx,r11d
-	lea	r12d,DWORD PTR[08f1bbcdch+r12*1+rbp]
+	lea	r12d,DWORD PTR[((-1894007588))+r12*1+rbp]
 	rol	ecx,5
 	xor	edx,DWORD PTR[4+rsp]
 	add	r12d,eax
@@ -837,7 +837,7 @@ $L$loop::
 	mov	ecx,r12d
 	xor	ebp,DWORD PTR[52+rsp]
 	xor	ebx,edi
-	lea	r11d,DWORD PTR[08f1bbcdch+r11*1+rdx]
+	lea	r11d,DWORD PTR[((-1894007588))+r11*1+rdx]
 	rol	ecx,5
 	xor	ebp,DWORD PTR[8+rsp]
 	add	r11d,eax
@@ -855,7 +855,7 @@ $L$loop::
 	mov	ecx,r11d
 	xor	edx,DWORD PTR[56+rsp]
 	xor	ebx,esi
-	lea	edi,DWORD PTR[08f1bbcdch+rdi*1+rbp]
+	lea	edi,DWORD PTR[((-1894007588))+rdi*1+rbp]
 	rol	ecx,5
 	xor	edx,DWORD PTR[12+rsp]
 	add	edi,eax
@@ -873,7 +873,7 @@ $L$loop::
 	mov	ecx,edi
 	xor	ebp,DWORD PTR[60+rsp]
 	xor	ebx,r13d
-	lea	esi,DWORD PTR[08f1bbcdch+rsi*1+rdx]
+	lea	esi,DWORD PTR[((-1894007588))+rsi*1+rdx]
 	rol	ecx,5
 	xor	ebp,DWORD PTR[16+rsp]
 	add	esi,eax
@@ -891,7 +891,7 @@ $L$loop::
 	mov	ecx,esi
 	xor	edx,DWORD PTR[rsp]
 	xor	ebx,r12d
-	lea	r13d,DWORD PTR[08f1bbcdch+r13*1+rbp]
+	lea	r13d,DWORD PTR[((-1894007588))+r13*1+rbp]
 	rol	ecx,5
 	xor	edx,DWORD PTR[20+rsp]
 	add	r13d,eax
@@ -909,7 +909,7 @@ $L$loop::
 	mov	ecx,r13d
 	xor	ebp,DWORD PTR[4+rsp]
 	xor	ebx,r11d
-	lea	r12d,DWORD PTR[08f1bbcdch+r12*1+rdx]
+	lea	r12d,DWORD PTR[((-1894007588))+r12*1+rdx]
 	rol	ecx,5
 	xor	ebp,DWORD PTR[24+rsp]
 	add	r12d,eax
@@ -927,7 +927,7 @@ $L$loop::
 	mov	ecx,r12d
 	xor	edx,DWORD PTR[8+rsp]
 	xor	ebx,edi
-	lea	r11d,DWORD PTR[08f1bbcdch+r11*1+rbp]
+	lea	r11d,DWORD PTR[((-1894007588))+r11*1+rbp]
 	rol	ecx,5
 	xor	edx,DWORD PTR[28+rsp]
 	add	r11d,eax
@@ -945,7 +945,7 @@ $L$loop::
 	mov	ecx,r11d
 	xor	ebp,DWORD PTR[12+rsp]
 	xor	ebx,esi
-	lea	edi,DWORD PTR[08f1bbcdch+rdi*1+rdx]
+	lea	edi,DWORD PTR[((-1894007588))+rdi*1+rdx]
 	rol	ecx,5
 	xor	ebp,DWORD PTR[32+rsp]
 	add	edi,eax
@@ -963,7 +963,7 @@ $L$loop::
 	mov	ecx,edi
 	xor	edx,DWORD PTR[16+rsp]
 	xor	ebx,r13d
-	lea	esi,DWORD PTR[08f1bbcdch+rsi*1+rbp]
+	lea	esi,DWORD PTR[((-1894007588))+rsi*1+rbp]
 	rol	ecx,5
 	xor	edx,DWORD PTR[36+rsp]
 	add	esi,eax
@@ -979,7 +979,7 @@ $L$loop::
 	xor	ebp,DWORD PTR[60+rsp]
 	xor	eax,edi
 	rol	ecx,5
-	lea	r13d,DWORD PTR[3395469782+r13*1+rdx]
+	lea	r13d,DWORD PTR[((-899497514))+r13*1+rdx]
 	xor	ebp,DWORD PTR[20+rsp]
 	xor	eax,r12d
 	add	r13d,ecx
@@ -994,7 +994,7 @@ $L$loop::
 	xor	edx,DWORD PTR[rsp]
 	xor	eax,esi
 	rol	ecx,5
-	lea	r12d,DWORD PTR[3395469782+r12*1+rbp]
+	lea	r12d,DWORD PTR[((-899497514))+r12*1+rbp]
 	xor	edx,DWORD PTR[24+rsp]
 	xor	eax,r11d
 	add	r12d,ecx
@@ -1009,7 +1009,7 @@ $L$loop::
 	xor	ebp,DWORD PTR[4+rsp]
 	xor	eax,r13d
 	rol	ecx,5
-	lea	r11d,DWORD PTR[3395469782+r11*1+rdx]
+	lea	r11d,DWORD PTR[((-899497514))+r11*1+rdx]
 	xor	ebp,DWORD PTR[28+rsp]
 	xor	eax,edi
 	add	r11d,ecx
@@ -1024,7 +1024,7 @@ $L$loop::
 	xor	edx,DWORD PTR[8+rsp]
 	xor	eax,r12d
 	rol	ecx,5
-	lea	edi,DWORD PTR[3395469782+rdi*1+rbp]
+	lea	edi,DWORD PTR[((-899497514))+rdi*1+rbp]
 	xor	edx,DWORD PTR[32+rsp]
 	xor	eax,esi
 	add	edi,ecx
@@ -1039,7 +1039,7 @@ $L$loop::
 	xor	ebp,DWORD PTR[12+rsp]
 	xor	eax,r11d
 	rol	ecx,5
-	lea	esi,DWORD PTR[3395469782+rsi*1+rdx]
+	lea	esi,DWORD PTR[((-899497514))+rsi*1+rdx]
 	xor	ebp,DWORD PTR[36+rsp]
 	xor	eax,r13d
 	add	esi,ecx
@@ -1054,7 +1054,7 @@ $L$loop::
 	xor	edx,DWORD PTR[16+rsp]
 	xor	eax,edi
 	rol	ecx,5
-	lea	r13d,DWORD PTR[3395469782+r13*1+rbp]
+	lea	r13d,DWORD PTR[((-899497514))+r13*1+rbp]
 	xor	edx,DWORD PTR[40+rsp]
 	xor	eax,r12d
 	add	r13d,ecx
@@ -1069,7 +1069,7 @@ $L$loop::
 	xor	ebp,DWORD PTR[20+rsp]
 	xor	eax,esi
 	rol	ecx,5
-	lea	r12d,DWORD PTR[3395469782+r12*1+rdx]
+	lea	r12d,DWORD PTR[((-899497514))+r12*1+rdx]
 	xor	ebp,DWORD PTR[44+rsp]
 	xor	eax,r11d
 	add	r12d,ecx
@@ -1084,7 +1084,7 @@ $L$loop::
 	xor	edx,DWORD PTR[24+rsp]
 	xor	eax,r13d
 	rol	ecx,5
-	lea	r11d,DWORD PTR[3395469782+r11*1+rbp]
+	lea	r11d,DWORD PTR[((-899497514))+r11*1+rbp]
 	xor	edx,DWORD PTR[48+rsp]
 	xor	eax,edi
 	add	r11d,ecx
@@ -1099,7 +1099,7 @@ $L$loop::
 	xor	ebp,DWORD PTR[28+rsp]
 	xor	eax,r12d
 	rol	ecx,5
-	lea	edi,DWORD PTR[3395469782+rdi*1+rdx]
+	lea	edi,DWORD PTR[((-899497514))+rdi*1+rdx]
 	xor	ebp,DWORD PTR[52+rsp]
 	xor	eax,esi
 	add	edi,ecx
@@ -1114,7 +1114,7 @@ $L$loop::
 	xor	edx,DWORD PTR[32+rsp]
 	xor	eax,r11d
 	rol	ecx,5
-	lea	esi,DWORD PTR[3395469782+rsi*1+rbp]
+	lea	esi,DWORD PTR[((-899497514))+rsi*1+rbp]
 	xor	edx,DWORD PTR[56+rsp]
 	xor	eax,r13d
 	add	esi,ecx
@@ -1129,7 +1129,7 @@ $L$loop::
 	xor	ebp,DWORD PTR[36+rsp]
 	xor	eax,edi
 	rol	ecx,5
-	lea	r13d,DWORD PTR[3395469782+r13*1+rdx]
+	lea	r13d,DWORD PTR[((-899497514))+r13*1+rdx]
 	xor	ebp,DWORD PTR[60+rsp]
 	xor	eax,r12d
 	add	r13d,ecx
@@ -1144,7 +1144,7 @@ $L$loop::
 	xor	edx,DWORD PTR[40+rsp]
 	xor	eax,esi
 	rol	ecx,5
-	lea	r12d,DWORD PTR[3395469782+r12*1+rbp]
+	lea	r12d,DWORD PTR[((-899497514))+r12*1+rbp]
 	xor	edx,DWORD PTR[rsp]
 	xor	eax,r11d
 	add	r12d,ecx
@@ -1159,7 +1159,7 @@ $L$loop::
 	xor	ebp,DWORD PTR[44+rsp]
 	xor	eax,r13d
 	rol	ecx,5
-	lea	r11d,DWORD PTR[3395469782+r11*1+rdx]
+	lea	r11d,DWORD PTR[((-899497514))+r11*1+rdx]
 	xor	ebp,DWORD PTR[4+rsp]
 	xor	eax,edi
 	add	r11d,ecx
@@ -1174,7 +1174,7 @@ $L$loop::
 	xor	edx,DWORD PTR[48+rsp]
 	xor	eax,r12d
 	rol	ecx,5
-	lea	edi,DWORD PTR[3395469782+rdi*1+rbp]
+	lea	edi,DWORD PTR[((-899497514))+rdi*1+rbp]
 	xor	edx,DWORD PTR[8+rsp]
 	xor	eax,esi
 	add	edi,ecx
@@ -1189,7 +1189,7 @@ $L$loop::
 	xor	ebp,DWORD PTR[52+rsp]
 	xor	eax,r11d
 	rol	ecx,5
-	lea	esi,DWORD PTR[3395469782+rsi*1+rdx]
+	lea	esi,DWORD PTR[((-899497514))+rsi*1+rdx]
 	xor	ebp,DWORD PTR[12+rsp]
 	xor	eax,r13d
 	add	esi,ecx
@@ -1204,7 +1204,7 @@ $L$loop::
 	xor	edx,DWORD PTR[56+rsp]
 	xor	eax,edi
 	rol	ecx,5
-	lea	r13d,DWORD PTR[3395469782+r13*1+rbp]
+	lea	r13d,DWORD PTR[((-899497514))+r13*1+rbp]
 	xor	edx,DWORD PTR[16+rsp]
 	xor	eax,r12d
 	add	r13d,ecx
@@ -1219,7 +1219,7 @@ $L$loop::
 	xor	ebp,DWORD PTR[60+rsp]
 	xor	eax,esi
 	rol	ecx,5
-	lea	r12d,DWORD PTR[3395469782+r12*1+rdx]
+	lea	r12d,DWORD PTR[((-899497514))+r12*1+rdx]
 	xor	ebp,DWORD PTR[20+rsp]
 	xor	eax,r11d
 	add	r12d,ecx
@@ -1233,7 +1233,7 @@ $L$loop::
 	xor	edx,DWORD PTR[rsp]
 	xor	eax,r13d
 	rol	ecx,5
-	lea	r11d,DWORD PTR[3395469782+r11*1+rbp]
+	lea	r11d,DWORD PTR[((-899497514))+r11*1+rbp]
 	xor	edx,DWORD PTR[24+rsp]
 	xor	eax,edi
 	add	r11d,ecx
@@ -1247,7 +1247,7 @@ $L$loop::
 	xor	ebp,DWORD PTR[4+rsp]
 	xor	eax,r12d
 	rol	ecx,5
-	lea	edi,DWORD PTR[3395469782+rdi*1+rdx]
+	lea	edi,DWORD PTR[((-899497514))+rdi*1+rdx]
 	xor	ebp,DWORD PTR[28+rsp]
 	xor	eax,esi
 	add	edi,ecx
@@ -1258,7 +1258,7 @@ $L$loop::
 	mov	eax,r12d
 	mov	ecx,edi
 	xor	eax,r11d
-	lea	esi,DWORD PTR[3395469782+rsi*1+rbp]
+	lea	esi,DWORD PTR[((-899497514))+rsi*1+rbp]
 	rol	ecx,5
 	xor	eax,r13d
 	add	esi,ecx

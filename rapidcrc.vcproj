@@ -672,6 +672,130 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sha256-586.asm"
+				>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\sha256-x86_64.asm"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="ml64.exe /c  /nologo /Fo&quot;$(IntDir)\sha256-x86_64.obj&quot; /W3 /Zi /errorReport:prompt  $(InputFileName)&#x0D;&#x0A;"
+						Outputs="$(IntDir)\sha256-x86_64.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="ml64.exe /c  /nologo /Fo&quot;$(IntDir)\sha256-x86_64.obj&quot; /W3 /Zi /errorReport:prompt  $(InputFileName)&#x0D;&#x0A;"
+						Outputs="$(IntDir)\sha256-x86_64.obj"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\sha256_ossl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\sha512-586.asm"
+				>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\sha512-x86_64.asm"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="ml64.exe /c  /nologo /Fo&quot;$(IntDir)\sha512-x86_64.obj&quot; /W3 /Zi /errorReport:prompt  $(InputFileName)&#x0D;&#x0A;"
+						Outputs="$(IntDir)\sha512-x86_64.obj"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="MASM"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						CommandLine="ml64.exe /c  /nologo /Fo&quot;$(IntDir)\sha512-x86_64.obj&quot; /W3 /Zi /errorReport:prompt  $(InputFileName)"
+						Outputs="$(IntDir)\sha512-x86_64.obj"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\sha512_ossl.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\sortfcts.cpp"
 				>
 			</File>
@@ -723,6 +847,14 @@
 			</File>
 			<File
 				RelativePath=".\sha1_ossl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sha256_ossl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\sha512_ossl.h"
 				>
 			</File>
 			<File

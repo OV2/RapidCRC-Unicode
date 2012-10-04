@@ -445,13 +445,13 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			break;
 		case IDC_CHECK_DISPLAY_CRC_IN_LIST:
 			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bDisplayCrcInListView = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_CRC_IN_LIST) == BST_CHECKED);
+				program_options_temp.bDisplayInListView[HASH_TYPE_CRC32] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_CRC_IN_LIST) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
 		case IDC_CHECK_DISPLAY_ED2K_IN_LIST:
 			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bDisplayEd2kInListView = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_ED2K_IN_LIST) == BST_CHECKED);
+				program_options_temp.bDisplayInListView[HASH_TYPE_ED2K] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_ED2K_IN_LIST) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
@@ -505,37 +505,61 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			break;
 		case IDC_CHECK_CRC_DEFAULT:
 			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bCalcCrcPerDefault = (IsDlgButtonChecked(hDlg, IDC_CHECK_CRC_DEFAULT) == BST_CHECKED);
+				program_options_temp.bCalcPerDefault[HASH_TYPE_CRC32] = (IsDlgButtonChecked(hDlg, IDC_CHECK_CRC_DEFAULT) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
 		case IDC_CHECK_ED2K_DEFAULT:
 			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bCalcEd2kPerDefault = (IsDlgButtonChecked(hDlg, IDC_CHECK_ED2K_DEFAULT) == BST_CHECKED);
+				program_options_temp.bCalcPerDefault[HASH_TYPE_ED2K] = (IsDlgButtonChecked(hDlg, IDC_CHECK_ED2K_DEFAULT) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
 		case IDC_CHECK_SHA1_DEFAULT:
 			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bCalcSha1PerDefault = (IsDlgButtonChecked(hDlg, IDC_CHECK_SHA1_DEFAULT) == BST_CHECKED);
+				program_options_temp.bCalcPerDefault[HASH_TYPE_SHA1] = (IsDlgButtonChecked(hDlg, IDC_CHECK_SHA1_DEFAULT) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
 		case IDC_CHECK_DISPLAY_SHA1_IN_LIST:
 			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bDisplaySha1InListView = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_SHA1_IN_LIST) == BST_CHECKED);
+                program_options_temp.bDisplayInListView[HASH_TYPE_SHA1] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_SHA1_IN_LIST) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
 		case IDC_CHECK_MD5_DEFAULT:
 			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bCalcMd5PerDefault = (IsDlgButtonChecked(hDlg, IDC_CHECK_MD5_DEFAULT) == BST_CHECKED);
+				program_options_temp.bCalcPerDefault[HASH_TYPE_MD5] = (IsDlgButtonChecked(hDlg, IDC_CHECK_MD5_DEFAULT) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
 		case IDC_CHECK_DISPLAY_MD5_IN_LIST:
 			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bDisplayMd5InListView = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_MD5_IN_LIST) == BST_CHECKED);
+				program_options_temp.bDisplayInListView[HASH_TYPE_MD5] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_MD5_IN_LIST) == BST_CHECKED);
+				return TRUE;
+			}
+			break;
+        case IDC_CHECK_SHA256_DEFAULT:
+			if(HIWORD(wParam) == BN_CLICKED){
+				program_options_temp.bCalcPerDefault[HASH_TYPE_SHA256] = (IsDlgButtonChecked(hDlg, IDC_CHECK_SHA256_DEFAULT) == BST_CHECKED);
+				return TRUE;
+			}
+			break;
+		case IDC_CHECK_DISPLAY_SHA256_IN_LIST:
+			if(HIWORD(wParam) == BN_CLICKED){
+				program_options_temp.bDisplayInListView[HASH_TYPE_SHA256] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_SHA256_IN_LIST) == BST_CHECKED);
+				return TRUE;
+			}
+			break;
+        case IDC_CHECK_SHA512_DEFAULT:
+			if(HIWORD(wParam) == BN_CLICKED){
+				program_options_temp.bCalcPerDefault[HASH_TYPE_SHA512] = (IsDlgButtonChecked(hDlg, IDC_CHECK_SHA512_DEFAULT) == BST_CHECKED);
+				return TRUE;
+			}
+			break;
+		case IDC_CHECK_DISPLAY_SHA512_IN_LIST:
+			if(HIWORD(wParam) == BN_CLICKED){
+				program_options_temp.bDisplayInListView[HASH_TYPE_SHA512] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_SHA512_IN_LIST) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
@@ -775,18 +799,33 @@ __inline VOID ProcessTextQuery(NMLVDISPINFO * pnmlvdispinfo)
 
 	if(pnmlvdispinfo->item.mask & LVIF_TEXT)
 	{
-		int crcNum=0, md5Num=0, ed2kNum=0, sha1Num=0;
+		/*int crcNum=0, md5Num=0, ed2kNum=0, sha1Num=0;
 		crcNum=(g_program_options.bDisplayCrcInListView)?1:0;
 		md5Num=(g_program_options.bDisplayMd5InListView)?1:0;
 		ed2kNum=(g_program_options.bDisplayEd2kInListView)?1:0;
 		sha1Num=(g_program_options.bDisplaySha1InListView)?1:0;
 		if(sha1Num) sha1Num+=ed2kNum+md5Num+crcNum;
 		if(ed2kNum) ed2kNum+=md5Num+crcNum;
-		if(md5Num) md5Num+=crcNum;
+		if(md5Num) md5Num+=crcNum;*/
 
 		if(pnmlvdispinfo->item.iSubItem==0) {
 			pnmlvdispinfo->item.pszText = pFileinfo->szFilenameShort;
-		} else if(pnmlvdispinfo->item.iSubItem==sha1Num) {
+        } else {
+            pnmlvdispinfo->item.pszText = pFileinfo->szInfo;
+            int itemNum = pnmlvdispinfo->item.iSubItem - 1;
+            int curCol = 0;
+            for(int i=0;i<NUM_HASH_TYPES;i++) {
+                if(g_program_options.bDisplayInListView[i]) {
+                    if(curCol == itemNum) {
+                        pnmlvdispinfo->item.pszText = pFileinfo->hashInfo[i].szResult;
+                        break;
+                    }
+                    curCol++;
+                }
+            }
+
+        }
+        /* else if(pnmlvdispinfo->item.iSubItem==sha1Num) {
 			pnmlvdispinfo->item.pszText = SHA1I(pFileinfo).szResult;
 		} else if(pnmlvdispinfo->item.iSubItem==ed2kNum) {
 			pnmlvdispinfo->item.pszText = ED2KI(pFileinfo).szResult;
@@ -796,7 +835,7 @@ __inline VOID ProcessTextQuery(NMLVDISPINFO * pnmlvdispinfo)
 			pnmlvdispinfo->item.pszText = CRCI(pFileinfo).szResult;
 		} else {
 			pnmlvdispinfo->item.pszText = pFileinfo->szInfo;
-		}
+		}*/
 
 	}
 	return;
@@ -1006,29 +1045,50 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 
 	const float leftMargin = 15/10.0f;
 	const float rightMargin = 3;
+    const float labelOffset = 3;
+    const float labelWidth = 7;
+    const float editOffset = labelOffset + labelWidth + 1;
 
-	const float resultGroupY = 1415/100.0f;
-	const float actButtonY = resultGroupY + 235/100.0f;
+	//float resultGroupY = 1265/100.0f;
+    float resultGroupHeight = 75/10.0;
+    for(int i=HASH_TYPE_SHA1;i<NUM_HASH_TYPES;i++) {
+        if(g_program_options.bCalcPerDefault[i]) {
+            //resultGroupY += 15/10.0f;
+            resultGroupHeight += 15/10.0f;
+        }
+    }
+    float resultGroupY = resultGroupHeight + 515/100.0f;
+	float actButtonY = resultGroupY + 235/100.0f;
 
 #pragma warning(disable: 4244) //disable float cut-off warnings
 
 	MoveWindow(arrHwnd[ID_LISTVIEW], lACW * leftMargin, lACH * 65/100.0, wWidth - lACW * rightMargin, wHeight - lACH * (actButtonY + 1), FALSE);
 
-	MoveWindow(arrHwnd[ID_GROUP_RESULT], lACW * leftMargin, wHeight - lACH * resultGroupY, wWidth - lACW * rightMargin, lACH * 90/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_GROUP_RESULT], lACW * leftMargin, wHeight - lACH * resultGroupY, wWidth - lACW * rightMargin, lACH * resultGroupHeight, FALSE);
 
-	MoveWindow(arrHwnd[ID_STATIC_FILENAME], lACW * 3, wHeight - lACH * (resultGroupY - 15/10.0), lACW * 5, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_FILENAME], lACW * 9, wHeight - lACH * (resultGroupY - 15/10.0), wWidth - lACW * 12, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_STATIC_CRC_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 51, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_STATIC_ED2K_VALUE], lACW * 61, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_ED2K_VALUE], lACW * 67, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 42, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_STATIC_MD5_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 45/10.0), lACW * 5, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_MD5_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 45/10.0), wWidth - lACW * 12, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_STATIC_SHA1_VALUE], lACW * 3, wHeight - lACH * (resultGroupY - 60/10.0), lACW * 5, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_SHA1_VALUE], lACW * 9, wHeight - lACH * (resultGroupY - 60/10.0), wWidth - lACW * 12, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_STATIC_INFO], lACW * 3, wHeight - lACH * (resultGroupY - 75/10.0), lACW * 5, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_INFO], lACW * 9, wHeight - lACH * (resultGroupY - 75/10.0), wWidth - lACW * 20, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_ERROR_DESCR], wWidth - lACW * 105/10.0, wHeight - lACH * (resultGroupY - 73/10.0), lACW * 75/10.0, lACH * 15/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_STATIC_FILENAME], lACW * labelOffset, wHeight - lACH * (resultGroupY - 15/10.0), lACW * labelWidth, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_FILENAME], lACW * editOffset, wHeight - lACH * (resultGroupY - 15/10.0), wWidth - lACW * 12, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_STATIC_CRC_VALUE], lACW * labelOffset, wHeight - lACH * (resultGroupY - 30/10.0), lACW * labelWidth, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * editOffset, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 51, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_STATIC_ED2K_VALUE], lACW * 63, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_ED2K_VALUE], lACW * 69, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 42, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_STATIC_MD5_VALUE], lACW * labelOffset, wHeight - lACH * (resultGroupY - 45/10.0), lACW * labelWidth, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_MD5_VALUE], lACW * editOffset, wHeight - lACH * (resultGroupY - 45/10.0), wWidth - lACW * 12, lACH, FALSE);
+
+    float offset = 45/10.0;
+    for(int i=HASH_TYPE_SHA1;i<NUM_HASH_TYPES;i++) {
+        ShowWindow(arrHwnd[ID_STATIC_CRC_VALUE + i],g_program_options.bCalcPerDefault[i]);
+        ShowWindow(arrHwnd[ID_EDIT_CRC_VALUE + i],g_program_options.bCalcPerDefault[i]);
+        offset += 15/10.0;
+        if(g_program_options.bCalcPerDefault[i]) {
+            MoveWindow(arrHwnd[ID_STATIC_CRC_VALUE + i], lACW * labelOffset, wHeight - lACH * (resultGroupY - offset), lACW * labelWidth, lACH, FALSE);
+	        MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE + i], lACW * editOffset, wHeight - lACH * (resultGroupY - offset), wWidth - lACW * 12, lACH, FALSE);
+        }
+    }
+
+	MoveWindow(arrHwnd[ID_STATIC_INFO], lACW * labelOffset, wHeight - lACH * (665/100.0f), lACW * labelWidth, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_INFO], lACW * editOffset, wHeight - lACH * (665/100.0f), wWidth - lACW * 20, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_ERROR_DESCR], wWidth - lACW * 105/10.0, wHeight - lACH * (685/100.0), lACW * 75/10.0, lACH * 15/10.0, FALSE);
 
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * leftMargin, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 16 + 1) + 16, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, FALSE);
@@ -1056,26 +1116,14 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	// resize listview columns
 	iCurrentWidthUsed = 0;
 	iCurrentSubItem = 1;
-	if(g_program_options.bDisplayCrcInListView){
-		ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 14);
-		iCurrentWidthUsed += lACW * 14;
-		iCurrentSubItem++;
-	}
-	if(g_program_options.bDisplayMd5InListView){
-		ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 42);
-		iCurrentWidthUsed += lACW * 42;
-		iCurrentSubItem++;
-	}
-	if(g_program_options.bDisplayEd2kInListView){
-		ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 42);
-		iCurrentWidthUsed += lACW * 42;
-		iCurrentSubItem++;
-	}
-	if(g_program_options.bDisplaySha1InListView){
-		ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 53);
-		iCurrentWidthUsed += lACW * 53;
-		iCurrentSubItem++;
-	}
+    INT hash_widths[] = {14, 42, 42, 50, 75, 137};
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        if(g_program_options.bDisplayInListView[i]){
+		    ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * hash_widths[i]);
+		    iCurrentWidthUsed += lACW * hash_widths[i];
+		    iCurrentSubItem++;
+	    }
+    }
 	// Info text column:
 	ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 17);
 	iCurrentWidthUsed += lACW * 17;

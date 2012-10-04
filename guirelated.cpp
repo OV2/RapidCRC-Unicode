@@ -170,10 +170,14 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	arrHwnd[ID_EDIT_CRC_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_CRC_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_STATIC_MD5_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("MD5:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_MD5_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_MD5_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_MD5_VALUE, g_hInstance, NULL);
-	arrHwnd[ID_STATIC_ED2K_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("ED2K:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_CRC_VALUE, g_hInstance, NULL);
-	arrHwnd[ID_EDIT_ED2K_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_CRC_VALUE, g_hInstance, NULL);
-	arrHwnd[ID_STATIC_SHA1_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("SHA1:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_MD5_VALUE, g_hInstance, NULL);
-	arrHwnd[ID_EDIT_SHA1_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_MD5_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_STATIC_ED2K_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("ED2K:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_ED2K_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_ED2K_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_ED2K_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_STATIC_SHA1_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("SHA1:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_SHA1_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_SHA1_VALUE]			= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_SHA1_VALUE, g_hInstance, NULL);
+    arrHwnd[ID_STATIC_SHA256_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("SHA512:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_SHA256_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_SHA256_VALUE]		= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_SHA256_VALUE, g_hInstance, NULL);
+    arrHwnd[ID_STATIC_SHA512_VALUE]		= CreateWindow(TEXT("STATIC"), TEXT("SHA512:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_SHA512_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_SHA512_VALUE]		= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_SHA512_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_STATIC_INFO]				= CreateWindow(TEXT("STATIC"), TEXT("Info:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_INFO, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_INFO]				= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_INFO, g_hInstance, NULL);
 	arrHwnd[ID_BTN_ERROR_DESCR]			= CreateWindow(TEXT("BUTTON"), TEXT("Descr."), BS_PUSHBUTTON | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_ERROR_DESCR, g_hInstance, NULL);
@@ -255,13 +259,19 @@ void CreateListViewPopupMenu(HMENU *menu)
 *****************************************************************************/
 void CreateListViewPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
+    TCHAR menuText[100];
 	//HMENU hSubMenu = CreatePopupMenu();
+
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K_LINK,TEXT("Copy ED2K Link to Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K,TEXT("Copy ED2K to Clipboard"));
+	/*InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K,TEXT("Copy ED2K to Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_SHA1,TEXT("Copy SHA1 to Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_MD5,TEXT("Copy MD5 to Clipboard"));
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC,TEXT("Copy CRC to Clipboard"));
+	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC,TEXT("Copy CRC to Clipboard"));*/
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        StringCchPrintf(menuText,100,TEXT("Copy %s to Clipboard"),g_hash_names[i]);
+        InsertMenu(*menu,i, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC + i,menuText);
+    }
 
 	//InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_POPUP,(UINT_PTR)hSubMenu,TEXT("Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
@@ -293,24 +303,15 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 
 	if(finalList->size() == 0) return;
 
-	switch(menuid) {
-		case IDM_COPY_CRC:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((CRC_AS_STRING_LENGHT + 1) * finalList->size() + 1) * sizeof(TCHAR));
-									break;
-		case IDM_COPY_MD5:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((MD5_AS_STRING_LENGHT + 1) * finalList->size() + 1) * sizeof(TCHAR));
-									break;
-		case IDM_COPY_ED2K:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((ED2K_AS_STRING_LENGHT + 1) * finalList->size() + 1) * sizeof(TCHAR));
-									break;
-		case IDM_COPY_SHA1:			gAlloc = GlobalAlloc(GMEM_MOVEABLE,((SHA1_AS_STRING_LENGHT + 1) * finalList->size() + 1) * sizeof(TCHAR));
-									break;
-		case IDM_COPY_ED2K_LINK:	bLink = true;
-									break;
-	}
+    UINT hash_string_lengths[] = { 9, 33, 33, 41, 65, 129 };
+
 	if(!OpenClipboard(hListView)) return;
     if(!EmptyClipboard()) {
         CloseClipboard();
         return;
     }
-	if(bLink) {
+
+	if(menuid == IDM_COPY_ED2K_LINK) {
 		max_ed2k_str_size = finalList->size() * MAX_ED2K_LINK_ENCODED_SIZE + 1;
 		ed2k_links = (TCHAR *)malloc(max_ed2k_str_size * sizeof(TCHAR));
 		if(ed2k_links == NULL) {
@@ -345,6 +346,8 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 		clip[ed2kStrSize-2]=TEXT('\0');
 		free(ed2k_links);
 	} else {
+        UINT hash_type = menuid - IDM_COPY_CRC;
+        gAlloc = GlobalAlloc(GMEM_MOVEABLE,((hash_string_lengths[hash_type] + 1) * finalList->size() + 1) * sizeof(TCHAR));
 		if(gAlloc == NULL) {
 			CloseClipboard();
 			return;
@@ -357,31 +360,14 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 	
 		curpos = clip;
 		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
-			switch(menuid) {
-				case IDM_COPY_CRC:	memcpy(curpos,CRCI(*it).szResult,CRC_AS_STRING_LENGHT * sizeof(TCHAR));
-									curpos[CRC_AS_STRING_LENGHT-1] = TEXT('\r');
-									curpos[CRC_AS_STRING_LENGHT] = TEXT('\n');
-									curpos += CRC_AS_STRING_LENGHT+1;
-									break;
-				case IDM_COPY_MD5:	memcpy(curpos,MD5I(*it).szResult,MD5_AS_STRING_LENGHT * sizeof(TCHAR));
-									curpos[MD5_AS_STRING_LENGHT-1] = TEXT('\r');
-									curpos[MD5_AS_STRING_LENGHT] = TEXT('\n');
-									curpos += MD5_AS_STRING_LENGHT+1;
-									break;
-				case IDM_COPY_ED2K: memcpy(curpos,ED2KI(*it).szResult,ED2K_AS_STRING_LENGHT * sizeof(TCHAR));
-									curpos[ED2K_AS_STRING_LENGHT-1] = TEXT('\r');
-									curpos[ED2K_AS_STRING_LENGHT] = TEXT('\n');
-									curpos += ED2K_AS_STRING_LENGHT+1;
-									break;
-				case IDM_COPY_SHA1: memcpy(curpos,SHA1I(*it).szResult,SHA1_AS_STRING_LENGHT * sizeof(TCHAR));
-									curpos[SHA1_AS_STRING_LENGHT-1] = TEXT('\r');
-									curpos[SHA1_AS_STRING_LENGHT] = TEXT('\n');
-									curpos += SHA1_AS_STRING_LENGHT+1;
-									break;
-			}
+            memcpy(curpos,(*it)->hashInfo[hash_type].szResult,hash_string_lengths[hash_type] * sizeof(TCHAR));
+            curpos[hash_string_lengths[hash_type]-1] = TEXT('\r');
+			curpos[hash_string_lengths[hash_type]] = TEXT('\n');
+            curpos += hash_string_lengths[hash_type]+1;
 		}
 		*(curpos - 1) = TEXT('\0');
 	}
+
 	GlobalUnlock(gAlloc);
 	SetClipboardData(CF_UNICODETEXT,gAlloc);
 	CloseClipboard();
@@ -501,40 +487,42 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 	int ret;
 	UINT uiSelected = 0;	
 	list<FILEINFO*> finalList;
-	bool bCrc=true,bMd5=true,bSha1=true,bEd2k=true;
+	//bool bCrc=true,bMd5=true,bSha1=true,bEd2k=true;
+    bool bCalculatedForSelected[NUM_HASH_TYPES];
+    for(int i=0;i<NUM_HASH_TYPES;i++)
+        bCalculatedForSelected[i] = true;
 
 	uiSelected = ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]);
 
 	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,uiSelected);
 
 	for(list<FILEINFO*>::iterator it=finalList.begin();it!=finalList.end();it++) {
-		if(!(*it)->parentList->bCalculated[HASH_TYPE_CRC32]) bCrc = false;
-		if(!(*it)->parentList->bCalculated[HASH_TYPE_MD5]) bMd5 = false;
-		if(!(*it)->parentList->bCalculated[HASH_TYPE_SHA1]) bSha1 = false;
-		if(!(*it)->parentList->bCalculated[HASH_TYPE_ED2K]) bEd2k = false;
+        for(int i=0;i<NUM_HASH_TYPES;i++)
+            if(!(*it)->parentList->bCalculated[i])
+                bCalculatedForSelected[i] = false;
 	}
 	if(finalList.empty()) {
-		bCrc = false;
-		bMd5 = false;
-		bSha1 = false;
-		bEd2k = false;
+		for(int i=0;i<NUM_HASH_TYPES;i++)
+            bCalculatedForSelected[i] = false;
 	}
 
 	EnableMenuItem(popup,IDM_CLEAR_LIST,MF_BYCOMMAND | (SyncQueue.bThreadDone ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_REMOVE_ITEMS,MF_BYCOMMAND | ((SyncQueue.bThreadDone && uiSelected>0) ? MF_ENABLED : MF_GRAYED));
     EnableMenuItem(popup,IDM_HIDE_VERIFIED,MF_BYCOMMAND | (SyncQueue.bThreadDone ? MF_ENABLED : MF_GRAYED));
     CheckMenuItem(popup,IDM_HIDE_VERIFIED,MF_BYCOMMAND | (g_pstatus.bHideVerified ? MF_CHECKED : MF_UNCHECKED));
-	EnableMenuItem(popup,IDM_COPY_CRC,MF_BYCOMMAND | (bCrc ? MF_ENABLED : MF_GRAYED));
-	EnableMenuItem(popup,IDM_COPY_MD5,MF_BYCOMMAND | (bMd5 ? MF_ENABLED : MF_GRAYED));
-	EnableMenuItem(popup,IDM_COPY_SHA1,MF_BYCOMMAND | (bSha1 ? MF_ENABLED : MF_GRAYED));
-	EnableMenuItem(popup,IDM_COPY_ED2K,MF_BYCOMMAND | (bEd2k ? MF_ENABLED : MF_GRAYED));
-	EnableMenuItem(popup,IDM_COPY_ED2K_LINK,MF_BYCOMMAND | (bEd2k ? MF_ENABLED : MF_GRAYED));
+
+    for(int i=0;i<NUM_HASH_TYPES;i++)
+	    EnableMenuItem(popup,IDM_COPY_CRC + i,MF_BYCOMMAND | (bCalculatedForSelected[i] ? MF_ENABLED : MF_GRAYED));
+
+    EnableMenuItem(popup,IDM_COPY_ED2K_LINK,MF_BYCOMMAND | (bCalculatedForSelected[HASH_TYPE_ED2K] ? MF_ENABLED : MF_GRAYED));
 
     ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,arrHwnd[ID_LISTVIEW],NULL);
 	switch(ret) {
 		case IDM_COPY_CRC:			
 		case IDM_COPY_MD5:
 		case IDM_COPY_SHA1:
+        case IDM_COPY_SHA256:
+        case IDM_COPY_SHA512:
 		case IDM_COPY_ED2K:			
 		case IDM_COPY_ED2K_LINK:	HandleClipboard(arrHwnd[ID_LISTVIEW],ret,&finalList);
 									break;
@@ -559,10 +547,9 @@ void CreateListViewHeaderPopupMenu(HMENU *menu)
 *****************************************************************************/
 void CreateListViewHeaderPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_CHECKED,IDM_SHA1_COLUMN,TEXT("SHA1"));
-    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_CHECKED,IDM_ED2K_COLUMN,TEXT("ED2K"));
-    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_CHECKED,IDM_MD5_COLUMN,TEXT("MD5"));
-    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_CHECKED,IDM_CRC_COLUMN,TEXT("CRC32"));
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        InsertMenu(*menu, i, MF_BYPOSITION | MF_STRING | MF_CHECKED, IDM_CRC_COLUMN + i, g_hash_names[i]);
+    }
 }
 
 /*****************************************************************************
@@ -582,13 +569,21 @@ Notes:
 BOOL ListViewHeaderPopup(HWND pHwnd,HMENU popup,int x,int y) {
 	int ret;
 	
-    CheckMenuItem(popup,IDM_CRC_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayCrcInListView ? MF_CHECKED : MF_UNCHECKED));
-	CheckMenuItem(popup,IDM_MD5_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayMd5InListView ? MF_CHECKED : MF_UNCHECKED));
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        CheckMenuItem(popup,IDM_CRC_COLUMN + i,MF_BYCOMMAND | (g_program_options.bDisplayInListView[i] ? MF_CHECKED : MF_UNCHECKED));
+    }
+
+	/*CheckMenuItem(popup,IDM_MD5_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayMd5InListView ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(popup,IDM_ED2K_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayEd2kInListView ? MF_CHECKED : MF_UNCHECKED));
 	CheckMenuItem(popup,IDM_SHA1_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplaySha1InListView ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(popup,IDM_SHA512_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplaySha512InListView ? MF_CHECKED : MF_UNCHECKED));*/
 	
     ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,pHwnd,NULL);
-	switch(ret) {
+    if(ret > 0) {
+        g_program_options.bDisplayInListView[ret - IDM_CRC_COLUMN] = !g_program_options.bDisplayInListView[ret - IDM_CRC_COLUMN];
+        return TRUE;
+    }
+	/*switch(ret) {
 		case IDM_CRC_COLUMN:
             g_program_options.bDisplayCrcInListView = !g_program_options.bDisplayCrcInListView;
 			return TRUE;
@@ -601,9 +596,12 @@ BOOL ListViewHeaderPopup(HWND pHwnd,HMENU popup,int x,int y) {
 		case IDM_SHA1_COLUMN:
 			g_program_options.bDisplaySha1InListView = !g_program_options.bDisplaySha1InListView;
 			return TRUE;
+        case IDM_SHA512_COLUMN:
+			g_program_options.bDisplaySha512InListView = !g_program_options.bDisplaySha512InListView;
+			return TRUE;
 		default:
             break;
-	}
+	}*/
     return FALSE;
 }
 
@@ -835,11 +833,9 @@ VOID UpdateListViewColumns(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LONG lACW)
 
 	//ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
 
-	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 5);
-	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 4);
-	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 3);
-	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 2);
-	ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], 1);
+    for(int i=NUM_HASH_TYPES + 1;i>0;i--) {
+        ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], i);
+    }
 
 	SetSubItemColumns(arrHwnd[ID_LISTVIEW]);
 
@@ -876,57 +872,84 @@ BOOL SetSubItemColumns(CONST HWND hWndListView)
 	LVCOLUMN lvcolumn;
 	INT iCurrentSubItem = 1;
 
-	if(g_program_options.bDisplayCrcInListView){
-		lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-		lvcolumn.fmt = LVCFMT_LEFT;
-		lvcolumn.cx = 0; // is resized later in WM_SIZE
-		lvcolumn.pszText = TEXT("CRC32");
-		lvcolumn.iSubItem = iCurrentSubItem;
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        if(g_program_options.bDisplayInListView[i]){
+		    lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+		    lvcolumn.fmt = LVCFMT_LEFT;
+		    lvcolumn.cx = 0; // is resized later in WM_SIZE
+            lvcolumn.pszText = g_hash_names[i];
+		    lvcolumn.iSubItem = iCurrentSubItem;
 
-		if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
-			return FALSE;
+		    if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
+			    return FALSE;
 
-		iCurrentSubItem++;
-	}
+		    iCurrentSubItem++;
+	    }
+    }
+	//if(g_program_options.bDisplayCrcInListView){
+	//	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+	//	lvcolumn.fmt = LVCFMT_LEFT;
+	//	lvcolumn.cx = 0; // is resized later in WM_SIZE
+	//	lvcolumn.pszText = TEXT("CRC32");
+	//	lvcolumn.iSubItem = iCurrentSubItem;
 
-	if(g_program_options.bDisplayMd5InListView){
-		lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-		lvcolumn.fmt = LVCFMT_LEFT;
-		lvcolumn.cx = 0;
-		lvcolumn.pszText = TEXT("MD5");
-		lvcolumn.iSubItem = iCurrentSubItem;
+	//	if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
+	//		return FALSE;
 
-		if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
-			return FALSE;
+	//	iCurrentSubItem++;
+	//}
 
-		iCurrentSubItem++;
-	}
+	//if(g_program_options.bDisplayMd5InListView){
+	//	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+	//	lvcolumn.fmt = LVCFMT_LEFT;
+	//	lvcolumn.cx = 0;
+	//	lvcolumn.pszText = TEXT("MD5");
+	//	lvcolumn.iSubItem = iCurrentSubItem;
 
-	if(g_program_options.bDisplayEd2kInListView){
-		lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-		lvcolumn.fmt = LVCFMT_LEFT;
-		lvcolumn.cx = 0;
-		lvcolumn.pszText = TEXT("ED2K");
-		lvcolumn.iSubItem = iCurrentSubItem;
+	//	if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
+	//		return FALSE;
 
-		if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
-			return FALSE;
+	//	iCurrentSubItem++;
+	//}
 
-		iCurrentSubItem++;
-	}
+	//if(g_program_options.bDisplayEd2kInListView){
+	//	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+	//	lvcolumn.fmt = LVCFMT_LEFT;
+	//	lvcolumn.cx = 0;
+	//	lvcolumn.pszText = TEXT("ED2K");
+	//	lvcolumn.iSubItem = iCurrentSubItem;
 
-	if(g_program_options.bDisplaySha1InListView){
-		lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-		lvcolumn.fmt = LVCFMT_LEFT;
-		lvcolumn.cx = 0;
-		lvcolumn.pszText = TEXT("SHA1");
-		lvcolumn.iSubItem = iCurrentSubItem;
+	//	if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
+	//		return FALSE;
 
-		if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
-			return FALSE;
+	//	iCurrentSubItem++;
+	//}
 
-		iCurrentSubItem++;
-	}
+	//if(g_program_options.bDisplaySha1InListView){
+	//	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+	//	lvcolumn.fmt = LVCFMT_LEFT;
+	//	lvcolumn.cx = 0;
+	//	lvcolumn.pszText = TEXT("SHA1");
+	//	lvcolumn.iSubItem = iCurrentSubItem;
+
+	//	if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
+	//		return FALSE;
+
+	//	iCurrentSubItem++;
+	//}
+
+ //   if(g_program_options.bDisplaySha512InListView){
+	//	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
+	//	lvcolumn.fmt = LVCFMT_LEFT;
+	//	lvcolumn.cx = 0;
+	//	lvcolumn.pszText = TEXT("SHA512");
+	//	lvcolumn.iSubItem = iCurrentSubItem;
+
+	//	if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
+	//		return FALSE;
+
+	//	iCurrentSubItem++;
+	//}
 
 	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvcolumn.fmt = LVCFMT_LEFT;
@@ -970,10 +993,13 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 
 	if(pFileinfo == NULL){
 		SetWindowText(arrHwnd[ID_EDIT_FILENAME], TEXT(""));
-		SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE], TEXT(""));
+        for(int i=0;i<NUM_HASH_TYPES;i++) {
+            SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE + i], TEXT(""));
+        }
+		/*SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE], TEXT(""));
 		SetWindowText(arrHwnd[ID_EDIT_MD5_VALUE], TEXT(""));
 		SetWindowText(arrHwnd[ID_EDIT_ED2K_VALUE], TEXT(""));
-		SetWindowText(arrHwnd[ID_EDIT_SHA1_VALUE], TEXT(""));
+		SetWindowText(arrHwnd[ID_EDIT_SHA1_VALUE], TEXT(""));*/
 		SetWindowText(arrHwnd[ID_EDIT_INFO], TEXT(""));
 		ShowWindow(arrHwnd[ID_BTN_ERROR_DESCR], SW_HIDE);
 		pshowresult_params->pFileinfo_cur_displayed = NULL ;
@@ -985,10 +1011,9 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 
 		if(pFileinfo->dwError != NO_ERROR){
 			SetWindowText(arrHwnd[ID_EDIT_FILENAME], pFileinfo->szFilenameShort);
-			SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE], TEXT(""));
-			SetWindowText(arrHwnd[ID_EDIT_MD5_VALUE], TEXT(""));
-			SetWindowText(arrHwnd[ID_EDIT_ED2K_VALUE], TEXT(""));
-			SetWindowText(arrHwnd[ID_EDIT_SHA1_VALUE], TEXT(""));
+			for(int i=0;i<NUM_HASH_TYPES;i++) {
+                SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE + i], TEXT(""));
+            }
 			if(pFileinfo->dwError == APPL_ERROR_ILLEGAL_CRC)
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("The found checksum for this file was not valid"), pFileinfo->dwError);
             else if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND || pFileinfo->dwError == ERROR_PATH_NOT_FOUND)
@@ -1055,6 +1080,20 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 			else
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
 			SetWindowText(arrHwnd[ID_EDIT_ED2K_VALUE], szTemp1);
+
+            if(pFileinfo->parentList->bCalculated[HASH_TYPE_SHA256]){
+				StringCchCopy(szTemp1,MAX_RESULT_LINE,SHA256I(pFileinfo).szResult);
+			}
+			else
+				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
+			SetWindowText(arrHwnd[ID_EDIT_SHA256_VALUE], szTemp1);
+
+            if(pFileinfo->parentList->bCalculated[HASH_TYPE_SHA512]){
+				StringCchCopy(szTemp1,MAX_RESULT_LINE,SHA512I(pFileinfo).szResult);
+			}
+			else
+				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
+			SetWindowText(arrHwnd[ID_EDIT_SHA512_VALUE], szTemp1);
 
 			if(pFileinfo->parentList->bCalculated[HASH_TYPE_SHA1]){
 				StringCchCopy(szTemp1,MAX_RESULT_LINE,SHA1I(pFileinfo).szResult);
@@ -1232,21 +1271,18 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
     TCHAR szGenFilename[MAX_PATH_EX];
     HWND dlgItem;
 
-	CheckDlgButton(hDlg, IDC_CHECK_CRC_DEFAULT, pprogram_options->bCalcCrcPerDefault ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(hDlg, IDC_CHECK_MD5_DEFAULT, pprogram_options->bCalcMd5PerDefault ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(hDlg, IDC_CHECK_ED2K_DEFAULT, pprogram_options->bCalcEd2kPerDefault ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_CRC_IN_LIST, pprogram_options->bDisplayCrcInListView ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_ED2K_IN_LIST, pprogram_options->bDisplayEd2kInListView ? BST_CHECKED : BST_UNCHECKED);
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        CheckDlgButton(hDlg, IDC_CHECK_CRC_DEFAULT + i, pprogram_options->bCalcPerDefault[i] ? BST_CHECKED : BST_UNCHECKED);
+        CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_CRC_IN_LIST + i, pprogram_options->bDisplayInListView[i] ? BST_CHECKED : BST_UNCHECKED);
+    }
+
 	CheckDlgButton(hDlg, IDC_CHECK_SORT_LIST, pprogram_options->bSortList ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_AUTO_SCROLL, pprogram_options->bAutoScrollListView ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_WINSFV_COMP, pprogram_options->bWinsfvComp ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_CREATE_UNIX_STYLE, pprogram_options->bCreateUnixStyle ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_CREATE_UNICODE_FILES, pprogram_options->bCreateUnicodeFiles ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_MD5_IN_LIST, pprogram_options->bDisplayMd5InListView ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_ENABLE_QUEUE, pprogram_options->bEnableQueue ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_USE_DEFAULT_CP, pprogram_options->bUseDefaultCP ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(hDlg, IDC_CHECK_SHA1_DEFAULT, pprogram_options->bCalcSha1PerDefault ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(hDlg, IDC_CHECK_DISPLAY_SHA1_IN_LIST, pprogram_options->bDisplaySha1InListView ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_ALLOW_CRC_ANYWHERE, pprogram_options->bAllowCrcAnywhere ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(hDlg, IDC_CHECK_INCLUDE_COMMENTS, pprogram_options->bIncludeFileComments ? BST_CHECKED : BST_UNCHECKED);
 

@@ -74,7 +74,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MAX_LINE_LENGTH MAX_PATH_EX + 100
 #define MAX_UTF8_PATH (MAX_PATH_EX * 4)
 #define MAX_RESULT_LINE 200
-#define RESULT_AS_STRING_MAX_LENGTH 41
+#define RESULT_AS_STRING_MAX_LENGTH 129
 
 #define CRC_AS_STRING_LENGHT 9
 #define MD5_AS_STRING_LENGHT 33
@@ -87,12 +87,16 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define HASH_TYPE_MD5 1
 #define HASH_TYPE_ED2K 2
 #define HASH_TYPE_SHA1 3
-#define NUM_HASH_TYPES 4
+#define HASH_TYPE_SHA256 4
+#define HASH_TYPE_SHA512 5
+#define NUM_HASH_TYPES 6
 
 #define CRCI(x) (x)->hashInfo[HASH_TYPE_CRC32]
 #define MD5I(x) (x)->hashInfo[HASH_TYPE_MD5]
 #define SHA1I(x) (x)->hashInfo[HASH_TYPE_SHA1]
 #define ED2KI(x) (x)->hashInfo[HASH_TYPE_ED2K]
+#define SHA256I(x) (x)->hashInfo[HASH_TYPE_SHA256]
+#define SHA512I(x) (x)->hashInfo[HASH_TYPE_SHA512]
 
 // special error codes ("Bit 29 is reserved for application-defined error codes; no system
 // error code has this bit set. If you are defining an error code for your application, set
@@ -159,58 +163,65 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_STATIC_FILENAME			3
 #define ID_STATIC_CRC_VALUE			4
 #define ID_STATIC_MD5_VALUE			5
-#define ID_STATIC_INFO				6
-#define ID_STATIC_STATUS			7
+#define ID_STATIC_ED2K_VALUE		6
+#define ID_STATIC_SHA1_VALUE		7
+#define ID_STATIC_SHA256_VALUE		8
+#define ID_STATIC_SHA512_VALUE		9
+#define ID_STATIC_INFO				10
+#define ID_STATIC_STATUS			11
 
-#define ID_STATIC_PRIORITY			8
-#define ID_PROGRESS_FILE			9
-#define ID_PROGRESS_GLOBAL			10
+#define ID_STATIC_PRIORITY			12
+#define ID_PROGRESS_FILE			13
+#define ID_PROGRESS_GLOBAL			14
 
 //the ids here are used to initialize the window order, which equals the tab order
-#define ID_FIRST_TAB_CONTROL		11
+#define ID_FIRST_TAB_CONTROL		15
 #define ID_BTN_EXIT					2		// 2==IDCANCEL
-#define ID_LISTVIEW					11
+#define ID_LISTVIEW					15
 
-#define ID_BTN_CRC_IN_SFV			12
-#define ID_BTN_MD5_IN_MD5			13
-#define ID_BTN_SHA1_IN_SHA1			14
-#define ID_BTN_CRC_IN_FILENAME		15
-#define ID_BTN_CRC_IN_STREAM		16
-#define ID_BTN_PLAY_PAUSE			17
-#define ID_BTN_OPTIONS				18
+#define ID_BTN_CRC_IN_SFV			16
+#define ID_BTN_MD5_IN_MD5			17
+#define ID_BTN_SHA1_IN_SHA1			18
+#define ID_BTN_CRC_IN_FILENAME		19
+#define ID_BTN_CRC_IN_STREAM		20
+#define ID_BTN_PLAY_PAUSE			21
+#define ID_BTN_OPTIONS				22
 
-#define ID_EDIT_FILENAME			19
-#define ID_EDIT_CRC_VALUE			20
-#define ID_EDIT_MD5_VALUE			21
-#define ID_EDIT_ED2K_VALUE			22
-#define ID_EDIT_SHA1_VALUE			23
-#define ID_EDIT_INFO				24
-#define ID_EDIT_STATUS				25
-#define ID_BTN_ERROR_DESCR			26
+#define ID_EDIT_FILENAME			23
+#define ID_EDIT_CRC_VALUE			24
+#define ID_EDIT_MD5_VALUE			25
+#define ID_EDIT_ED2K_VALUE			26
+#define ID_EDIT_SHA1_VALUE			27
+#define ID_EDIT_SHA256_VALUE		28
+#define ID_EDIT_SHA512_VALUE		29
+#define ID_EDIT_INFO				30
+#define ID_EDIT_STATUS				31
+#define ID_BTN_ERROR_DESCR			32
 
-#define ID_COMBO_PRIORITY			27
-#define ID_BTN_OPENFILES_PAUSE		28
-#define ID_LAST_TAB_CONTROL			28
+#define ID_COMBO_PRIORITY			33
+#define ID_BTN_OPENFILES_PAUSE		34
+#define ID_LAST_TAB_CONTROL			35
 
-//further ids whithout tab
-#define ID_STATIC_ED2K_VALUE		29
-#define ID_STATIC_SHA1_VALUE		30
-
-#define ID_NUM_WINDOWS				31
+#define ID_NUM_WINDOWS				35
 
 #define IDM_COPY_CRC				40
 #define IDM_COPY_MD5				41
 #define IDM_COPY_ED2K				42
-#define IDM_COPY_ED2K_LINK			43
-#define IDM_REMOVE_ITEMS			44
-#define IDM_CLEAR_LIST				45
-#define IDM_COPY_SHA1				46
-#define IDM_HIDE_VERIFIED           47
+#define IDM_COPY_SHA1				43
+#define IDM_COPY_SHA256				44
+#define IDM_COPY_SHA512				45
+#define IDM_COPY_ED2K_LINK			46
+#define IDM_REMOVE_ITEMS			47
+#define IDM_CLEAR_LIST				48
+
+#define IDM_HIDE_VERIFIED           49
 
 #define IDM_CRC_COLUMN              50
 #define IDM_MD5_COLUMN              51
 #define IDM_ED2K_COLUMN             52
 #define IDM_SHA1_COLUMN             53
+#define IDM_SHA256_COLUMN           54
+#define IDM_SHA512_COLUMN           55
 
 //****** file open dialog *******
 #define FDIALOG_OPENCHOICES 0
@@ -247,6 +258,8 @@ typedef struct _FILEINFO{
             BYTE	abMd5Result[16];
             BYTE	abSha1Result[20];
             BYTE	abEd2kResult[16];
+            BYTE	abSHA256Result[32];
+            BYTE	abSHA512Result[64];
         } r;
         union {
             DWORD   dwCrc32Found;
@@ -350,6 +363,8 @@ typedef struct{
 	TCHAR			szFilenameSha1[MAX_PATH];
     BOOL            bIncludeFileComments;
     UINT            uiDefaultCP;
+    BOOL			bDisplayInListView[10];
+    BOOL            bCalcPerDefault[10];
 }PROGRAM_OPTIONS;
 
 typedef struct{
@@ -373,6 +388,7 @@ extern HINSTANCE g_hInstance;
 extern PROGRAM_OPTIONS g_program_options;
 extern PROGRAM_STATUS g_pstatus;
 extern CRITICAL_SECTION thread_fileinfo_crit;
+extern TCHAR *g_hash_names[];
 
 //****** function prototypes *******
 
@@ -507,6 +523,8 @@ INT QuickCompFunction(const void * pFileinfo1, const void * pFileinfo2);
 UINT __stdcall ThreadProc_Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Sha1Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha256Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha512Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam);
 DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam);
 void StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_params, lFILEINFO * fileList);

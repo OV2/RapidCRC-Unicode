@@ -434,13 +434,13 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 
 	ProcessFileProperties(fileList);
 
-	fileList->bDoCalculate[HASH_TYPE_CRC32]	= ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcCrcPerDefault))
-								|| (fileList->uiRapidCrcMode == MODE_SFV);
-	fileList->bDoCalculate[HASH_TYPE_MD5]	= ((fileList->uiRapidCrcMode == MODE_NORMAL) &&	(g_program_options.bCalcMd5PerDefault))
-								|| (fileList->uiRapidCrcMode == MODE_MD5);
-	fileList->bDoCalculate[HASH_TYPE_ED2K]  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcEd2kPerDefault));
-	fileList->bDoCalculate[HASH_TYPE_SHA1]  = ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcSha1PerDefault))
-								|| (fileList->uiRapidCrcMode == MODE_SHA1);
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        fileList->bDoCalculate[i]	= ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcPerDefault[i]));
+    }
+
+	fileList->bDoCalculate[HASH_TYPE_CRC32]	|= (fileList->uiRapidCrcMode == MODE_SFV);
+	fileList->bDoCalculate[HASH_TYPE_MD5]	|= (fileList->uiRapidCrcMode == MODE_MD5);
+	fileList->bDoCalculate[HASH_TYPE_SHA1]  |= (fileList->uiRapidCrcMode == MODE_SHA1);
 
 	switch(fileList->uiCmdOpts) {
 		case CMD_SFV:

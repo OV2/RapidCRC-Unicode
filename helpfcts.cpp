@@ -411,6 +411,41 @@ VOID ReadOptions()
 	if(!g_pstatus.bHaveComCtrlv6)
 		g_program_options.bEnableQueue = FALSE;
 
+    // import old program options
+    if(g_program_options.bCalcCrcPerDefault!=-1) {
+        g_program_options.bCalcPerDefault[HASH_TYPE_CRC32] = g_program_options.bCalcCrcPerDefault;
+        g_program_options.bCalcCrcPerDefault=-1;
+    }
+    if(g_program_options.bCalcMd5PerDefault!=-1) {
+        g_program_options.bCalcPerDefault[HASH_TYPE_MD5] = g_program_options.bCalcMd5PerDefault;
+        g_program_options.bCalcMd5PerDefault=-1;
+    }
+    if(g_program_options.bCalcEd2kPerDefault!=-1) {
+        g_program_options.bCalcPerDefault[HASH_TYPE_ED2K] = g_program_options.bCalcEd2kPerDefault;
+        g_program_options.bCalcEd2kPerDefault=-1;
+    }
+    if(g_program_options.bCalcSha1PerDefault!=-1) {
+        g_program_options.bCalcPerDefault[HASH_TYPE_SHA1] = g_program_options.bCalcSha1PerDefault;
+        g_program_options.bCalcSha1PerDefault=-1;
+    }
+
+    if(g_program_options.bDisplayCrcInListView!=-1) {
+        g_program_options.bDisplayInListView[HASH_TYPE_CRC32] = g_program_options.bDisplayCrcInListView;
+        g_program_options.bDisplayCrcInListView=-1;
+    }
+    if(g_program_options.bDisplayMd5InListView!=-1) {
+        g_program_options.bDisplayInListView[HASH_TYPE_MD5] = g_program_options.bDisplayMd5InListView;
+        g_program_options.bDisplayMd5InListView=-1;
+    }
+    if(g_program_options.bDisplayEd2kInListView!=-1) {
+        g_program_options.bDisplayInListView[HASH_TYPE_ED2K] = g_program_options.bDisplayEd2kInListView;
+        g_program_options.bDisplayEd2kInListView=-1;
+    }
+    if(g_program_options.bDisplaySha1InListView!=-1) {
+        g_program_options.bDisplayInListView[HASH_TYPE_SHA1] = g_program_options.bDisplaySha1InListView;
+        g_program_options.bDisplaySha1InListView=-1;
+    }
+
 	if(!IsLegalFilename(g_program_options.szFilenamePattern) ||
 	   !IsLegalFilename(g_program_options.szFilenameMd5) ||
 	   !IsLegalFilename(g_program_options.szFilenameSfv))
@@ -515,20 +550,20 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	pprogram_options->dwVersion = 1;
 	StringCchCopy(pprogram_options->szFilenamePattern, MAX_PATH_EX, TEXT("%FILENAME [%CRC].%FILEEXT") );
 	*pprogram_options->szExcludeString = TEXT('\0');
-	pprogram_options->bDisplayCrcInListView = FALSE;
-	pprogram_options->bDisplayEd2kInListView = FALSE;
+	pprogram_options->bDisplayCrcInListView = -1;
+	pprogram_options->bDisplayEd2kInListView = -1;
 	pprogram_options->bOwnChecksumFile = FALSE;
 	pprogram_options->bSortList = FALSE;
 	pprogram_options->bAutoScrollListView = FALSE;
 	pprogram_options->bWinsfvComp = TRUE;
 	pprogram_options->uiPriority = PRIORITY_NORMAL;
-	pprogram_options->bDisplayMd5InListView = FALSE;
+	pprogram_options->bDisplayMd5InListView = -1;
 	pprogram_options->uiWndWidth = 119;
 	pprogram_options->uiWndHeight = 35;
 	pprogram_options->iWndCmdShow = SW_NORMAL;
-	pprogram_options->bCalcCrcPerDefault = TRUE;
-	pprogram_options->bCalcMd5PerDefault = FALSE;
-	pprogram_options->bCalcEd2kPerDefault = FALSE;
+	pprogram_options->bCalcCrcPerDefault = -1;
+	pprogram_options->bCalcMd5PerDefault = -1;
+	pprogram_options->bCalcEd2kPerDefault = -1;
 	pprogram_options->uiCreateFileModeMd5 = CREATE_ONE_PER_FILE;
 	pprogram_options->uiCreateFileModeSfv = CREATE_ONE_FILE;
 	StringCchCopy(pprogram_options->szFilenameMd5, MAX_PATH_EX, TEXT("checksum.md5"));
@@ -540,12 +575,15 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	pprogram_options->uiWndTop = 10;
 	pprogram_options->bEnableQueue = FALSE;
 	pprogram_options->bUseDefaultCP = FALSE;
-	pprogram_options->bCalcSha1PerDefault= FALSE;
-	pprogram_options->bDisplaySha1InListView = FALSE;
+	pprogram_options->bCalcSha1PerDefault= -1;
+	pprogram_options->bDisplaySha1InListView = -1;
 	StringCchCopy(pprogram_options->szCRCStringDelims, MAX_PATH_EX, TEXT("{[(_)]}") );
 	pprogram_options->bAllowCrcAnywhere = false;
     pprogram_options->bIncludeFileComments = false;
     pprogram_options->uiDefaultCP = CP_UTF8;
+    ZeroMemory(pprogram_options->bDisplayInListView,10 * sizeof(BOOL));
+    ZeroMemory(pprogram_options->bCalcPerDefault,10 * sizeof(BOOL));
+    pprogram_options->bCalcPerDefault[HASH_TYPE_CRC32] = TRUE;
 	return;
 }
 
@@ -737,7 +775,21 @@ VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
 	else
 		StringCchPrintf(pFileinfo->hashInfo[HASH_TYPE_CRC32].szResult, CRC_AS_STRING_LENGHT, TEXT(""));
 
-	if(fileList->bCalculated[HASH_TYPE_MD5] && pFileinfo->dwError == NOERROR)
+    int hash_lengths[] = { 4, 16, 16, 20, 32, 64 };
+
+    for(int i=1;i<NUM_HASH_TYPES;i++) {
+        if(fileList->bCalculated[i] && pFileinfo->dwError == NOERROR) {
+            TCHAR *pPrint = pFileinfo->hashInfo[i].szResult;
+            for(int j=0;j<hash_lengths[i];j++) {
+                StringCchPrintf(pPrint,3,TEXT("%02lx"),*((BYTE *)&pFileinfo->hashInfo[i].r + j));
+                pPrint+=2;
+            }
+        } else {
+            StringCchPrintf(pFileinfo->hashInfo[i].szResult, 2, TEXT(""));
+        }
+    }
+
+	/*if(fileList->bCalculated[HASH_TYPE_MD5] && pFileinfo->dwError == NOERROR)
 		StringCchPrintf(MD5I(pFileinfo).szResult, MD5_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
 		MD5I(pFileinfo).r.abMd5Result[0], MD5I(pFileinfo).r.abMd5Result[1], MD5I(pFileinfo).r.abMd5Result[2], MD5I(pFileinfo).r.abMd5Result[3], 
 		MD5I(pFileinfo).r.abMd5Result[4], MD5I(pFileinfo).r.abMd5Result[5], MD5I(pFileinfo).r.abMd5Result[6], MD5I(pFileinfo).r.abMd5Result[7], 
@@ -764,6 +816,16 @@ VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
 		ED2KI(pFileinfo).r.abEd2kResult[12], ED2KI(pFileinfo).r.abEd2kResult[13], ED2KI(pFileinfo).r.abEd2kResult[14], ED2KI(pFileinfo).r.abEd2kResult[15]);
 	else
 		StringCchPrintf(ED2KI(pFileinfo).szResult, ED2K_AS_STRING_LENGHT, TEXT(""));
+
+    if(fileList->bCalculated[HASH_TYPE_SHA512] && pFileinfo->dwError == NOERROR)
+		StringCchPrintf(SHA512I(pFileinfo).szResult, SHA512_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
+		SHA1I(pFileinfo).r.abSha1Result[0], SHA1I(pFileinfo).r.abSha1Result[1], SHA1I(pFileinfo).r.abSha1Result[2], SHA1I(pFileinfo).r.abSha1Result[3], 
+		SHA1I(pFileinfo).r.abSha1Result[4], SHA1I(pFileinfo).r.abSha1Result[5], SHA1I(pFileinfo).r.abSha1Result[6], SHA1I(pFileinfo).r.abSha1Result[7], 
+		SHA1I(pFileinfo).r.abSha1Result[8], SHA1I(pFileinfo).r.abSha1Result[9], SHA1I(pFileinfo).r.abSha1Result[10], SHA1I(pFileinfo).r.abSha1Result[11], 
+		SHA1I(pFileinfo).r.abSha1Result[12], SHA1I(pFileinfo).r.abSha1Result[13], SHA1I(pFileinfo).r.abSha1Result[14], SHA1I(pFileinfo).r.abSha1Result[15],
+		SHA1I(pFileinfo).r.abSha1Result[16], SHA1I(pFileinfo).r.abSha1Result[17], SHA1I(pFileinfo).r.abSha1Result[18], SHA1I(pFileinfo).r.abSha1Result[19]);
+	else
+		StringCchPrintf(SHA1I(pFileinfo).szResult, SHA1_AS_STRING_LENGHT, TEXT(""));*/
 
 	SetInfoColumnText(pFileinfo, fileList, InfoToIntValue(pFileinfo) - 1);
 }
