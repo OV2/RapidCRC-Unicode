@@ -607,6 +607,7 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 	TCHAR szString[MAX_PATH_EX];
 	static FILECREATION_OPTIONS * pfco;
 	static TCHAR szFilenameChecksumTemp[MAX_PATH_EX];
+    TCHAR *hashExt;
 
 	switch (message)
 	{
@@ -614,13 +615,8 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 		pfco = (FILECREATION_OPTIONS *)lParam;
 		StringCchCopy(szFilenameChecksumTemp, MAX_PATH_EX, pfco->szFilename);
 	case WM_SET_CTRLS_STATE:
-		TCHAR hashExt[10];
-		switch(pfco->uiMode) {
-			case MODE_MD5: StringCchCopy(hashExt,10,TEXT("MD5")); break;
-			case MODE_SHA1: StringCchCopy(hashExt,10,TEXT("SHA1")); break;
-			default:
-				StringCchCopy(hashExt,10,TEXT("SFV")); break;
-		}
+        hashExt = g_hash_ext[pfco->uiMode];
+
 		StringCchPrintf(szString, MAX_PATH_EX, TEXT("How to create the .%s file(s)?"), hashExt);
 		SetWindowText(hDlg, szString);
 
@@ -712,14 +708,8 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 			if(HIWORD(wParam) == BN_CLICKED){
 				PROGRAM_OPTIONS po;
 				SetDefaultOptions(& po);
-				if(pfco->uiMode == MODE_MD5){
-					StringCchCopy(szFilenameChecksumTemp, MAX_PATH_EX, po.szFilenameMd5);
-					pfco->uiCreateFileMode = po.uiCreateFileModeMd5;
-				}
-				else{
-					StringCchCopy(szFilenameChecksumTemp, MAX_PATH_EX, po.szFilenameSfv);
-					pfco->uiCreateFileMode = po.uiCreateFileModeSfv;
-				}
+                StringCchCopy(szFilenameChecksumTemp, MAX_PATH_EX, po.szFilename[pfco->uiMode]);
+			    pfco->uiCreateFileMode = po.uiCreateFileMode[pfco->uiMode];
 				SendMessage(hDlg, WM_SET_CTRLS_STATE, 0, 0);
 			}
 			break;

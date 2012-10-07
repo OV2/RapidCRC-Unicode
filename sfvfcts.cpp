@@ -208,198 +208,6 @@ DWORD WriteSfvHeader(CONST HANDLE hFile)
 }
 
 /*****************************************************************************
-DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST DWORD dwCrc)
-	hFile		: (IN) handle to an open file
-	szFilename	: (IN) string of the filename that we want to write into the sfv file
-	dwCrc		: (IN) the crc that belongs to the filename
-
-Return Value:
-- returns NOERROR or GetLastError()
-*****************************************************************************/
-DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST DWORD dwCrc)
-{
-	TCHAR szFilenameTemp[MAX_PATH_EX];
-	TCHAR szLine[MAX_LINE_LENGTH];
-#ifdef UNICODE
-	CHAR szLineAnsi[MAX_LINE_LENGTH];
-#endif
-	DWORD dwNumberOfBytesWritten;
-	size_t stStringLength;
-	VOID *szOutLine=szLine;
-
-	StringCchCopy(szFilenameTemp, MAX_PATH_EX, szFilename);
-	if(g_program_options.bCreateUnixStyle)
-		ReplaceChar(szFilenameTemp, MAX_PATH_EX, TEXT('\\'), TEXT('/'));
-
-    StringCbPrintf(szLine, MAX_LINE_LENGTH, TEXT("%s %08LX%s"), szFilenameTemp, dwCrc, g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n") );
-    StringCbLength(szLine, MAX_LINE_LENGTH, & stStringLength);
-
-#ifdef UNICODE
-    // we only need the conversion if we don't write unicode data
-	if(!g_program_options.bCreateUnicodeFiles) {
-		if(!WideCharToMultiByte(CP_ACP, 0, szLine, -1, szLineAnsi, MAX_UTF8_PATH, NULL, NULL) )
-			return GetLastError();
-
-        StringCbLengthA(szLineAnsi, MAX_LINE_LENGTH, & stStringLength);
-		szOutLine=szLineAnsi;
-	} else if(g_program_options.iUnicodeSaveType==UTF_8 || g_program_options.iUnicodeSaveType==UTF_8_BOM) {
-        if(!WideCharToMultiByte(CP_UTF8, 0, szLine, -1, szLineAnsi, MAX_UTF8_PATH, NULL, NULL) )
-		    return GetLastError();
-
-        StringCbLengthA(szLineAnsi, MAX_LINE_LENGTH, & stStringLength);
-	    szOutLine=szLineAnsi;
-    }
-#endif
-
-	if(!WriteFile(hFile, szOutLine, (DWORD)stStringLength, & dwNumberOfBytesWritten, NULL) )
-		return GetLastError();
-
-	return NOERROR;
-}
-
-/*****************************************************************************
-DWORD WriteSingleLineSfvFile(CONST FILEINFO * pFileinfo)
-	pFileinfo	: (IN) FILEINFO that includes the info we want to write
-
-Return Value:
-- returns NOERROR or GetLastError()
-
-Notes:
-- overwrites existing files
-- takes pFileinfo->szFilename (that is always the full pathname), appends 
-a ".sfv" and writes just pFileinfo->szFilename and dwCrc into that file (and
-the header eventually)
-*****************************************************************************/
-DWORD WriteSingleLineSfvFile(CONST FILEINFO * pFileinfo)
-{
-	TCHAR szFileSfvOut[MAX_PATH_EX];
-	HANDLE hFile;
-	DWORD dwResult;
-
-	StringCchCopy(szFileSfvOut, MAX_PATH_EX, pFileinfo->szFilename);
-	StringCchCat(szFileSfvOut, MAX_PATH_EX, TEXT(".sfv"));
-
-	hFile = CreateFile(szFileSfvOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
-	if(hFile == INVALID_HANDLE_VALUE)
-		return GetLastError();
-
-#ifdef UNICODE
-    // we need a BOM if we are writing unicode
-    if(!WriteCurrentBOM(hFile))
-		return GetLastError();
-#endif
-
-	if(g_program_options.bWinsfvComp){
-		dwResult = WriteSfvHeader(hFile);
-		if(dwResult != NOERROR){
-			CloseHandle(hFile);
-			return dwResult;
-		}
-	}
-
-	dwResult = WriteSfvLine(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), CRCI(pFileinfo).r.dwCrc32Result);
-
-	CloseHandle(hFile);
-	return dwResult;
-}
-
-/*****************************************************************************
-DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abMd5Result[16])
-	hFile		: (IN) handle to an open file
-	szFilename	: (IN) string of the filename that we want to write into the md5 file
-	abMd5Result	: (IN) Array with md5 values
-
-Return Value:
-- returns NOERROR or GetLastError()
-*****************************************************************************/
-DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abMd5Result[16])
-{
-	TCHAR szFilenameTemp[MAX_PATH_EX];
-	TCHAR szLine[MAX_LINE_LENGTH];
-#ifdef UNICODE
-	CHAR szLineAnsi[MAX_LINE_LENGTH];
-#endif
-	DWORD dwNumberOfBytesWritten;
-	size_t stStringLength;
-	VOID *szOutLine=szLine;
-
-	StringCchCopy(szFilenameTemp, MAX_PATH_EX, szFilename);
-	if(g_program_options.bCreateUnixStyle)
-		ReplaceChar(szFilenameTemp, MAX_PATH_EX, TEXT('\\'), TEXT('/'));
-
-    StringCchPrintf(szLine, MAX_LINE_LENGTH, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx *%s%s"),
-		abMd5Result[0], abMd5Result[1], abMd5Result[2], abMd5Result[3], 
-		abMd5Result[4], abMd5Result[5], abMd5Result[6], abMd5Result[7], 
-		abMd5Result[8], abMd5Result[9], abMd5Result[10], abMd5Result[11], 
-		abMd5Result[12], abMd5Result[13], abMd5Result[14], abMd5Result[15],
-		szFilenameTemp, g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
-
-	StringCbLength(szLine, MAX_LINE_LENGTH, & stStringLength);
-
-#ifdef UNICODE
-    // we only need the conversion if we don't write unicode data
-	if(!g_program_options.bCreateUnicodeFiles) {
-		if(!WideCharToMultiByte(CP_ACP, 0, szLine, -1, szLineAnsi, MAX_UTF8_PATH, NULL, NULL) )
-			return GetLastError();
-
-        StringCbLengthA(szLineAnsi, MAX_LINE_LENGTH, & stStringLength);
-		szOutLine=szLineAnsi;
-    } else if(g_program_options.iUnicodeSaveType == UTF_8 || g_program_options.iUnicodeSaveType==UTF_8_BOM) {
-		if(!WideCharToMultiByte(CP_UTF8, 0, szLine, -1, szLineAnsi, MAX_UTF8_PATH, NULL, NULL) )
-			return GetLastError();
-
-        StringCbLengthA(szLineAnsi, MAX_LINE_LENGTH, & stStringLength);
-		szOutLine=szLineAnsi;
-	}
-#endif
-
-	if(!WriteFile(hFile, szOutLine, (DWORD)stStringLength, & dwNumberOfBytesWritten, NULL) )
-		return GetLastError();
-
-	return NOERROR;
-}
-
-/*****************************************************************************
-DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo)
-	pFileinfo	: (IN) FILEINFO that includes the info we want to write
-
-Return Value:
-- returns NOERROR or GetLastError()
-
-Notes:
-- overwrites existing files
-- takes pFileinfo->szFilename (that is always the full pathname), appends 
-a ".md5" and writes just pFileinfo->szFilename and abMd5Result into that file
-*****************************************************************************/
-DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo)
-{
-	TCHAR szFileSfvOut[MAX_PATH_EX];
-	HANDLE hFile;
-	DWORD dwResult;
-
-	StringCchCopy(szFileSfvOut, MAX_PATH_EX, pFileinfo->szFilename);
-	StringCchCat(szFileSfvOut, MAX_PATH_EX, TEXT(".md5"));
-
-	hFile = CreateFile(szFileSfvOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
-	if(hFile == INVALID_HANDLE_VALUE)
-		return GetLastError();
-
-#ifdef UNICODE
-	// we need a BOM if we are writing unicode
-    if(!WriteCurrentBOM(hFile))
-		return GetLastError();
-#endif
-
-    if(g_program_options.bIncludeFileComments)
-        WriteFileComment(hFile, pFileinfo, GetFilenameWithoutPathPointer(pFileinfo->szFilename) - pFileinfo->szFilename);
-
-	dwResult = WriteMd5Line(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), MD5I(pFileinfo).r.abMd5Result);
-
-	CloseHandle(hFile);
-	return dwResult;
-}
-
-/*****************************************************************************
 BOOL EnterMd5Mode(lFILEINFO *fileList)
 	fileList	: (IN/OUT) pointer to the job structure whose files are to be processed
 
@@ -546,15 +354,16 @@ BOOL EnterMd5Mode(lFILEINFO *fileList)
 }
 
 /*****************************************************************************
-DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abSha1Result[20])
-	hFile		: (IN) handle to an open file
-	szFilename	: (IN) string of the filename that we want to write into the sha1 file
-	abMd5Result	: (IN) Array with sha1 values
+DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], BOOL bIsSfv)
+	hFile		    : (IN) handle to an open file
+	szFilename	    : (IN) string of the filename that we want to write into the hash file
+	szHashResult	: (IN) string of the hash result
+    bIsSfv          : (IN) is this a sfv hash
 
 Return Value:
 - returns NOERROR or GetLastError()
 *****************************************************************************/
-DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abSha1Result[20])
+DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], BOOL bIsSfv)
 {
 	TCHAR szFilenameTemp[MAX_PATH_EX];
 	TCHAR szLine[MAX_LINE_LENGTH];
@@ -569,12 +378,8 @@ DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CON
 	if(g_program_options.bCreateUnixStyle)
 		ReplaceChar(szFilenameTemp, MAX_PATH_EX, TEXT('\\'), TEXT('/'));
 
-    StringCchPrintf(szLine, MAX_LINE_LENGTH, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx *%s%s"),
-		abSha1Result[0], abSha1Result[1], abSha1Result[2], abSha1Result[3], 
-		abSha1Result[4], abSha1Result[5], abSha1Result[6], abSha1Result[7], 
-		abSha1Result[8], abSha1Result[9], abSha1Result[10], abSha1Result[11], 
-		abSha1Result[12], abSha1Result[13], abSha1Result[14], abSha1Result[15],
-		abSha1Result[16], abSha1Result[17], abSha1Result[18], abSha1Result[19],
+    StringCchPrintf(szLine, MAX_LINE_LENGTH, TEXT("%s %s%s%s"), szHashResult,
+        bIsSfv ? TEXT("*") : TEXT(""),
 		szFilenameTemp, g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
 
 	StringCbLength(szLine, MAX_LINE_LENGTH, & stStringLength);
@@ -600,43 +405,6 @@ DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CON
 		return GetLastError();
 
 	return NOERROR;
-}
-
-/*****************************************************************************
-DWORD WriteSingleLineSha1File(CONST FILEINFO * pFileinfo)
-	pFileinfo	: (IN) FILEINFO that includes the info we want to write
-
-Return Value:
-- returns NOERROR or GetLastError()
-
-Notes:
-- overwrites existing files
-- takes pFileinfo->szFilename (that is always the full pathname), appends 
-a ".sha1" and writes just pFileinfo->szFilename and abSha1Result into that file
-*****************************************************************************/
-DWORD WriteSingleLineSha1File(CONST FILEINFO * pFileinfo)
-{
-	TCHAR szFileSfvOut[MAX_PATH_EX];
-	HANDLE hFile;
-	DWORD dwResult;
-
-	StringCchCopy(szFileSfvOut, MAX_PATH_EX, pFileinfo->szFilename);
-	StringCchCat(szFileSfvOut, MAX_PATH_EX, TEXT(".sha1"));
-
-	hFile = CreateFile(szFileSfvOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
-	if(hFile == INVALID_HANDLE_VALUE)
-		return GetLastError();
-
-#ifdef UNICODE
-	// we need a BOM if we are writing unicode
-    if(!WriteCurrentBOM(hFile))
-		return GetLastError();
-#endif
-
-	dwResult = WriteSha1Line(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), SHA1I(pFileinfo).r.abSha1Result);
-
-	CloseHandle(hFile);
-	return dwResult;
 }
 
 /*****************************************************************************

@@ -91,6 +91,15 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define HASH_TYPE_SHA512 5
 #define NUM_HASH_TYPES 6
 
+// RapidCRC modes; also used in the action functions
+// Have to equal hash types
+#define MODE_NORMAL				20
+#define MODE_SFV				0
+#define MODE_MD5				1
+#define MODE_SHA1				3
+#define MODE_SHA256				4
+#define MODE_SHA512				5
+
 #define CRCI(x) (x)->hashInfo[HASH_TYPE_CRC32]
 #define MD5I(x) (x)->hashInfo[HASH_TYPE_MD5]
 #define SHA1I(x) (x)->hashInfo[HASH_TYPE_SHA1]
@@ -124,12 +133,6 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define PATH_TYPE_RELATIVE				0
 #define PATH_TYPE_ABS_WITHOUT_DRIVE		1
 #define PATH_TYPE_ABSOLUTE				2
-
-// RapidCRC modes; also used in the action functions
-#define MODE_NORMAL				0
-#define MODE_SFV				1
-#define MODE_MD5				2
-#define MODE_SHA1				3
 
 //CMDLINE Options for the shell extension
 #define CMD_NORMAL			0
@@ -365,6 +368,8 @@ typedef struct{
     UINT            uiDefaultCP;
     BOOL			bDisplayInListView[10];
     BOOL            bCalcPerDefault[10];
+    UINT			uiCreateFileMode[10];
+    TCHAR			szFilename[10][MAX_PATH];
 }PROGRAM_OPTIONS;
 
 typedef struct{
@@ -389,6 +394,7 @@ extern PROGRAM_OPTIONS g_program_options;
 extern PROGRAM_STATUS g_pstatus;
 extern CRITICAL_SECTION thread_fileinfo_crit;
 extern TCHAR *g_hash_names[];
+extern TCHAR *g_hash_ext[];
 
 //****** function prototypes *******
 
@@ -492,14 +498,9 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList);
 //SFV and MD5 functions (sfvfcts.cpp)
 BOOL EnterSfvMode(lFILEINFO *fileList);
 DWORD WriteSfvHeader(CONST HANDLE hFile);
-DWORD WriteSfvLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST DWORD dwCrc);
-DWORD WriteSingleLineSfvFile(CONST FILEINFO * pFileinfo);
 BOOL EnterMd5Mode(lFILEINFO *fileList);
-DWORD WriteMd5Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abMd5Result[16]);
-DWORD WriteSingleLineMd5File(CONST FILEINFO * pFileinfo);
 BOOL EnterSha1Mode(lFILEINFO *fileList);
-DWORD WriteSha1Line(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST BYTE abSha1Result[20]);
-DWORD WriteSingleLineSha1File(CONST FILEINFO * pFileinfo);
+DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], BOOL bIsSfv);
 DWORD WriteFileComment(CONST HANDLE hFile, CONST FILEINFO *pFileInfo, UINT startChar);
 #ifdef UNICODE
 BOOL WriteCurrentBOM(CONST HANDLE hFile);

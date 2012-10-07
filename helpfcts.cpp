@@ -566,8 +566,8 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 	pprogram_options->bCalcEd2kPerDefault = -1;
 	pprogram_options->uiCreateFileModeMd5 = CREATE_ONE_PER_FILE;
 	pprogram_options->uiCreateFileModeSfv = CREATE_ONE_FILE;
-	StringCchCopy(pprogram_options->szFilenameMd5, MAX_PATH_EX, TEXT("checksum.md5"));
-	StringCchCopy(pprogram_options->szFilenameSfv, MAX_PATH_EX, TEXT("checksum.sfv"));
+	StringCchCopy(pprogram_options->szFilenameMd5, MAX_PATH, TEXT("checksum.md5"));
+	StringCchCopy(pprogram_options->szFilenameSfv, MAX_PATH, TEXT("checksum.sfv"));
 	pprogram_options->bCreateUnixStyle = FALSE;
 	pprogram_options->bCreateUnicodeFiles = TRUE;
 	pprogram_options->iUnicodeSaveType = UTF_8;
@@ -584,6 +584,9 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
     ZeroMemory(pprogram_options->bDisplayInListView,10 * sizeof(BOOL));
     ZeroMemory(pprogram_options->bCalcPerDefault,10 * sizeof(BOOL));
     pprogram_options->bCalcPerDefault[HASH_TYPE_CRC32] = TRUE;
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        StringCchPrintf(pprogram_options->szFilename[i],MAX_PATH,TEXT("checksum.%s"),g_hash_ext[i]);
+    }
 	return;
 }
 
