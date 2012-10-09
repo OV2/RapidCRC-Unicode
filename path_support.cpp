@@ -423,10 +423,14 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
         if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sfv"))) {
 			EnterSfvMode(fileList);
         } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".md5"))) {
-			EnterMd5Mode(fileList);
+			EnterHashMode(fileList,MODE_MD5);
         } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sha1"))) {
-			EnterSha1Mode(fileList);
-        } else{
+			EnterHashMode(fileList,MODE_SHA1);
+        } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sha256"))) {
+			EnterHashMode(fileList,MODE_SHA256);
+        } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sha512"))) {
+			EnterHashMode(fileList,MODE_SHA512);
+        } else {
 			SetBasePath(fileList);
 			ProcessDirectories(fileList);
 		}
@@ -438,9 +442,9 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
         fileList->bDoCalculate[i]	= ((fileList->uiRapidCrcMode == MODE_NORMAL) && (g_program_options.bCalcPerDefault[i]));
     }
 
-	fileList->bDoCalculate[HASH_TYPE_CRC32]	|= (fileList->uiRapidCrcMode == MODE_SFV);
-	fileList->bDoCalculate[HASH_TYPE_MD5]	|= (fileList->uiRapidCrcMode == MODE_MD5);
-	fileList->bDoCalculate[HASH_TYPE_SHA1]  |= (fileList->uiRapidCrcMode == MODE_SHA1);
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        fileList->bDoCalculate[i]	|= (fileList->uiRapidCrcMode == i);
+    }
 
 	switch(fileList->uiCmdOpts) {
 		case CMD_SFV:
@@ -449,10 +453,10 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 			fileList->bDoCalculate[HASH_TYPE_CRC32] = true;
 			break;
 		case CMD_MD5:
-			fileList->bDoCalculate[HASH_TYPE_MD5] = true;
-			break;
 		case CMD_SHA1:
-			fileList->bDoCalculate[HASH_TYPE_SHA1] = true;
+        case CMD_SHA256:
+        case CMD_SHA512:
+			fileList->bDoCalculate[fileList->uiCmdOpts] = true;
 			break;
 		default:
 			break;

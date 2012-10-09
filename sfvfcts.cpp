@@ -208,152 +208,6 @@ DWORD WriteSfvHeader(CONST HANDLE hFile)
 }
 
 /*****************************************************************************
-BOOL EnterMd5Mode(lFILEINFO *fileList)
-	fileList	: (IN/OUT) pointer to the job structure whose files are to be processed
-
-Return Value:
-returns TRUE if everything went fine. FALSE went something went wrong.
-
-Notes:
-- takes fileList->fInfos.front().szFilename as .sfv file and creates new list entries
-  based on that
-*****************************************************************************/
-BOOL EnterMd5Mode(lFILEINFO *fileList)
-{
-#ifdef UNICODE
-	CHAR	szLineAnsi[MAX_LINE_LENGTH];
-#endif
-	TCHAR	szLine[MAX_LINE_LENGTH];
-	TCHAR	szFilenameMd5[MAX_PATH_EX];
-	HANDLE	hFile;
-	UINT	uiStringLength;
-	BOOL	bErrorOccured, bEndOfFile;
-	UINT	uiIndex;
-
-	BOOL	bMd5OK;
-	BOOL	fileIsUTF16;
-    UINT    codePage;
-	UNICODE_TYPE detectedBOM;
-
-	FILEINFO fileinfoTmp;
-
-	// save MD5 filename and path
-	// => g_szBasePath in MD5-mode is the path part of the complete filename of the .md5 file
-	StringCchCopy(szFilenameMd5, MAX_PATH_EX, fileList->fInfos.front().szFilename);
-	StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szFilenameMd5);
-	ReduceToPath(fileList->g_szBasePath);
-
-	if(fileList->uiCmdOpts==CMD_REPARENT) {
-		TCHAR	szReparentPath[MAX_PATH_EX];
-		LPITEMIDLIST iidl=NULL;
-		BROWSEINFO bInfo = {0};
-		bInfo.lpszTitle = TEXT("Select folder for md5 reparenting");
-		bInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
-		bInfo.lpfn = BrowseFolderSetSelProc;
-		bInfo.lParam = (LPARAM)fileList->g_szBasePath;
-		if(iidl=SHBrowseForFolder(&bInfo)) {
-			SHGetPathFromIDList(iidl,szReparentPath);
-			CoTaskMemFree(iidl);
-			StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szReparentPath);
-		}
-	}
-
-	// set md5 mode
-	fileList->uiRapidCrcMode = MODE_MD5;
-
-	// free everything we did so far
-	fileList->fInfos.clear();
-
-	hFile = CreateFile(szFilenameMd5, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
-	if(hFile == INVALID_HANDLE_VALUE){
-		MessageBox(NULL, TEXT("MD5 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		return FALSE;
-	}
-
-    // check for the BOM and read accordingly
-	detectedBOM = CheckForBOM(hFile);
-	fileIsUTF16 = (detectedBOM == UTF_16LE);
-	if(!fileIsUTF16) {
-		if(detectedBOM==UTF_8_BOM)
-            codePage = CP_UTF8;
-        else if(g_program_options.bUseDefaultCP)
-            codePage = g_program_options.uiDefaultCP;
-		else
-			codePage = DetermineFileCP(hFile);
-	}
-
-	GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUTF16);
-
-	if(bErrorOccured){
-		MessageBox(NULL, TEXT("MD5 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		return FALSE;
-	}
-
-	while( !(bEndOfFile && uiStringLength == 0) ){
-
-		if(uiStringLength > 34){ // a valid line has 32 hex values for the md5 value and then either "  " or " *"
-
-			ZeroMemory(&fileinfoTmp,sizeof(FILEINFO));
-			fileinfoTmp.parentList=fileList;
-
-#ifdef UNICODE
-            // if we already read unicode characters we don't need the conversion here
-			if(!fileIsUTF16) {
-				AnsiFromUnicode(szLineAnsi,MAX_LINE_LENGTH,szLine);
-				MultiByteToWideChar(codePage,	// ANSI Codepage
-					0,						    // we use no flags; ANSI isn't a 'real' MBCC
-					szLineAnsi,			    	// the ANSI String
-					-1,						    // ANSI String is 0 terminated
-					szLine,					    // the UNICODE destination string
-					MAX_LINE_LENGTH );		    // size of the UNICODE String in chars
-                uiStringLength = lstrlen(szLine);
-			}
-#endif
-
-			if( IsLegalHexSymbol(szLine[0]) ){
-				bMd5OK = TRUE;
-				for(uiIndex=0; uiIndex < 32; ++uiIndex)
-					if(! IsLegalHexSymbol(szLine[uiIndex]))
-						bMd5OK = FALSE;
-				if(bMd5OK){
-                    fileinfoTmp.hashInfo[HASH_TYPE_MD5].dwFound = TRUE;
-					for(uiIndex=0; uiIndex < 16; ++uiIndex)
-						fileinfoTmp.hashInfo[HASH_TYPE_MD5].f.abMd5Found[uiIndex] = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
-					fileinfoTmp.dwError = NOERROR;
-				}
-				else
-					fileinfoTmp.dwError = APPL_ERROR_ILLEGAL_CRC;
-
-				//delete trailing spaces
-				while(szLine[uiStringLength - 1] == TEXT(' ')){
-					szLine[uiStringLength - 1] = NULL;
-					uiStringLength--;
-				}
-
-				//find leading spaces and '*'
-				uiIndex = 32; // szLine[32] is the first char after the md5
-				while( (uiIndex < uiStringLength) && ((szLine[uiIndex] == TEXT(' ')) || (szLine[uiIndex] == TEXT('*'))) )
-					uiIndex++;
-
-                StringCchPrintf(fileinfoTmp.szFilename, MAX_PATH_EX, TEXT("%s%s"), fileList->g_szBasePath, szLine + uiIndex);
-
-				fileList->fInfos.push_back(fileinfoTmp);
-			}
-		}
-
-		GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUTF16);
-		if(bErrorOccured){
-			MessageBox(NULL, TEXT("MD5 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-			fileList->fInfos.clear();
-			return FALSE;
-		}
-	}
-	CloseHandle(hFile);
-
-	return TRUE;
-}
-
-/*****************************************************************************
 DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], BOOL bIsSfv)
 	hFile		    : (IN) handle to an open file
 	szFilename	    : (IN) string of the filename that we want to write into the hash file
@@ -408,8 +262,9 @@ DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CON
 }
 
 /*****************************************************************************
-BOOL EnterSha1Mode(lFILEINFO *fileList)
+BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 	fileList	: (IN/OUT) pointer to the job structure whose files are to be processed
+    uiMode      : (IN) type of hash file
 
 Return Value:
 returns TRUE if everything went fine. FALSE went something went wrong.
@@ -418,36 +273,37 @@ Notes:
 - takes fileList->fInfos.front().szFilename as .sha1 file and creates new list entries
   based on that
 *****************************************************************************/
-BOOL EnterSha1Mode(lFILEINFO *fileList)
+BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 {
 #ifdef UNICODE
 	CHAR	szLineAnsi[MAX_LINE_LENGTH];
 #endif
 	TCHAR	szLine[MAX_LINE_LENGTH];
-	TCHAR	szFilenameSha1[MAX_PATH_EX];
+	TCHAR	szFilenameHash[MAX_PATH_EX];
 	HANDLE	hFile;
 	UINT	uiStringLength;
 	BOOL	bErrorOccured, bEndOfFile;
 	UINT	uiIndex;
+    UINT    uiHashLengthChars = g_hash_lengths[uiMode] * 2;
 
-	BOOL	bSha1OK;
+	BOOL	bHashOK;
 	BOOL	fileIsUTF16;
     UINT    codePage;
 	UNICODE_TYPE detectedBOM;
 
 	FILEINFO fileinfoTmp;
 
-	// save SHA1 filename and path
-	// => g_szBasePath in SHA1-mode is the path part of the complete filename of the .md5 file
-	StringCchCopy(szFilenameSha1, MAX_PATH_EX, fileList->fInfos.front().szFilename);
-	StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szFilenameSha1);
+	// save hash filename and path
+	// => g_szBasePath in is the path part of the complete filename of the .xyz file
+	StringCchCopy(szFilenameHash, MAX_PATH_EX, fileList->fInfos.front().szFilename);
+	StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szFilenameHash);
 	ReduceToPath(fileList->g_szBasePath);
 
 	if(fileList->uiCmdOpts==CMD_REPARENT) {
 		TCHAR	szReparentPath[MAX_PATH_EX];
 		LPITEMIDLIST iidl=NULL;
 		BROWSEINFO bInfo = {0};
-		bInfo.lpszTitle = TEXT("Select folder for sha1 reparenting");
+		bInfo.lpszTitle = TEXT("Select folder for reparenting");
 		bInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
 		bInfo.lpfn = BrowseFolderSetSelProc;
 		bInfo.lParam = (LPARAM)fileList->g_szBasePath;
@@ -458,15 +314,15 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 		}
 	}
 
-	// set sha1 mode
-	fileList->uiRapidCrcMode = MODE_SHA1;
+	// set mode
+	fileList->uiRapidCrcMode = uiMode;
 
 	// free everything we did so far
 	fileList->fInfos.clear();
 
-	hFile = CreateFile(szFilenameSha1, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
+	hFile = CreateFile(szFilenameHash, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
 	if(hFile == INVALID_HANDLE_VALUE){
-		MessageBox(NULL, TEXT("SHA1 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
+		MessageBox(NULL, TEXT("Hash file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
 		return FALSE;
 	}
 
@@ -485,13 +341,13 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 	GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUTF16);
 
 	if(bErrorOccured){
-		MessageBox(NULL, TEXT("SHA1 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
+		MessageBox(NULL, TEXT("Hash file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
 		return FALSE;
 	}
 
 	while( !(bEndOfFile && uiStringLength == 0) ){
 
-		if(uiStringLength > 42){ // a valid line has 32 hex values for the md5 value and then either "  " or " *"
+		if(uiStringLength > uiHashLengthChars){ // a valid line has uiHashLengthChars hex values for the hash value and then either "  " or " *"
 
 			ZeroMemory(&fileinfoTmp,sizeof(FILEINFO));
 			fileinfoTmp.parentList=fileList;
@@ -511,14 +367,14 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 #endif
 
 			if( IsLegalHexSymbol(szLine[0]) ){
-				bSha1OK = TRUE;
-				for(uiIndex=0; uiIndex < 40; ++uiIndex)
+				bHashOK = TRUE;
+				for(uiIndex=0; uiIndex < uiHashLengthChars; ++uiIndex)
 					if(! IsLegalHexSymbol(szLine[uiIndex]))
-						bSha1OK = FALSE;
-				if(bSha1OK){
-					fileinfoTmp.hashInfo[HASH_TYPE_SHA1].dwFound = TRUE;
-					for(uiIndex=0; uiIndex < 20; ++uiIndex)
-						fileinfoTmp.hashInfo[HASH_TYPE_SHA1].f.abSha1Found[uiIndex] = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
+						bHashOK = FALSE;
+				if(bHashOK){
+					fileinfoTmp.hashInfo[uiMode].dwFound = TRUE;
+					for(uiIndex=0; uiIndex < g_hash_lengths[uiMode]; ++uiIndex)
+						*((BYTE *)&fileinfoTmp.hashInfo[uiMode].f + uiIndex) = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
 					fileinfoTmp.dwError = NOERROR;
 				}
 				else
@@ -531,7 +387,7 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 				}
 
 				//find leading spaces and '*'
-				uiIndex = 40; // szLine[40] is the first char after the sha1
+				uiIndex = uiHashLengthChars; // szLine[uiHashLengthChars] is the first char after the hash
 				while( (uiIndex < uiStringLength) && ((szLine[uiIndex] == TEXT(' ')) || (szLine[uiIndex] == TEXT('*'))) )
 					uiIndex++;
 
@@ -543,7 +399,7 @@ BOOL EnterSha1Mode(lFILEINFO *fileList)
 
 		GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUTF16);
 		if(bErrorOccured){
-			MessageBox(NULL, TEXT("SHA1 file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
+			MessageBox(NULL, TEXT("Hash file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
 			fileList->fInfos.clear();
 			return FALSE;
 		}

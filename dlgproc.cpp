@@ -137,7 +137,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         }
 		break;
 	case WM_GETMINMAXINFO:
-		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 131;
+		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 153;
 		((MINMAXINFO *)lParam)->ptMinTrackSize.y = lAveCharHeight * 25;
 		return 0;
 	case WM_SIZE:
@@ -269,6 +269,18 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		case ID_BTN_SHA1_IN_SHA1:
 			if(HIWORD(wParam) == BN_CLICKED){
 				CreateChecksumFiles(arrHwnd, MODE_SHA1);
+				return 0;
+			}
+			break;
+        case ID_BTN_SHA256_IN_SHA256:
+			if(HIWORD(wParam) == BN_CLICKED){
+				CreateChecksumFiles(arrHwnd, MODE_SHA256);
+				return 0;
+			}
+			break;
+        case ID_BTN_SHA512_IN_SHA512:
+			if(HIWORD(wParam) == BN_CLICKED){
+				CreateChecksumFiles(arrHwnd, MODE_SHA512);
 				return 0;
 			}
 			break;
@@ -1057,13 +1069,13 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_GROUP_RESULT], lACW * leftMargin, wHeight - lACH * resultGroupY, wWidth - lACW * rightMargin, lACH * resultGroupHeight, FALSE);
 
 	MoveWindow(arrHwnd[ID_STATIC_FILENAME], lACW * labelOffset, wHeight - lACH * (resultGroupY - 15/10.0), lACW * labelWidth, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_FILENAME], lACW * editOffset, wHeight - lACH * (resultGroupY - 15/10.0), wWidth - lACW * 12, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_FILENAME], lACW * editOffset, wHeight - lACH * (resultGroupY - 15/10.0), wWidth - lACW * (editOffset + 6), lACH, FALSE);
 	MoveWindow(arrHwnd[ID_STATIC_CRC_VALUE], lACW * labelOffset, wHeight - lACH * (resultGroupY - 30/10.0), lACW * labelWidth, lACH, FALSE);
 	MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * editOffset, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 51, lACH, FALSE);
 	MoveWindow(arrHwnd[ID_STATIC_ED2K_VALUE], lACW * 63, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, FALSE);
 	MoveWindow(arrHwnd[ID_EDIT_ED2K_VALUE], lACW * 69, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 42, lACH, FALSE);
 	MoveWindow(arrHwnd[ID_STATIC_MD5_VALUE], lACW * labelOffset, wHeight - lACH * (resultGroupY - 45/10.0), lACW * labelWidth, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_MD5_VALUE], lACW * editOffset, wHeight - lACH * (resultGroupY - 45/10.0), wWidth - lACW * 12, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_MD5_VALUE], lACW * editOffset, wHeight - lACH * (resultGroupY - 45/10.0), wWidth - lACW * (editOffset + 6), lACH, FALSE);
 
     float offset = 45/10.0;
     for(int i=HASH_TYPE_SHA1;i<NUM_HASH_TYPES;i++) {
@@ -1072,7 +1084,7 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
         if(g_program_options.bCalcPerDefault[i]) {
             offset += 15/10.0;
             MoveWindow(arrHwnd[ID_STATIC_CRC_VALUE + i], lACW * labelOffset, wHeight - lACH * (resultGroupY - offset), lACW * labelWidth, lACH, FALSE);
-	        MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE + i], lACW * editOffset, wHeight - lACH * (resultGroupY - offset), wWidth - lACW * 12, lACH, FALSE);
+	        MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE + i], lACW * editOffset, wHeight - lACH * (resultGroupY - offset), wWidth - lACW * (editOffset + 6), lACH, FALSE);
         }
     }
 
@@ -1080,11 +1092,14 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_EDIT_INFO], lACW * editOffset, wHeight - lACH * (665/100.0f), wWidth - lACW * 22, lACH, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_ERROR_DESCR], wWidth - lACW * 105/10.0, wHeight - lACH * (685/100.0), lACW * 75/10.0, lACH * 15/10.0, FALSE);
 
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * leftMargin, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 16 + 1) + 16, wHeight - lACH * actButtonY, lACW * 16 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], lACW * (leftMargin + 32 + 2) + 32, wHeight - lACH * actButtonY, lACW * 17 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 49 + 3) + 48, wHeight - lACH * actButtonY, lACW * 24, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 73 + 4) + 48, wHeight - lACH * actButtonY, lACW * 28, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_STATIC_CREATE], lACW * leftMargin, wHeight - lACH * actButtonY + 5, lACW * 6, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * (leftMargin + 6 + 1), wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 16 + 2) + 16, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], lACW * (leftMargin + 26 + 3) + 32, wHeight - lACH * actButtonY, lACW * 11 + 16, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_BTN_SHA256_IN_SHA256], lACW * (leftMargin + 37 + 4) + 48, wHeight - lACH * actButtonY, lACW * 13 + 16, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_BTN_SHA512_IN_SHA512], lACW * (leftMargin + 50 + 5) + 64, wHeight - lACH * actButtonY, lACW * 13 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 63 + 6) + 80, wHeight - lACH * actButtonY, lACW * 24, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 87 + 7) + 80, wHeight - lACH * actButtonY, lACW * 28, lACH * 19/10.0, FALSE);
 	//MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - lACW * 125/10.0/*lACW * (leftMargin + 88 + 4) + 32*/, wHeight - lACH * actButtonY, 32, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, FALSE);
 	

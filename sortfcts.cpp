@@ -193,26 +193,18 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 	if(pFileinfo->dwError != NO_ERROR)
 		iResult = 4;
 	else{
-		if(pFileinfo->parentList->uiRapidCrcMode == MODE_MD5){
-			if( (pFileinfo->parentList->bCalculated[HASH_TYPE_MD5]) && (MD5I(pFileinfo).dwFound) ){
-				if(memcmp( MD5I(pFileinfo).r.abMd5Result, MD5I(pFileinfo).f.abMd5Found, 16) == 0)
+        if(pFileinfo->parentList->uiRapidCrcMode != MODE_NORMAL && pFileinfo->parentList->uiRapidCrcMode != MODE_SFV) {
+            if( (pFileinfo->parentList->bCalculated[pFileinfo->parentList->uiRapidCrcMode] && pFileinfo->hashInfo[pFileinfo->parentList->uiRapidCrcMode].dwFound) ){
+                if(memcmp( &pFileinfo->hashInfo[pFileinfo->parentList->uiRapidCrcMode].r,
+                           &pFileinfo->hashInfo[pFileinfo->parentList->uiRapidCrcMode].f,
+                           g_hash_lengths[pFileinfo->parentList->uiRapidCrcMode] ) == 0)
 					iResult = 1;
 				else
 					iResult = 2;
 			}
 			else
 				iResult = 3;
-		}
-		else if(pFileinfo->parentList->uiRapidCrcMode == MODE_SHA1){
-			if( (pFileinfo->parentList->bCalculated[HASH_TYPE_SHA1]) && (SHA1I(pFileinfo).dwFound) ){
-				if(memcmp( SHA1I(pFileinfo).r.abSha1Result, SHA1I(pFileinfo).f.abSha1Found, 20) == 0)
-					iResult = 1;
-				else
-					iResult = 2;
-			}
-			else
-				iResult = 3;
-		}
+        }
 		else{ // MODE_SFV and MODE_NORMAL; the icon does not differ between these modes
 			if( CRCI(pFileinfo).dwFound ) {
 				if( pFileinfo->parentList->bCalculated[HASH_TYPE_CRC32] ){

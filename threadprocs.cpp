@@ -413,13 +413,11 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			finalList.sort(ListPointerCompFunction);
 			switch(fileList->uiCmdOpts) {
 				case CMD_SFV:
-					CreateChecksumFiles(arrHwnd,MODE_SFV,&finalList);
-					break;
 				case CMD_MD5:
-					CreateChecksumFiles(arrHwnd,MODE_MD5,&finalList);
-					break;
 				case CMD_SHA1:
-					CreateChecksumFiles(arrHwnd,MODE_SHA1,&finalList);
+                case CMD_SHA256:
+                case CMD_SHA512:
+					CreateChecksumFiles(arrHwnd,fileList->uiCmdOpts,&finalList);
 					break;
 				case CMD_NAME:
 					ActionCrcIntoFilename(arrHwnd,TRUE,&finalList);

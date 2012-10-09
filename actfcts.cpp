@@ -716,25 +716,6 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 		}
 	}
 
-	/*if(finalList->size()==1) {
-        if(g_program_options.bIncludeFileComments)
-            WriteFileComment(hFile, finalList->front(), finalList->front()->szFilenameShort - finalList->front()->szFilename);
-		switch(uiMode) {
-			case MODE_MD5:
-				dwResult = WriteMd5Line(hFile, finalList->front()->szFilenameShort, MD5I(finalList->front()).r.abMd5Result);
-				break;
-			case MODE_SHA1:
-				dwResult = WriteSha1Line(hFile, finalList->front()->szFilenameShort, SHA1I(finalList->front()).r.abSha1Result);
-				break;
-			default:
-				dwResult = WriteSfvLine(hFile, finalList->front()->szFilenameShort, CRCI(finalList->front()).r.dwCrc32Result);
-				break;
-		}
-
-		CloseHandle(hFile);
-		return dwResult;
-	}*/
-
 	uiSameCharCount = FindCommonPrefix(finalList);
 
     if(g_program_options.bIncludeFileComments) {
@@ -826,9 +807,7 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 	if(ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW])==0) {
 		doneList = SyncQueue.getDoneList();
 		for(list<lFILEINFO*>::iterator it=doneList->begin();it!=doneList->end();it++) {
-            if( (uiMode == MODE_SFV) && !(*it)->bCalculated[HASH_TYPE_CRC32] ||
-			    (uiMode == MODE_MD5) && !(*it)->bCalculated[HASH_TYPE_MD5] ||
-			    (uiMode == MODE_SHA1) && !(*it)->bCalculated[HASH_TYPE_SHA1] )
+            if( uiMode != MODE_NORMAL && !(*it)->bCalculated[uiMode] )
 				rehashList.push_back(*it);
 		}
 		SyncQueue.releaseDoneList();
@@ -863,18 +842,7 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 	if(doRehash) {
 		for(list<lFILEINFO*>::iterator it=rehashList.begin();it!=rehashList.end();it++) {
 			SyncQueue.deleteFromList(*it);
-			switch(uiMode) {
-				case MODE_MD5:
-					(*it)->bDoCalculate[HASH_TYPE_MD5] = true;
-					break;
-				case MODE_SHA1:
-					(*it)->bDoCalculate[HASH_TYPE_SHA1] = true;
-					break;
-				default:
-					(*it)->bDoCalculate[HASH_TYPE_CRC32] = true;
-					break;
-			}
-				
+			(*it)->bDoCalculate[uiMode] = true;
 			SyncQueue.pushQueue(*it);
 		}
 		PostMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL, NULL);

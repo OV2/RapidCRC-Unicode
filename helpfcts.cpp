@@ -778,12 +778,10 @@ VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
 	else
 		StringCchPrintf(pFileinfo->hashInfo[HASH_TYPE_CRC32].szResult, CRC_AS_STRING_LENGHT, TEXT(""));
 
-    int hash_lengths[] = { 4, 16, 16, 20, 32, 64 };
-
     for(int i=1;i<NUM_HASH_TYPES;i++) {
         if(fileList->bCalculated[i] && pFileinfo->dwError == NOERROR) {
             TCHAR *pPrint = pFileinfo->hashInfo[i].szResult;
-            for(int j=0;j<hash_lengths[i];j++) {
+            for(int j=0;j<g_hash_lengths[i];j++) {
                 StringCchPrintf(pPrint,3,TEXT("%02lx"),*((BYTE *)&pFileinfo->hashInfo[i].r + j));
                 pPrint+=2;
             }
@@ -858,16 +856,19 @@ VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList, CONST INT iImag
 			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("Error"));
 	}
 	else{
-		if(fileList->bCalculated[HASH_TYPE_CRC32] || fileList->bCalculated[HASH_TYPE_MD5] || fileList->bCalculated[HASH_TYPE_SHA1])
-		{
-			if(iImageIndex == ICON_OK)
-				StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("File OK"));
-			else if (iImageIndex == ICON_NOT_OK)
-				StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("File corrupt"));
-			else  // iImageIndex == ICON_NO_CRC
-				StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("No CRC found"));
+        for(int i=0;i<NUM_HASH_TYPES;i++) {
+            if(fileList->bCalculated[i]) {
+			    if(iImageIndex == ICON_OK)
+				    StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("File OK"));
+			    else if (iImageIndex == ICON_NOT_OK)
+				    StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("File corrupt"));
+			    else  // iImageIndex == ICON_NO_CRC
+				    StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("No CRC found"));
+
+                return;
+            }
 		}
-		else if(CRCI(pFileinfo).f.dwCrc32Found)
+		if(CRCI(pFileinfo).f.dwCrc32Found)
 			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH,
 				(CRCI(pFileinfo).f.dwCrc32Found == CRC_FOUND_FILENAME?
 				TEXT("Checksum in filename"):

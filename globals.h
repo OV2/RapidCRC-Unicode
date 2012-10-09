@@ -100,6 +100,18 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MODE_SHA256				4
 #define MODE_SHA512				5
 
+//CMDLINE Options for the shell extension
+#define CMD_NORMAL			20
+#define CMD_SFV				0
+#define CMD_MD5				1
+#define CMD_SHA1			3
+#define CMD_SHA256			4
+#define CMD_SHA512			5
+#define CMD_NAME			21
+#define CMD_NTFS			22
+#define CMD_REPARENT		23
+
+
 #define CRCI(x) (x)->hashInfo[HASH_TYPE_CRC32]
 #define MD5I(x) (x)->hashInfo[HASH_TYPE_MD5]
 #define SHA1I(x) (x)->hashInfo[HASH_TYPE_SHA1]
@@ -134,15 +146,6 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define PATH_TYPE_ABS_WITHOUT_DRIVE		1
 #define PATH_TYPE_ABSOLUTE				2
 
-//CMDLINE Options for the shell extension
-#define CMD_NORMAL			0
-#define CMD_SFV				1
-#define CMD_MD5				2
-#define CMD_NAME			3
-#define CMD_NTFS			4
-#define CMD_REPARENT		5
-#define CMD_SHA1			6
-
 //CRC Locations
 #define CRC_FOUND_NONE		0
 #define CRC_FOUND_SFV		1
@@ -172,59 +175,62 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_STATIC_SHA512_VALUE		9
 #define ID_STATIC_INFO				10
 #define ID_STATIC_STATUS			11
+#define ID_STATIC_CREATE            12
 
-#define ID_STATIC_PRIORITY			12
-#define ID_PROGRESS_FILE			13
-#define ID_PROGRESS_GLOBAL			14
+#define ID_STATIC_PRIORITY			13
+#define ID_PROGRESS_FILE			14
+#define ID_PROGRESS_GLOBAL			15
 
 //the ids here are used to initialize the window order, which equals the tab order
-#define ID_FIRST_TAB_CONTROL		15
+#define ID_FIRST_TAB_CONTROL		30
 #define ID_BTN_EXIT					2		// 2==IDCANCEL
-#define ID_LISTVIEW					15
+#define ID_LISTVIEW					30
 
-#define ID_BTN_CRC_IN_SFV			16
-#define ID_BTN_MD5_IN_MD5			17
-#define ID_BTN_SHA1_IN_SHA1			18
-#define ID_BTN_CRC_IN_FILENAME		19
-#define ID_BTN_CRC_IN_STREAM		20
-#define ID_BTN_PLAY_PAUSE			21
-#define ID_BTN_OPTIONS				22
+#define ID_BTN_CRC_IN_SFV			31
+#define ID_BTN_MD5_IN_MD5			32
+#define ID_BTN_SHA1_IN_SHA1			33
+#define ID_BTN_SHA256_IN_SHA256     34
+#define ID_BTN_SHA512_IN_SHA512     35
+#define ID_BTN_CRC_IN_FILENAME		36
+#define ID_BTN_CRC_IN_STREAM		37
+#define ID_BTN_PLAY_PAUSE			38
+#define ID_BTN_OPTIONS				39
 
-#define ID_EDIT_FILENAME			23
-#define ID_EDIT_CRC_VALUE			24
-#define ID_EDIT_MD5_VALUE			25
-#define ID_EDIT_ED2K_VALUE			26
-#define ID_EDIT_SHA1_VALUE			27
-#define ID_EDIT_SHA256_VALUE		28
-#define ID_EDIT_SHA512_VALUE		29
-#define ID_EDIT_INFO				30
-#define ID_EDIT_STATUS				31
-#define ID_BTN_ERROR_DESCR			32
+#define ID_EDIT_FILENAME			40
+#define ID_EDIT_CRC_VALUE			41
+#define ID_EDIT_MD5_VALUE			42
+#define ID_EDIT_ED2K_VALUE			43
+#define ID_EDIT_SHA1_VALUE			44
+#define ID_EDIT_SHA256_VALUE		45
+#define ID_EDIT_SHA512_VALUE		46
+#define ID_EDIT_INFO				47
+#define ID_EDIT_STATUS				48
+#define ID_BTN_ERROR_DESCR			49
 
-#define ID_COMBO_PRIORITY			33
-#define ID_BTN_OPENFILES_PAUSE		34
-#define ID_LAST_TAB_CONTROL			35
+#define ID_COMBO_PRIORITY			50
+#define ID_BTN_OPENFILES_PAUSE		51
+#define ID_LAST_TAB_CONTROL			51
 
-#define ID_NUM_WINDOWS				35
+#define ID_NUM_WINDOWS				52
 
-#define IDM_COPY_CRC				40
-#define IDM_COPY_MD5				41
-#define IDM_COPY_ED2K				42
-#define IDM_COPY_SHA1				43
-#define IDM_COPY_SHA256				44
-#define IDM_COPY_SHA512				45
-#define IDM_COPY_ED2K_LINK			46
-#define IDM_REMOVE_ITEMS			47
-#define IDM_CLEAR_LIST				48
+#define IDM_COPY_CRC				0
+#define IDM_COPY_MD5				1
+#define IDM_COPY_ED2K				2
+#define IDM_COPY_SHA1				3
+#define IDM_COPY_SHA256				4
+#define IDM_COPY_SHA512				5
+#define IDM_COPY_ED2K_LINK			6
+#define IDM_REMOVE_ITEMS			7
+#define IDM_CLEAR_LIST				8
 
-#define IDM_HIDE_VERIFIED           49
+#define IDM_HIDE_VERIFIED           9
 
-#define IDM_CRC_COLUMN              50
-#define IDM_MD5_COLUMN              51
-#define IDM_ED2K_COLUMN             52
-#define IDM_SHA1_COLUMN             53
-#define IDM_SHA256_COLUMN           54
-#define IDM_SHA512_COLUMN           55
+#define IDM_CRC_COLUMN              0
+#define IDM_MD5_COLUMN              1
+#define IDM_ED2K_COLUMN             2
+#define IDM_SHA1_COLUMN             3
+#define IDM_SHA256_COLUMN           4
+#define IDM_SHA512_COLUMN           5
 
 //****** file open dialog *******
 #define FDIALOG_OPENCHOICES 0
@@ -261,13 +267,15 @@ typedef struct _FILEINFO{
             BYTE	abMd5Result[16];
             BYTE	abSha1Result[20];
             BYTE	abEd2kResult[16];
-            BYTE	abSHA256Result[32];
-            BYTE	abSHA512Result[64];
+            BYTE	abSha256Result[32];
+            BYTE	abSha512Result[64];
         } r;
         union {
             DWORD   dwCrc32Found;
             BYTE	abMd5Found[16];
             BYTE	abSha1Found[20];
+            BYTE	abSha256Found[32];
+            BYTE	abSha512Found[64];
         } f;
         TCHAR   szResult[RESULT_AS_STRING_MAX_LENGTH];
         DWORD   dwFound;
@@ -393,6 +401,7 @@ extern HINSTANCE g_hInstance;
 extern PROGRAM_OPTIONS g_program_options;
 extern PROGRAM_STATUS g_pstatus;
 extern CRITICAL_SECTION thread_fileinfo_crit;
+extern UINT g_hash_lengths[];
 extern TCHAR *g_hash_names[];
 extern TCHAR *g_hash_ext[];
 
@@ -498,8 +507,7 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList);
 //SFV and MD5 functions (sfvfcts.cpp)
 BOOL EnterSfvMode(lFILEINFO *fileList);
 DWORD WriteSfvHeader(CONST HANDLE hFile);
-BOOL EnterMd5Mode(lFILEINFO *fileList);
-BOOL EnterSha1Mode(lFILEINFO *fileList);
+BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode);
 DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], BOOL bIsSfv);
 DWORD WriteFileComment(CONST HANDLE hFile, CONST FILEINFO *pFileInfo, UINT startChar);
 #ifdef UNICODE
