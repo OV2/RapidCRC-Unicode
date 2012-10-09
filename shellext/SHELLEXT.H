@@ -108,6 +108,8 @@ private:
 	void doRapidCrcSFV(void);
 	void doRapidCrcMD5(void);
 	void doRapidCrcSHA1(void);
+    void doRapidCrcSHA256(void);
+    void doRapidCrcSHA512(void);
 	void doRapidCrcNAME(void);
 	void doRapidCrcNTFS(void);
 };

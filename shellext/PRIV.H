@@ -44,9 +44,11 @@
 #define IDM_SFV 2
 #define IDM_MD5 3
 #define IDM_SHA1 4
-#define IDM_NAME 5
-#define IDM_NTFS 6
-#define IDM_SUBMENU 7
+#define IDM_SHA256 5
+#define IDM_SHA512 6
+#define IDM_NAME 7
+#define IDM_NTFS 8
+#define IDM_SUBMENU 9
 #define ResultFromShort(i)  ResultFromScode(MAKE_SCODE(SEVERITY_SUCCESS, 0, (USHORT)(i)))
 
 //***************************
