@@ -339,23 +339,23 @@ typedef struct{
 typedef struct{
 	DWORD			dwVersion;
 	TCHAR			szFilenamePattern[MAX_PATH];
-	BOOL			bDisplayCrcInListView;
-	BOOL			bDisplayEd2kInListView;
+	BOOL			bDisplayCrcInListView; // not used anymore
+	BOOL			bDisplayEd2kInListView; // not used anymore
 	BOOL			bSortList;
 	BOOL			bWinsfvComp;
 	BOOL			bOwnChecksumFile;	// not used anymore
 	UINT			uiPriority;
-	BOOL			bDisplayMd5InListView;
+	BOOL			bDisplayMd5InListView; // not used anymore
 	UINT			uiWndWidth;		//saved in lACW units
 	UINT			uiWndHeight;	//saved in lACH units
 	INT				iWndCmdShow;
-	BOOL			bCalcCrcPerDefault;
-	BOOL			bCalcMd5PerDefault;
-	BOOL			bCalcEd2kPerDefault;
-	UINT			uiCreateFileModeSfv;
-	UINT			uiCreateFileModeMd5;
-	TCHAR			szFilenameSfv[MAX_PATH];
-	TCHAR			szFilenameMd5[MAX_PATH];
+	BOOL			bCalcCrcPerDefault; // not used anymore
+	BOOL			bCalcMd5PerDefault; // not used anymore
+	BOOL			bCalcEd2kPerDefault; // not used anymore
+	UINT			uiCreateFileModeSfv; // not used anymore
+	UINT			uiCreateFileModeMd5; // not used anymore
+	TCHAR			szFilenameSfv[MAX_PATH]; // not used anymore
+	TCHAR			szFilenameMd5[MAX_PATH]; // not used anymore
 	BOOL			bCreateUnixStyle;
 	//RCR Unicode specific
 	BOOL			bCreateUnicodeFiles;
@@ -366,12 +366,12 @@ typedef struct{
 	UINT			uiWndTop;
 	BOOL			bEnableQueue;
 	BOOL			bUseDefaultCP;
-	BOOL			bCalcSha1PerDefault;
-	BOOL			bDisplaySha1InListView;
+	BOOL			bCalcSha1PerDefault; // not used anymore
+	BOOL			bDisplaySha1InListView; // not used anymore
 	TCHAR			szCRCStringDelims[MAX_PATH];
 	BOOL			bAllowCrcAnywhere;
-	UINT			uiCreateFileModeSha1;
-	TCHAR			szFilenameSha1[MAX_PATH];
+	UINT			uiCreateFileModeSha1; // not used anymore
+	TCHAR			szFilenameSha1[MAX_PATH]; // not used anymore
     BOOL            bIncludeFileComments;
     UINT            uiDefaultCP;
     BOOL			bDisplayInListView[10];
