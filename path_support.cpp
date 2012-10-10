@@ -193,8 +193,8 @@ Return Value:
 	returns the new length of the string
 
 Notes:
-	- looks for a '\' in the string from back to front; if one is found it is set
-	  to \0. Otherwise the whole string is set to TEXT("")
+	- looks for a '\' in the string from back to front; if one is found the next
+      char is set to \0. Otherwise the whole string is set to TEXT("")
 	- used to set g_szBasePath
 *****************************************************************************/
 INT ReduceToPath(TCHAR szString[MAX_PATH_EX])
@@ -206,9 +206,9 @@ INT ReduceToPath(TCHAR szString[MAX_PATH_EX])
 	iStringLength = (INT) stStringLength;
 	while( (iStringLength > 0) && (szString[iStringLength] != TEXT('\\')) )
 		iStringLength--;
-	if(iStringLength != 0) // this is the case for example for C:\ or C:\test.txt. Then we want soemthing like C:\ and not C:
+	if(iStringLength != 0) // we want a \ at the end
 		iStringLength++;
-	szString[iStringLength] = TEXT('\0'); // replace the '\' with 0 to get the path of the sfv file
+	szString[iStringLength] = TEXT('\0');
 	
 	return iStringLength;
 }

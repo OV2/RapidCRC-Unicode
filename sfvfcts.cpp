@@ -63,12 +63,13 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 		bInfo.lpszTitle = TEXT("Select folder for sfv reparenting");
 		bInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
 		bInfo.lpfn = BrowseFolderSetSelProc;
-		bInfo.lParam = (LPARAM)fileList->g_szBasePath;
+		bInfo.lParam = (LPARAM)(fileList->g_szBasePath + 4);
 		if(iidl=SHBrowseForFolder(&bInfo)) {
 			SHGetPathFromIDList(iidl,szReparentPath);
 			CoTaskMemFree(iidl);
-            StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, TEXT("\\\\?\\"));
-			StringCchCat(fileList->g_szBasePath, MAX_PATH_EX, szReparentPath);
+            StringCchPrintf(fileList->g_szBasePath, MAX_PATH_EX, TEXT("\\\\?\\%s\\"),szReparentPath);
+            if(fileList->g_szBasePath[lstrlen(fileList->g_szBasePath) - 2] == TEXT('\\'))
+                fileList->g_szBasePath[lstrlen(fileList->g_szBasePath) - 1] = TEXT('\0');
 		}
 	}
 
@@ -306,11 +307,13 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 		bInfo.lpszTitle = TEXT("Select folder for reparenting");
 		bInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
 		bInfo.lpfn = BrowseFolderSetSelProc;
-		bInfo.lParam = (LPARAM)fileList->g_szBasePath;
+		bInfo.lParam = (LPARAM)(fileList->g_szBasePath + 4);
 		if(iidl=SHBrowseForFolder(&bInfo)) {
 			SHGetPathFromIDList(iidl,szReparentPath);
 			CoTaskMemFree(iidl);
-			StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szReparentPath);
+            StringCchPrintf(fileList->g_szBasePath, MAX_PATH_EX, TEXT("\\\\?\\%s\\"),szReparentPath);
+            if(fileList->g_szBasePath[lstrlen(fileList->g_szBasePath) - 2] == TEXT('\\'))
+                fileList->g_szBasePath[lstrlen(fileList->g_szBasePath) - 1] = TEXT('\0');
 		}
 	}
 
