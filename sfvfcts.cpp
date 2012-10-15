@@ -233,9 +233,12 @@ DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CON
 	if(g_program_options.bCreateUnixStyle)
 		ReplaceChar(szFilenameTemp, MAX_PATH_EX, TEXT('\\'), TEXT('/'));
 
-    StringCchPrintf(szLine, MAX_LINE_LENGTH, TEXT("%s %s%s%s"), szHashResult,
-        bIsSfv ? TEXT("*") : TEXT(""),
-		szFilenameTemp, g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
+    if(bIsSfv)
+        StringCchPrintf(szLine, MAX_LINE_LENGTH, TEXT("%s %s%s"), szFilenameTemp,
+		    szHashResult, g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
+    else
+        StringCchPrintf(szLine, MAX_LINE_LENGTH, TEXT("%s *%s%s"), szHashResult,
+		    szFilenameTemp, g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
 
 	StringCbLength(szLine, MAX_LINE_LENGTH, & stStringLength);
 
