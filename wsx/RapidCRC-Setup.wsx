@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='windows-1252'?>
-<?define rcrcv = "0.3.7" ?>
+<?define rcrcv = "0.3.8" ?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-  <Product Name='RapidCRC $(var.rcrcv)' Id='22FA0F96-B10E-4a6a-809E-D869BF3E25B8' UpgradeCode='F23F7724-AC87-4b4e-8F55-F908CCC0071A'
+  <Product Name='RapidCRC $(var.rcrcv)' Id='F2EB76A3-01AF-4a6c-9F32-06BAF0E06597' UpgradeCode='F23F7724-AC87-4b4e-8F55-F908CCC0071A'
     Language='1033' Codepage='1252' Version='$(var.rcrcv)' Manufacturer='RapidCRC'>
 
     <Package Id='*' Keywords='Installer'
@@ -60,6 +60,21 @@
                     <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
                 </Extension>
                 </ProgId>
+                <ProgId Id='RCRC.sha1' Description='SHA1 File (RapidCRC)' Icon="HashFileIcon" IconIndex="0">
+                  <Extension Id='sha1' ContentType='application/sha1'>
+                    <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
+                  </Extension>
+                </ProgId>
+                <ProgId Id='RCRC.sha256' Description='SHA256 File (RapidCRC)' Icon="HashFileIcon" IconIndex="0">
+                  <Extension Id='sha256' ContentType='application/sha256'>
+                    <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
+                  </Extension>
+                </ProgId>
+                <ProgId Id='RCRC.sha512' Description='SHA512 File (RapidCRC)' Icon="HashFileIcon" IconIndex="0">
+                  <Extension Id='sha512' ContentType='application/sha512'>
+                    <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
+                  </Extension>
+                </ProgId>
             </Component>
 
           </Directory>
@@ -87,7 +102,7 @@
       <Feature Id='ShellExt' Title='Shell Extension' Description='Enables the Shell extension.' Level='1' AllowAdvertise='no'>
         <ComponentRef Id='ShellExtReg' />
       </Feature>
-      <Feature Id='FileExtAssoc' Title='File Associations' Description='Associates .sfv and .md5 files with RapidCRC.' Level='1' AllowAdvertise='no'>
+      <Feature Id='FileExtAssoc' Title='File Associations' Description='Associates .sfv, .md5 and .sha1/256/51 files with RapidCRC.' Level='1' AllowAdvertise='no'>
         <ComponentRef Id='FileAssoc' />
       </Feature>
     </Feature>
