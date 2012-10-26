@@ -46,6 +46,20 @@ BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH_EX])
 }
 
 /*****************************************************************************
+BOOL FileExists(CONST TCHAR szName[MAX_PATH_EX])
+	szName	: (IN) string
+
+Return Value:
+	returns TRUE if szName exists and is not a directory; FALSE otherwise
+*****************************************************************************/
+BOOL FileExists(CONST TCHAR szName[MAX_PATH_EX])
+{
+  DWORD dwResult = GetFileAttributes(szName);
+
+  return (dwResult != INVALID_FILE_ATTRIBUTES && !(dwResult & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+/*****************************************************************************
 DWORD GetFileSizeQW(CONST TCHAR * szFilename, QWORD * qwSize)
 szFilename	: (IN) filename of the file whose filesize we want
 qwSize		: (OUT) filesize as QWORD

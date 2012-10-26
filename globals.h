@@ -486,6 +486,7 @@ int CALLBACK BrowseFolderSetSelProc (HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM
 
 //path support functions (path_support.cpp)
 BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH_EX]);
+BOOL FileExists(CONST TCHAR szName[MAX_PATH_EX]);
 VOID SetFileinfoAttributes(FILEINFO *fileInfo);
 BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH_EX], CONST TCHAR szFilenameOld[MAX_PATH_EX], CONST DWORD dwCrc32, CONST TCHAR szFilenamePattern[MAX_PATH_EX]);
 BOOL SeparatePathFilenameExt(CONST TCHAR szCompleteFilename[MAX_PATH_EX], TCHAR szPath[MAX_PATH_EX], TCHAR szFilename[MAX_PATH_EX], TCHAR szFileext[MAX_PATH_EX]);

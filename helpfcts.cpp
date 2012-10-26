@@ -384,24 +384,20 @@ VOID ReadOptions()
 	TCHAR szOptionsFilename[MAX_PATH_EX];
 	DWORD dwBytesRead;
 
-	// Generate filename of the options file
-//	GetModuleFileName(g_hInstance, szOptionsFilename, MAX_PATH_EX);
-//	ReduceToPath(szOptionsFilename);
-//	StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\options.bin"));
-	SHGetSpecialFolderPath(NULL, szOptionsFilename, CSIDL_APPDATA, TRUE);
-	StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\RapidCRC\\options_unicode.bin"));
+    SetDefaultOptions(& g_program_options);
 
-	SetDefaultOptions(& g_program_options);
+	// Generate filename of the options file
+    GetModuleFileName(g_hInstance, szOptionsFilename, MAX_PATH_EX);
+    ReduceToPath(szOptionsFilename);
+    StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\options_unicode.bin"));
+
+    if(!FileExists(szOptionsFilename)) {
+        SHGetSpecialFolderPath(NULL, szOptionsFilename, CSIDL_APPDATA, TRUE);
+        StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\RapidCRC\\options_unicode.bin"));
+    }
 
 	hFile = CreateFile(szOptionsFilename, GENERIC_READ, FILE_SHARE_READ, NULL,
 					OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, 0);
-
-	if(hFile == INVALID_HANDLE_VALUE) {
-		SHGetSpecialFolderPath(NULL, szOptionsFilename, CSIDL_APPDATA, TRUE);
-		StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\RapidCRC\\options.bin"));
-		hFile = CreateFile(szOptionsFilename, GENERIC_READ, FILE_SHARE_READ, NULL,
-					OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, 0);
-	}
 
 	if(hFile != INVALID_HANDLE_VALUE){
 		ReadFile(hFile, & g_program_options, sizeof(PROGRAM_OPTIONS), &dwBytesRead, NULL);
@@ -483,12 +479,20 @@ VOID WriteOptions(CONST HWND hMainWnd, CONST LONG lACW, CONST LONG lACH)
 	g_program_options.uiWndTop		= wp.rcNormalPosition.top;
 	g_program_options.iWndCmdShow	= wp.showCmd;
 
+
+
 	// Generate filename of the options file
-	SHGetSpecialFolderPath(NULL, szOptionsFilename, CSIDL_APPDATA, TRUE);
-	StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\RapidCRC"));
-	if(!IsThisADirectory(szOptionsFilename))
-		CreateDirectory(szOptionsFilename, NULL);
-	StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\options_unicode.bin"));
+    GetModuleFileName(g_hInstance, szOptionsFilename, MAX_PATH_EX);
+    ReduceToPath(szOptionsFilename);
+    StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\options_unicode.bin"));
+
+    if(!FileExists(szOptionsFilename)) {
+        SHGetSpecialFolderPath(NULL, szOptionsFilename, CSIDL_APPDATA, TRUE);
+        StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\RapidCRC"));
+        if(!IsThisADirectory(szOptionsFilename))
+            CreateDirectory(szOptionsFilename, NULL);
+        StringCchCat(szOptionsFilename, MAX_PATH_EX, TEXT("\\options_unicode.bin"));
+    }
 
 	hFile = CreateFile(szOptionsFilename, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, 0);
 	if(hFile != INVALID_HANDLE_VALUE){
