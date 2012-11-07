@@ -669,8 +669,13 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	UINT uiSameCharCount;
 	OPENFILENAME ofn;
 	DWORD dwResult;
+    size_t strLen;
 
-	StringCchCopy(szFileOut, MAX_PATH_EX, GetFilenameWithoutPathPointer(finalList->front()->parentList->g_szBasePath) );
+    StringCchCopy(szCurrentPath, MAX_PATH_EX, finalList->front()->parentList->g_szBasePath);
+    StringCchLength(szCurrentPath, MAX_PATH_EX, &strLen);
+    if(strLen)
+        szCurrentPath[strLen - 1] = TEXT('\0');
+	StringCchCopy(szFileOut, MAX_PATH_EX, GetFilenameWithoutPathPointer(szCurrentPath) );
 
 	TCHAR *hashExt = g_hash_ext[uiMode];
 	TCHAR msgString[MAX_PATH_EX];
