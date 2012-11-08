@@ -690,7 +690,7 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	ofn.lpstrFilter       = filterString ;
 	ofn.lpstrFile         = szFileOut ;
 	ofn.nMaxFile          = MAX_PATH_EX ;
-	ofn.lpstrInitialDir   = finalList->front()->parentList->g_szBasePath ;
+    ofn.lpstrInitialDir   = strLen > 4 ? szCurrentPath + 4 : TEXT("");
 	ofn.lpstrTitle        = msgString;
 	ofn.Flags             = OFN_OVERWRITEPROMPT | OFN_EXPLORER ;
 	ofn.lpstrDefExt       = hashExt;
