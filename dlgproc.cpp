@@ -137,7 +137,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         }
 		break;
 	case WM_GETMINMAXINFO:
-		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 153;
+		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 155;
 		((MINMAXINFO *)lParam)->ptMinTrackSize.y = lAveCharHeight * 25;
 		return 0;
 	case WM_SIZE:
@@ -1092,20 +1092,20 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_EDIT_INFO], lACW * editOffset, wHeight - lACH * (665/100.0f), wWidth - lACW * 22, lACH, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_ERROR_DESCR], wWidth - lACW * 105/10.0, wHeight - lACH * (685/100.0), lACW * 75/10.0, lACH * 15/10.0, FALSE);
 
-    MoveWindow(arrHwnd[ID_STATIC_CREATE], lACW * leftMargin, wHeight - lACH * actButtonY + 5, lACW * 6, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * (leftMargin + 6 + 1), wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 16 + 2) + 16, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], lACW * (leftMargin + 26 + 3) + 32, wHeight - lACH * actButtonY, lACW * 11 + 16, lACH * 19/10.0, FALSE);
-    MoveWindow(arrHwnd[ID_BTN_SHA256_IN_SHA256], lACW * (leftMargin + 37 + 4) + 48, wHeight - lACH * actButtonY, lACW * 13 + 16, lACH * 19/10.0, FALSE);
-    MoveWindow(arrHwnd[ID_BTN_SHA512_IN_SHA512], lACW * (leftMargin + 50 + 5) + 64, wHeight - lACH * actButtonY, lACW * 13 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 63 + 6) + 80, wHeight - lACH * actButtonY, lACW * 24, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 87 + 7) + 80, wHeight - lACH * actButtonY, lACW * 28, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_STATIC_CREATE], lACW * leftMargin, wHeight - lACH * actButtonY + 5, lACW * 7, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * (leftMargin + 7 + 1), wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 17 + 2) + 16, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], lACW * (leftMargin + 27 + 3) + 32, wHeight - lACH * actButtonY, lACW * 11 + 16, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_BTN_SHA256_IN_SHA256], lACW * (leftMargin + 38 + 4) + 48, wHeight - lACH * actButtonY, lACW * 13 + 16, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_BTN_SHA512_IN_SHA512], lACW * (leftMargin + 51 + 5) + 64, wHeight - lACH * actButtonY, lACW * 13 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 64 + 6) + 80, wHeight - lACH * actButtonY, lACW * 24, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 88 + 7) + 80, wHeight - lACH * actButtonY, lACW * 28, lACH * 19/10.0, FALSE);
 	//MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - lACW * 125/10.0/*lACW * (leftMargin + 88 + 4) + 32*/, wHeight - lACH * actButtonY, 32, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, FALSE);
 	
 	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 35 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, FALSE);
 	//MoveWindow(arrHwnd[ID_STATIC_PRIORITY], wWidth - lACW * 38, wHeight - lACH * 44/10.0, lACW * 8, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_COMBO_PRIORITY], wWidth - lACW * 35, wHeight - lACH * 45/10.0, lACW * 17/*12*/, lACH * 5, FALSE);
+	MoveWindow(arrHwnd[ID_COMBO_PRIORITY], wWidth - lACW * 37, wHeight - lACH * 45/10.0, lACW * 19/*12*/, lACH * 5, FALSE);
 	
 
 	MoveWindow(arrHwnd[ID_STATIC_STATUS], lACW * leftMargin, wHeight - lACH * 42/10.0, lACW * 7, lACH, FALSE);
