@@ -20,6 +20,7 @@
 #include "resource.h"
 #include "globals.h"
 #include <shlobj.h>
+#include "bval.h"
 
 /*****************************************************************************
 BOOL EnterSfvMode(lFILEINFO *fileList)
@@ -151,6 +152,8 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 					szLine[uiStringLength - 1] = NULL;
 					uiStringLength--;
 				}
+
+                ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
 
                 StringCchPrintf(fileinfoTmp.szFilename,MAX_PATH_EX,TEXT("%s%s"),fileList->g_szBasePath, szLine);
 
@@ -396,6 +399,8 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 				uiIndex = uiHashLengthChars; // szLine[uiHashLengthChars] is the first char after the hash
 				while( (uiIndex < uiStringLength) && ((szLine[uiIndex] == TEXT(' ')) || (szLine[uiIndex] == TEXT('*'))) )
 					uiIndex++;
+
+                ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
 
                 StringCchPrintf(fileinfoTmp.szFilename,MAX_PATH_EX,TEXT("%s%s"),fileList->g_szBasePath, szLine + uiIndex);
 
