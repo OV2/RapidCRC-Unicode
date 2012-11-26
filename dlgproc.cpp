@@ -1103,13 +1103,13 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	//MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - lACW * 125/10.0/*lACW * (leftMargin + 88 + 4) + 32*/, wHeight - lACH * actButtonY, 32, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, FALSE);
 	
-	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 35 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 37 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, FALSE);
 	//MoveWindow(arrHwnd[ID_STATIC_PRIORITY], wWidth - lACW * 38, wHeight - lACH * 44/10.0, lACW * 8, lACH, FALSE);
 	MoveWindow(arrHwnd[ID_COMBO_PRIORITY], wWidth - lACW * 37, wHeight - lACH * 45/10.0, lACW * 19/*12*/, lACH * 5, FALSE);
 	
 
 	MoveWindow(arrHwnd[ID_STATIC_STATUS], lACW * leftMargin, wHeight - lACH * 42/10.0, lACW * 7, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_STATUS], lACW * 85/10.0, wHeight - lACH * 42/10.0, wWidth - lACW * 523/10.0, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_STATUS], lACW * 85/10.0, wHeight - lACH * 42/10.0, wWidth - lACW * 533/10.0, lACH, FALSE);
 
 	MoveWindow(arrHwnd[ID_PROGRESS_FILE], lACW * leftMargin, wHeight - lACH * 24/10.0, wWidth - lACW * 193/10.0, lACH * 95/100.0, FALSE);
 	MoveWindow(arrHwnd[ID_PROGRESS_GLOBAL], lACW * leftMargin, wHeight - lACH * 14/10.0, wWidth - lACW * 193/10.0, lACH * 95/100.0, FALSE);
