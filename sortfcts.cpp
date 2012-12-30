@@ -74,7 +74,7 @@ int CALLBACK SortInfo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 }
 
 /*****************************************************************************
-int CALLBACK SortCrc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK SortHash(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 lParam1		: (IN) lparam of the first list view item to be compared
 lParam2		: (IN) lparam of the second list view item to be compared
 lParamSort	: (IN) lParamSort. Application dependend value
@@ -86,87 +86,12 @@ Notes:
 - lParamSort is from DlgProc and stores info if we have to sort ascending or
 descending
 *****************************************************************************/
-int CALLBACK SortCrc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-	// iResult == 1 if '>', iResult == -1 if not '>'
-    INT iResult = CRCI((FILEINFO *)lParam1).r.dwCrc32Result > CRCI((FILEINFO *)lParam2).r.dwCrc32Result;
-	if(iResult == 0)
-		iResult = -1;
-
-	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
-		return iResult;
-	else
-		return iResult * (-1);
-}
-
-/*****************************************************************************
-int CALLBACK SortMd5(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-lParam1		: (IN) lparam of the first list view item to be compared
-lParam2		: (IN) lparam of the second list view item to be compared
-lParamSort	: (IN) lParamSort. Application dependend value
-
-Return Value:
-returns a value comparing the two items
-
-Notes:
-- lParamSort is from DlgProc and stores info if we have to sort ascending or
-descending
-*****************************************************************************/
-int CALLBACK SortMd5(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+int CALLBACK SortHash(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
 	int iResult;
 
-	iResult = memcmp( MD5I((FILEINFO *)lParam1).r.abMd5Result, MD5I((FILEINFO *)lParam2).r.abMd5Result, 16);
-	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
-		return iResult;
-	else
-		return iResult * (-1);
-	return 0;
-}
-
-/*****************************************************************************
-int CALLBACK SortEd2k(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-lParam1		: (IN) lparam of the first list view item to be compared
-lParam2		: (IN) lparam of the second list view item to be compared
-lParamSort	: (IN) lParamSort. Application dependend value
-
-Return Value:
-returns a value comparing the two items
-
-Notes:
-- lParamSort is from DlgProc and stores info if we have to sort ascending or
-descending
-*****************************************************************************/
-int CALLBACK SortEd2k(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-	int iResult;
-
-    iResult = memcmp( ED2KI((FILEINFO *)lParam1).r.abEd2kResult, ED2KI((FILEINFO *)lParam2).r.abEd2kResult, 16);
-	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
-		return iResult;
-	else
-		return iResult * (-1);
-	return 0;
-}
-
-/*****************************************************************************
-int CALLBACK SortSha1(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-lParam1		: (IN) lparam of the first list view item to be compared
-lParam2		: (IN) lparam of the second list view item to be compared
-lParamSort	: (IN) lParamSort. Application dependend value
-
-Return Value:
-returns a value comparing the two items
-
-Notes:
-- lParamSort is from DlgProc and stores info if we have to sort ascending or
-descending
-*****************************************************************************/
-int CALLBACK SortSha1(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
-{
-	int iResult;
-
-    iResult = memcmp( SHA1I((FILEINFO *)lParam1).r.abSha1Result, SHA1I((FILEINFO *)lParam2).r.abSha1Result, 20);
+    int hash_num = *((DWORD *)lParamSort) >> 8;
+    iResult = memcmp( &((FILEINFO *)lParam1)->hashInfo[hash_num].r, &((FILEINFO *)lParam2)->hashInfo[hash_num].r, g_hash_lengths[hash_num]);
 	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
 		return iResult;
 	else

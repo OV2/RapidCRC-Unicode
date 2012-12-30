@@ -131,10 +131,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define SORT_FLAG_DESCENDING	0x0002
 #define SORT_FLAG_FILENAME		0x0004
 #define SORT_FLAG_INFO			0x0008
-#define SORT_FLAG_CRC			0x0010
-#define SORT_FLAG_MD5			0x0020
-#define SORT_FLAG_ED2K			0x0030
-#define SORT_FLAG_SHA1			0x0040
+#define SORT_FLAG_HASH          0x0010
 
 // these correlate to the indexes in the priority combo box
 #define PRIORITY_IDLE	0
@@ -518,10 +515,7 @@ BOOL WriteCurrentBOM(CONST HANDLE hFile);
 //sort functions (sortfcts.cpp)
 int CALLBACK SortFilename(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortInfo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-int CALLBACK SortCrc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-int CALLBACK SortMd5(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-int CALLBACK SortEd2k(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-int CALLBACK SortSha1(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+int CALLBACK SortHash(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 INT InfoToIntValue(CONST FILEINFO * pFileinfo);
 bool ListCompFunction(const FILEINFO& pFileinfo1, const FILEINFO& pFileinfo2);
 bool ListPointerCompFunction(const FILEINFO *pFileinfo1, const FILEINFO *pFileinfo2);

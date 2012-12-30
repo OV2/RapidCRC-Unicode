@@ -858,65 +858,48 @@ Notes:
 *****************************************************************************/
 __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLISTVIEW * pnmlistview, DWORD * pdwSortStatus)
 {
-	int crcNum=0, md5Num=0, ed2kNum=0, sha1Num=0;
     HWND hwndHeader;
     HDITEM hditem;
-	crcNum=(g_program_options.bDisplayCrcInListView)?1:0;
-	md5Num=(g_program_options.bDisplayMd5InListView)?1:0;
-	ed2kNum=(g_program_options.bDisplayEd2kInListView)?1:0;
-	sha1Num=(g_program_options.bDisplaySha1InListView)?1:0;
-	if(sha1Num) sha1Num+=ed2kNum+md5Num+crcNum;
-	if(ed2kNum) ed2kNum+=md5Num+crcNum;
-	if(md5Num) md5Num+=crcNum;
 
-	if(pnmlistview->iSubItem==0) {
+    if(pnmlistview->iSubItem==0) {
 		if( ((*pdwSortStatus) & SORT_FLAG_FILENAME) && ((*pdwSortStatus) & SORT_FLAG_ASCENDING ) )
-			(*pdwSortStatus) = SORT_FLAG_FILENAME | SORT_FLAG_DESCENDING;
-		else
-			(*pdwSortStatus) = SORT_FLAG_FILENAME | SORT_FLAG_ASCENDING;
-		SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
-			(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortFilename );
+		    (*pdwSortStatus) = SORT_FLAG_FILENAME | SORT_FLAG_DESCENDING;
+	    else
+		    (*pdwSortStatus) = SORT_FLAG_FILENAME | SORT_FLAG_ASCENDING;
+	    SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
+		    (WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortFilename );
+    } else {
+        bool is_info_column = true;
+        int hash_num = 0;
+        int itemNum = pnmlistview->iSubItem - 1;
+        int curCol = 0;
+        for(int i=0;i<NUM_HASH_TYPES;i++) {
+            if(g_program_options.bDisplayInListView[i]) {
+                if(curCol == itemNum) {
+                    is_info_column = false;
+                    hash_num = i;
+                    break;
+                }
+                curCol++;
+            }
+        }
+        if(is_info_column) {
+            if( ((*pdwSortStatus) & SORT_FLAG_INFO ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
+		        (*pdwSortStatus) = SORT_FLAG_INFO | SORT_FLAG_DESCENDING;
+	        else
+		        (*pdwSortStatus) = SORT_FLAG_INFO | SORT_FLAG_ASCENDING;
+	        SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS ,
+		        (WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortInfo );
+        } else {
+            if( ((*pdwSortStatus) & 0xF) < 4 && ((*pdwSortStatus) >> 8 ) == hash_num && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
+		        (*pdwSortStatus) = hash_num << 8 | SORT_FLAG_DESCENDING;
+	        else
+		        (*pdwSortStatus) = hash_num << 8 | SORT_FLAG_ASCENDING;
+	        SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS ,
+		        (WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortHash );
+        }
 
-	} else if(pnmlistview->iSubItem==sha1Num) {
-		if( ((*pdwSortStatus) & SORT_FLAG_SHA1 ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
-			(*pdwSortStatus) = SORT_FLAG_SHA1 | SORT_FLAG_DESCENDING;
-		else
-			(*pdwSortStatus) = SORT_FLAG_SHA1 | SORT_FLAG_ASCENDING;
-		SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS ,
-			(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortSha1 );
-
-	} else if(pnmlistview->iSubItem==ed2kNum) {
-		if( ((*pdwSortStatus) & SORT_FLAG_ED2K ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
-			(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_DESCENDING;
-		else
-			(*pdwSortStatus) = SORT_FLAG_ED2K | SORT_FLAG_ASCENDING;
-		SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
-			(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortEd2k );
-
-	} else if(pnmlistview->iSubItem==md5Num) {
-		if( ((*pdwSortStatus) & SORT_FLAG_MD5 ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
-			(*pdwSortStatus) = SORT_FLAG_MD5 | SORT_FLAG_DESCENDING;
-		else
-			(*pdwSortStatus) = SORT_FLAG_MD5 | SORT_FLAG_ASCENDING;
-		SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
-			(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortMd5 );
-
-	} else if(pnmlistview->iSubItem==crcNum) {
-		if( ((*pdwSortStatus) & SORT_FLAG_CRC ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
-			(*pdwSortStatus) = SORT_FLAG_CRC | SORT_FLAG_DESCENDING;
-		else
-			(*pdwSortStatus) = SORT_FLAG_CRC | SORT_FLAG_ASCENDING;
-		SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS,
-			(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortCrc );
-
-	} else {
-		if( ((*pdwSortStatus) & SORT_FLAG_INFO ) && ((*pdwSortStatus) &  SORT_FLAG_ASCENDING) )
-			(*pdwSortStatus) = SORT_FLAG_INFO | SORT_FLAG_DESCENDING;
-		else
-			(*pdwSortStatus) = SORT_FLAG_INFO | SORT_FLAG_ASCENDING;
-		SendMessage(arrHwnd[ID_LISTVIEW], LVM_SORTITEMS ,
-			(WPARAM) (LPARAM) pdwSortStatus, (LPARAM) (PFNLVCOMPARE) SortInfo );
-	}
+    }
 
     hwndHeader = ListView_GetHeader(arrHwnd[ID_LISTVIEW]);
     ZeroMemory(&hditem,sizeof(HDITEM));
