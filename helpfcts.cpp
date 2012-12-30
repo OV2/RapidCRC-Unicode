@@ -589,6 +589,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
     ZeroMemory(pprogram_options->bCalcPerDefault,10 * sizeof(BOOL));
     pprogram_options->bCalcPerDefault[HASH_TYPE_CRC32] = TRUE;
     for(int i=0;i<NUM_HASH_TYPES;i++) {
+        pprogram_options->uiCreateFileMode[i] = CREATE_ONE_FILE;
         StringCchPrintf(pprogram_options->szFilename[i],MAX_PATH,TEXT("checksum.%s"),g_hash_ext[i]);
     }
 	return;
