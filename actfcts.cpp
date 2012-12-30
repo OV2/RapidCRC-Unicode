@@ -673,9 +673,13 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 
     StringCchCopy(szCurrentPath, MAX_PATH_EX, finalList->front()->parentList->g_szBasePath);
     StringCchLength(szCurrentPath, MAX_PATH_EX, &strLen);
-    if(strLen)
+    if(strLen > 4) {
+	    StringCchCopy(szFileOut, MAX_PATH_EX, szCurrentPath + 4);
         szCurrentPath[strLen - 1] = TEXT('\0');
-	StringCchCopy(szFileOut, MAX_PATH_EX, GetFilenameWithoutPathPointer(szCurrentPath) );
+        StringCchCat(szFileOut, MAX_PATH_EX, GetFilenameWithoutPathPointer(szCurrentPath));
+        if(szCurrentPath[strLen - 2] == TEXT(':'))
+            szFileOut[4] = TEXT('\0');
+    }
 
 	TCHAR *hashExt = g_hash_ext[uiMode];
 	TCHAR msgString[MAX_PATH_EX];
@@ -690,7 +694,7 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	ofn.lpstrFilter       = filterString ;
 	ofn.lpstrFile         = szFileOut ;
 	ofn.nMaxFile          = MAX_PATH_EX ;
-    ofn.lpstrInitialDir   = strLen > 4 ? szCurrentPath + 4 : TEXT("");
+    ofn.lpstrInitialDir   = strLen > 4 ? finalList->front()->parentList->g_szBasePath + 4 : TEXT("");
 	ofn.lpstrTitle        = msgString;
 	ofn.Flags             = OFN_OVERWRITEPROMPT | OFN_EXPLORER ;
 	ofn.lpstrDefExt       = hashExt;
