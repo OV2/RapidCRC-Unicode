@@ -20,7 +20,6 @@
 #include "resource.h"
 #include "globals.h"
 #include <shlobj.h>
-#include "bval.h"
 
 /*****************************************************************************
 BOOL EnterSfvMode(lFILEINFO *fileList)
