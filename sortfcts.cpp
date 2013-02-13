@@ -91,7 +91,12 @@ int CALLBACK SortHash(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 	int iResult;
 
     int hash_num = *((DWORD *)lParamSort) >> 8;
-    iResult = memcmp( &((FILEINFO *)lParam1)->hashInfo[hash_num].r, &((FILEINFO *)lParam2)->hashInfo[hash_num].r, g_hash_lengths[hash_num]);
+    if(hash_num == HASH_TYPE_CRC32) {
+        iResult = CRCI((FILEINFO *)lParam1).r.dwCrc32Result > CRCI((FILEINFO *)lParam2).r.dwCrc32Result;
+        if(iResult == 0)
+            iResult = -1;
+    } else
+        iResult = memcmp( &((FILEINFO *)lParam1)->hashInfo[hash_num].r, &((FILEINFO *)lParam2)->hashInfo[hash_num].r, g_hash_lengths[hash_num]);
 	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
 		return iResult;
 	else
