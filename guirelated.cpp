@@ -119,7 +119,6 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	WINDOWPLACEMENT wp;
 	RECT rect;
 
-	//InitCommonControls();
 	iccex.dwSize	= sizeof(INITCOMMONCONTROLSEX);
 	iccex.dwICC		= ICC_PROGRESS_CLASS | ICC_LISTVIEW_CLASSES;
 	InitCommonControlsEx(& iccex);
@@ -201,7 +200,6 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	SendMessage(arrHwnd[ID_BTN_SHA512_IN_SHA512],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 	arrHwnd[ID_BTN_OPTIONS]				= CreateWindow(TEXT("BUTTON"), TEXT("Options"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_OPTIONS, g_hInstance, NULL);
 
-	//arrHwnd[ID_STATIC_PRIORITY]			= CreateWindow(TEXT("STATIC"), TEXT("Priority"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_PRIORITY, g_hInstance, NULL);
 	arrHwnd[ID_COMBO_PRIORITY]			= CreateWindow(TEXT("COMBOBOX"), NULL, CBS_DROPDOWNLIST | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_COMBO_PRIORITY, g_hInstance, NULL);	
 
 	arrHwnd[ID_PROGRESS_FILE]			= CreateWindow(PROGRESS_CLASS, NULL, WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_PROGRESS_FILE, g_hInstance, NULL);
@@ -218,20 +216,11 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	for(i=0; i < ID_NUM_WINDOWS; i++)
 		SendMessage(arrHwnd[i], WM_SETFONT, (WPARAM)hFont, MAKELPARAM(FALSE, 0));
 
-	/*#pragma warning(disable: 4244) // SetWindowLongPtr has a w64 warning bug here...
-	#pragma warning(disable: 4312)
-	for(i=ID_FIRST_TAB_CONTROL; i < ID_LAST_TAB_CONTROL + 1; i++)
-		arrOldWndProcs[i - ID_FIRST_TAB_CONTROL] = (WNDPROC) SetWindowLongPtr(arrHwnd[i], GWLP_WNDPROC, (LONG_PTR)WndProcTabInterface);
-	#pragma warning(default: 4312)
-	#pragma warning(default: 4244)*/
-
 	//set window order so that the dialog manager can handle tab order
 	SetWindowPos(arrHwnd[ID_BTN_EXIT],HWND_TOP,0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
 	SetWindowPos(arrHwnd[ID_FIRST_TAB_CONTROL],arrHwnd[ID_BTN_EXIT],0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
 	for(i=ID_FIRST_TAB_CONTROL + 1; i < ID_LAST_TAB_CONTROL + 1; i++)
 		SetWindowPos(arrHwnd[i],arrHwnd[i-1],0,0,0,0,SWP_NOSIZE | SWP_NOMOVE);
-
-	//CallWindowProc(WndProcTabInterface, NULL, WM_INIT_WNDPROCTABINTERFACE, (WPARAM)arrOldWndProcs, (LPARAM)arrHwnd);
 
 	SetFocus(arrHwnd[ID_BTN_OPENFILES_PAUSE]);
 
@@ -265,20 +254,14 @@ void CreateListViewPopupMenu(HMENU *menu)
 void CreateListViewPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
     TCHAR menuText[100];
-	//HMENU hSubMenu = CreatePopupMenu();
 
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K_LINK,TEXT("Copy ED2K Link to Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
-	/*InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K,TEXT("Copy ED2K to Clipboard"));
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_SHA1,TEXT("Copy SHA1 to Clipboard"));
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_MD5,TEXT("Copy MD5 to Clipboard"));
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC,TEXT("Copy CRC to Clipboard"));*/
     for(int i=0;i<NUM_HASH_TYPES;i++) {
         StringCchPrintf(menuText,100,TEXT("Copy %s to Clipboard"),g_hash_names[i]);
         InsertMenu(*menu,i, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC + i,menuText);
     }
 
-	//InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING | MF_POPUP,(UINT_PTR)hSubMenu,TEXT("Clipboard"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
     InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_HIDE_VERIFIED,TEXT("Hide Verified Items"));
     InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
@@ -492,7 +475,6 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 	int ret;
 	UINT uiSelected = 0;	
 	list<FILEINFO*> finalList;
-	//bool bCrc=true,bMd5=true,bSha1=true,bEd2k=true;
     bool bCalculatedForSelected[NUM_HASH_TYPES];
     for(int i=0;i<NUM_HASH_TYPES;i++)
         bCalculatedForSelected[i] = true;
@@ -577,36 +559,13 @@ BOOL ListViewHeaderPopup(HWND pHwnd,HMENU popup,int x,int y) {
     for(int i=0;i<NUM_HASH_TYPES;i++) {
         CheckMenuItem(popup,IDM_CRC_COLUMN + i,MF_BYCOMMAND | (g_program_options.bDisplayInListView[i] ? MF_CHECKED : MF_UNCHECKED));
     }
-
-	/*CheckMenuItem(popup,IDM_MD5_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayMd5InListView ? MF_CHECKED : MF_UNCHECKED));
-	CheckMenuItem(popup,IDM_ED2K_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplayEd2kInListView ? MF_CHECKED : MF_UNCHECKED));
-	CheckMenuItem(popup,IDM_SHA1_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplaySha1InListView ? MF_CHECKED : MF_UNCHECKED));
-    CheckMenuItem(popup,IDM_SHA512_COLUMN,MF_BYCOMMAND | (g_program_options.bDisplaySha512InListView ? MF_CHECKED : MF_UNCHECKED));*/
 	
     ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,pHwnd,NULL);
     if(ret >= 0) {
         g_program_options.bDisplayInListView[ret - IDM_CRC_COLUMN] = !g_program_options.bDisplayInListView[ret - IDM_CRC_COLUMN];
         return TRUE;
     }
-	/*switch(ret) {
-		case IDM_CRC_COLUMN:
-            g_program_options.bDisplayCrcInListView = !g_program_options.bDisplayCrcInListView;
-			return TRUE;
-		case IDM_MD5_COLUMN:
-            g_program_options.bDisplayMd5InListView = !g_program_options.bDisplayMd5InListView;
-    		return TRUE;
-		case IDM_ED2K_COLUMN:
-            g_program_options.bDisplayEd2kInListView = !g_program_options.bDisplayEd2kInListView;
-			return TRUE;
-		case IDM_SHA1_COLUMN:
-			g_program_options.bDisplaySha1InListView = !g_program_options.bDisplaySha1InListView;
-			return TRUE;
-        case IDM_SHA512_COLUMN:
-			g_program_options.bDisplaySha512InListView = !g_program_options.bDisplaySha512InListView;
-			return TRUE;
-		default:
-            break;
-	}*/
+
     return FALSE;
 }
 
@@ -781,13 +740,6 @@ BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo,lFILEINFO *fi
 	lvI.pszText = LPSTR_TEXTCALLBACK;
 	if(SendMessage(hListView, LVM_INSERTITEM, 0, (LPARAM) &lvI) == -1)
 		return FALSE;
-    /*UINT cols[4] = { 2, 3, 4, 4 };
-    tileInfo.cbSize = sizeof(LVTILEINFO);
-    tileInfo.cColumns = 3;
-    int fmts[4] = {LVCFMT_NO_TITLE,LVCFMT_NO_TITLE,LVCFMT_NO_TITLE,LVCFMT_NO_TITLE};
-    tileInfo.piColFmt = fmts;
-    tileInfo.puColumns = cols;
-    SendMessage(hListView,LVM_SETTILEINFO,0,(LPARAM) &tileInfo);*/
 	return TRUE;
 }
 
@@ -836,8 +788,6 @@ VOID UpdateListViewColumns(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LONG lACW)
 {
 	RECT rect;
 
-	//ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
-
     for(int i=NUM_HASH_TYPES + 1;i>0;i--) {
         ListView_DeleteColumn(arrHwnd[ID_LISTVIEW], i);
     }
@@ -847,12 +797,6 @@ VOID UpdateListViewColumns(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LONG lACW)
 	// trying to send WM_SIZE to resize the columns
 	GetClientRect(arrHwnd[ID_MAIN_WND], & rect);
 	SendMessage(arrHwnd[ID_MAIN_WND], WM_SIZE, SIZE_RESTORED, MAKELPARAM(rect.right - rect.left, rect.bottom - rect.top));
-
-	//pFileinfo = g_fileinfo_list_first_item;
-	//while(pFileinfo != NULL){
-		//InsertItemIntoList(arrHwnd[ID_LISTVIEW], pFileinfo);
-	//	pFileinfo = pFileinfo->nextListItem;
-	//}
 
 	return;
 }
@@ -891,70 +835,6 @@ BOOL SetSubItemColumns(CONST HWND hWndListView)
 		    iCurrentSubItem++;
 	    }
     }
-	//if(g_program_options.bDisplayCrcInListView){
-	//	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-	//	lvcolumn.fmt = LVCFMT_LEFT;
-	//	lvcolumn.cx = 0; // is resized later in WM_SIZE
-	//	lvcolumn.pszText = TEXT("CRC32");
-	//	lvcolumn.iSubItem = iCurrentSubItem;
-
-	//	if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
-	//		return FALSE;
-
-	//	iCurrentSubItem++;
-	//}
-
-	//if(g_program_options.bDisplayMd5InListView){
-	//	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-	//	lvcolumn.fmt = LVCFMT_LEFT;
-	//	lvcolumn.cx = 0;
-	//	lvcolumn.pszText = TEXT("MD5");
-	//	lvcolumn.iSubItem = iCurrentSubItem;
-
-	//	if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
-	//		return FALSE;
-
-	//	iCurrentSubItem++;
-	//}
-
-	//if(g_program_options.bDisplayEd2kInListView){
-	//	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-	//	lvcolumn.fmt = LVCFMT_LEFT;
-	//	lvcolumn.cx = 0;
-	//	lvcolumn.pszText = TEXT("ED2K");
-	//	lvcolumn.iSubItem = iCurrentSubItem;
-
-	//	if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
-	//		return FALSE;
-
-	//	iCurrentSubItem++;
-	//}
-
-	//if(g_program_options.bDisplaySha1InListView){
-	//	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-	//	lvcolumn.fmt = LVCFMT_LEFT;
-	//	lvcolumn.cx = 0;
-	//	lvcolumn.pszText = TEXT("SHA1");
-	//	lvcolumn.iSubItem = iCurrentSubItem;
-
-	//	if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
-	//		return FALSE;
-
-	//	iCurrentSubItem++;
-	//}
-
- //   if(g_program_options.bDisplaySha512InListView){
-	//	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
-	//	lvcolumn.fmt = LVCFMT_LEFT;
-	//	lvcolumn.cx = 0;
-	//	lvcolumn.pszText = TEXT("SHA512");
-	//	lvcolumn.iSubItem = iCurrentSubItem;
-
-	//	if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
-	//		return FALSE;
-
-	//	iCurrentSubItem++;
-	//}
 
 	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvcolumn.fmt = LVCFMT_LEFT;
@@ -1001,10 +881,6 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
         for(int i=0;i<NUM_HASH_TYPES;i++) {
             SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE + i], TEXT(""));
         }
-		/*SetWindowText(arrHwnd[ID_EDIT_CRC_VALUE], TEXT(""));
-		SetWindowText(arrHwnd[ID_EDIT_MD5_VALUE], TEXT(""));
-		SetWindowText(arrHwnd[ID_EDIT_ED2K_VALUE], TEXT(""));
-		SetWindowText(arrHwnd[ID_EDIT_SHA1_VALUE], TEXT(""));*/
 		SetWindowText(arrHwnd[ID_EDIT_INFO], TEXT(""));
 		ShowWindow(arrHwnd[ID_BTN_ERROR_DESCR], SW_HIDE);
 		pshowresult_params->pFileinfo_cur_displayed = NULL ;

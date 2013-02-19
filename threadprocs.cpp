@@ -91,32 +91,17 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
     HANDLE hEvtThreadGo[NUM_HASH_TYPES];
     HANDLE hEvtThreadReady[NUM_HASH_TYPES];
-	/*HANDLE hEvtThreadMd5Go;
-	HANDLE hEvtThreadSha1Go;
-	HANDLE hEvtThreadEd2kGo;
-	HANDLE hEvtThreadCrcGo;
-	HANDLE hEvtThreadMd5Ready;
-	HANDLE hEvtThreadSha1Ready;
-	HANDLE hEvtThreadEd2kReady;
-	HANDLE hEvtThreadCrcReady;*/
 
 	HANDLE hEvtReadDone;
 	OVERLAPPED olp;
 	ZeroMemory(&olp,sizeof(olp));
 
     HANDLE hThread[NUM_HASH_TYPES];
-	/*HANDLE hThreadMd5;
-	HANDLE hThreadSha1;
-	HANDLE hThreadEd2k;
-	HANDLE hThreadCrc;*/
 	
 	HANDLE hEvtReadyHandles[NUM_HASH_TYPES];
 	DWORD cEvtReadyHandles;
 
     THREAD_PARAMS_HASHCALC calcParams[NUM_HASH_TYPES];
-	/*THREAD_PARAMS_HASHCALC sha1CalcParams;
-	THREAD_PARAMS_HASHCALC ed2kCalcParams;
-	THREAD_PARAMS_HASHCALC crcCalcParams;*/
 
 	lFILEINFO *fileList;
 	list<FILEINFO*> finalList;
@@ -158,79 +143,6 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 		    }
         }
 
-
-		/*bDoCalculate[HASH_TYPE_MD5]	= !fileList->bCalculated[HASH_TYPE_MD5] && fileList->bDoCalculate[HASH_TYPE_MD5];
-		bDoCalculate[HASH_TYPE_SHA1]	= !fileList->bCalculated[HASH_TYPE_SHA1] && fileList->bDoCalculate[HASH_TYPE_SHA1];
-		bDoCalculate[HASH_TYPE_ED2K]  = !fileList->bCalculated[HASH_TYPE_ED2K] && fileList->bDoCalculate[HASH_TYPE_ED2K];*/
-
-		/*if(bDoCalculate[HASH_TYPE_CRC32]) {
-			fileList->bCalculated[HASH_TYPE_CRC32] = TRUE;
-			hEvtThreadCrcGo = CreateEvent(NULL,FALSE,FALSE,NULL);
-			hEvtThreadCrcReady = CreateEvent(NULL,FALSE,FALSE,NULL);
-			if(hEvtThreadCrcGo == NULL || hEvtThreadCrcReady == NULL) {
-				ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-				ExitProcess(1);
-			}
-			hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadCrcReady;
-			cEvtReadyHandles++;
-			crcCalcParams.bFileDone = &bFileDone;
-			crcCalcParams.hHandleGo = hEvtThreadCrcGo;
-			crcCalcParams.hHandleReady = hEvtThreadCrcReady;
-			crcCalcParams.buffer = &calcBuffer;
-			crcCalcParams.dwBytesRead = &dwBytesReadCb;
-		}
-
-		if(bDoCalculate[HASH_TYPE_MD5]) {
-			fileList->bCalculated[HASH_TYPE_MD5] = TRUE;
-			hEvtThreadMd5Go = CreateEvent(NULL,FALSE,FALSE,NULL);
-			hEvtThreadMd5Ready = CreateEvent(NULL,FALSE,FALSE,NULL);
-			if(hEvtThreadMd5Go == NULL || hEvtThreadMd5Ready == NULL) {
-				ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-				ExitProcess(1);
-			}
-			hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadMd5Ready;
-			cEvtReadyHandles++;
-			md5CalcParams.bFileDone = &bFileDone;
-			md5CalcParams.hHandleGo = hEvtThreadMd5Go;
-			md5CalcParams.hHandleReady = hEvtThreadMd5Ready;
-			md5CalcParams.buffer = &calcBuffer;
-			md5CalcParams.dwBytesRead = &dwBytesReadCb;
-		}
-
-		if(bDoCalculate[HASH_TYPE_SHA1]) {
-			fileList->bCalculated[HASH_TYPE_SHA1] = TRUE;
-			hEvtThreadSha1Go = CreateEvent(NULL,FALSE,FALSE,NULL);
-			hEvtThreadSha1Ready = CreateEvent(NULL,FALSE,FALSE,NULL);
-			if(hEvtThreadSha1Go == NULL || hEvtThreadSha1Ready == NULL) {
-				ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-				ExitProcess(1);
-			}
-			hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadSha1Ready;
-			cEvtReadyHandles++;
-			sha1CalcParams.bFileDone = &bFileDone;
-			sha1CalcParams.hHandleGo = hEvtThreadSha1Go;
-			sha1CalcParams.hHandleReady = hEvtThreadSha1Ready;
-			sha1CalcParams.buffer = &calcBuffer;
-			sha1CalcParams.dwBytesRead = &dwBytesReadCb;
-		}
-
-		if(bDoCalculate[HASH_TYPE_ED2K]) {
-			fileList->bCalculated[HASH_TYPE_ED2K] = TRUE;
-			hEvtThreadEd2kGo = CreateEvent(NULL,FALSE,FALSE,NULL);
-			hEvtThreadEd2kReady = CreateEvent(NULL,FALSE,FALSE,NULL);
-			if(hEvtThreadEd2kGo == NULL || hEvtThreadEd2kReady == NULL) {
-				ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-				ExitProcess(1);
-			}
-			hEvtReadyHandles[cEvtReadyHandles] = hEvtThreadEd2kReady;
-			cEvtReadyHandles++;
-			ed2kCalcParams.bFileDone = &bFileDone;
-			ed2kCalcParams.hHandleGo = hEvtThreadEd2kGo;
-			ed2kCalcParams.hHandleReady = hEvtThreadEd2kReady;
-			ed2kCalcParams.buffer = &calcBuffer;
-			ed2kCalcParams.dwBytesRead = &dwBytesReadCb;
-		}*/
-
 		hEvtReadDone = CreateEvent(NULL,FALSE,FALSE,NULL);
 		if(hEvtReadDone == NULL) {
 			ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
@@ -253,10 +165,9 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			
 			FILEINFO& curFileInfo = (*it);
 
-			if ( (curFileInfo.dwError == NO_ERROR) /*&& (curFileInfo.qwFilesize != 0)*/ && cEvtReadyHandles > 0)
+			if ( (curFileInfo.dwError == NO_ERROR) && cEvtReadyHandles > 0)
 			{
 
-				//SetWindowText(arrHwnd[ID_EDIT_STATUS], curFileInfo.szFilename + 4);
                 DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 
 				QueryPerformanceCounter((LARGE_INTEGER*) &qwStart);
@@ -280,47 +191,6 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 					        }
                         }
 				    }
-
-				    /*if(bDoCalculate[HASH_TYPE_CRC32]) {
-					    ResetEvent(hEvtThreadCrcGo);
-					    ResetEvent(hEvtThreadCrcReady);
-					    crcCalcParams.result = &curFileInfo.dwCrc32Result;
-					    hThreadCrc = CreateThread(NULL,0,ThreadProc_CrcCalc,&crcCalcParams,0,NULL);
-					    if(hThreadCrc == NULL) {
-						    ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-						    ExitProcess(1);
-					    }
-				    }
-				    if(bDoCalculate[HASH_TYPE_MD5]) {
-					    ResetEvent(hEvtThreadMd5Go);
-					    ResetEvent(hEvtThreadMd5Ready);
-					    md5CalcParams.result = &curFileInfo.abMd5Result;
-					    hThreadMd5 = CreateThread(NULL,0,ThreadProc_Md5Calc,&md5CalcParams,0,NULL);
-					    if(hThreadMd5 == NULL) {
-						    ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-						    ExitProcess(1);
-					    }
-				    }
-				    if(bDoCalculate[HASH_TYPE_SHA1]) {
-					    ResetEvent(hEvtThreadSha1Go);
-					    ResetEvent(hEvtThreadSha1Ready);
-					    sha1CalcParams.result = &curFileInfo.abSha1Result;
-					    hThreadSha1 = CreateThread(NULL,0,ThreadProc_Sha1Calc,&sha1CalcParams,0,NULL);
-					    if(hThreadSha1 == NULL) {
-						    ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-						    ExitProcess(1);
-					    }
-				    }
-				    if(bDoCalculate[HASH_TYPE_ED2K]) {
-					    ResetEvent(hEvtThreadEd2kGo);
-					    ResetEvent(hEvtThreadEd2kReady);
-					    ed2kCalcParams.result = &curFileInfo.abEd2kResult;
-					    hThreadEd2k = CreateThread(NULL,0,ThreadProc_Ed2kCalc,&ed2kCalcParams,0,NULL);
-					    if(hThreadEd2k == NULL) {
-						    ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
-						    ExitProcess(1);
-					    }
-				    }*/
 
 				    ZeroMemory(&olp,sizeof(olp));
 				    olp.hEvent = hEvtReadDone;
@@ -380,8 +250,6 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				    curFileInfo.fSeconds = (float)((qwStop - qwStart) / (float)wqFreq);
                 }
 			}
-			/*else if(curFileInfo.qwFilesize == 0)	// this case is to have legal values in fSeconds
-				curFileInfo.fSeconds = 0;			// if the file has 0 bytes*/
 
 			SetFileInfoStrings(&curFileInfo,fileList);
 
@@ -853,48 +721,6 @@ DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam)
 		// assembly part by Brian Friesen
 		crcCalc(pdwCrc32,(DWORD *)&arrdwCrc32Table,bufferAsm,dwBytesReadAsm);
 
-		/*__asm
-		{
-			// Save the esi and edi registers
-			//push esi
-			//push edi
-
-			nop
-			nop
-			nop
-			nop
-			mov eax, pdwCrc32			// Load the pointer to dwCrc32
-			mov ecx, [eax]				// Dereference the pointer to load dwCrc32
-
-			mov edi, ptrCrc32Table		// Load the CRC32 table
-
-			mov esi, bufferAsm			// Load buffer
-			mov ebx, dwBytesReadAsm		// Load dwBytesRead
-			lea edx, [esi + ebx]		// Calculate the end of the buffer
-
-		crc32loop:
-			xor eax, eax				// Clear the eax register
-			mov bl, byte ptr [esi]		// Load the current source byte
-			
-			mov al, cl					// Copy crc value into eax
-			inc esi						// Advance the source pointer
-
-			xor al, bl					// Create the index into the CRC32 table
-			shr ecx, 8
-
-			mov ebx, [edi + eax * 4]	// Get the value out of the table
-			xor ecx, ebx				// xor with the current byte
-
-			cmp edx, esi				// Have we reached the end of the buffer?
-			jne crc32loop
-
-			// Restore the edi and esi registers
-			//pop edi
-			//pop esi
-
-			mov eax, pdwCrc32			// Load the pointer to dwCrc32
-			mov [eax], ecx				// Write the result
-		}*/
 	} while (!(*bFileDone));
 	*result = ~dwCrc32;
 	SetEvent(hEvtThreadReady);

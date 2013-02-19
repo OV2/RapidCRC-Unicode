@@ -113,9 +113,6 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList)
 	OutputDebugString(szTemp);
 	#endif
 
-	//memory allocation
-	//AllocateMultipleFileinfo(uiNumFiles);
-
 	// get the command line parameter itself 	
 	//pFileinfo = g_fileinfo_list_first_item;
 	for(UINT i = 0; i < uiNumFiles; ++i)
@@ -146,8 +143,6 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList)
 		OutputDebugString(szFilenameTemp);
 		#endif
 		
-		//pFileinfo = pFileinfo->nextListItem;
-        //StringCchCopy(fileinfoTmp.szFilename,MAX_PATH_EX,szFilenameTemp);
         fileinfoTmp.szFilename = szFilenameTemp;
 		fileList->fInfos.push_back(fileinfoTmp);
 

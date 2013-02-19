@@ -1035,11 +1035,9 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
     const float labelWidth = 7;
     const float editOffset = labelOffset + labelWidth + 1;
 
-	//float resultGroupY = 1265/100.0f;
     float resultGroupHeight = 75/10.0;
     for(int i=HASH_TYPE_SHA1;i<NUM_HASH_TYPES;i++) {
         if(g_program_options.bCalcPerDefault[i]) {
-            //resultGroupY += 15/10.0f;
             resultGroupHeight += 15/10.0f;
         }
     }
@@ -1084,11 +1082,9 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
     MoveWindow(arrHwnd[ID_BTN_SHA512_IN_SHA512], lACW * (leftMargin + 51 + 5) + 64, wHeight - lACH * actButtonY, lACW * 13 + 16, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 64 + 6) + 80, wHeight - lACH * actButtonY, lACW * 24, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 88 + 7) + 80, wHeight - lACH * actButtonY, lACW * 28, lACH * 19/10.0, FALSE);
-	//MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - lACW * 125/10.0/*lACW * (leftMargin + 88 + 4) + 32*/, wHeight - lACH * actButtonY, 32, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, FALSE);
 	
 	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 37 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, FALSE);
-	//MoveWindow(arrHwnd[ID_STATIC_PRIORITY], wWidth - lACW * 38, wHeight - lACH * 44/10.0, lACW * 8, lACH, FALSE);
 	MoveWindow(arrHwnd[ID_COMBO_PRIORITY], wWidth - lACW * 37, wHeight - lACH * 45/10.0, lACW * 19/*12*/, lACH * 5, FALSE);
 	
 
@@ -1117,7 +1113,6 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * 17);
 	iCurrentWidthUsed += lACW * 17;
 
-	//ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], 0, wWidth - iCurrentWidthUsed - lACW * 8);
 	ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], 0, wWidth - iCurrentWidthUsed - GetSystemMetrics(SM_CXVSCROLL) - lACW * 4);
 	return;
 }

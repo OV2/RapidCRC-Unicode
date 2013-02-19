@@ -596,90 +596,6 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 }
 
 /*****************************************************************************
-FILEINFO * AllocateFileinfo()
-
-Return Value:
-returns a pointer to the new FILEINFO item
-
-Notes:
-- allocates memory and does a basic error handling
-*****************************************************************************/
-/*FILEINFO * AllocateFileinfo()
-{
-	FILEINFO * pFileinfo;
-
-	pFileinfo = (FILEINFO *) malloc(sizeof(FILEINFO));
-
-	if(pFileinfo == NULL){
-		MessageBox(NULL,
-			TEXT("Could not allocate memory. Reason might be, that the system is out of memory.\nThe program will exit now"),
-			TEXT("Heavy error"), MB_ICONERROR | MB_TASKMODAL | MB_OK);
-		ExitProcess(1);
-		return NULL;
-	}
-	else{
-		ZeroMemory(pFileinfo, sizeof(FILEINFO));
-	}
-
-	return pFileinfo;
-}*/
-
-/*****************************************************************************
-VOID AllocateMultipleFileinfo(CONST UINT uiCount)
-	uiCount	: (IN) number of empty items to create
-
-Return Value:
-nothing
-
-Notes:
-- creates a list of uiCount linked FILEINFO items
-*****************************************************************************/
-/*VOID AllocateMultipleFileinfo(CONST UINT uiCount)
-{
-	FILEINFO * Fileinfo_list_last;
-
-	g_fileinfo_list_first_item = AllocateFileinfo();
-	Fileinfo_list_last = g_fileinfo_list_first_item;
-	for(UINT i = 1; i < uiCount; ++i) //1 to... because 1 is created before the loop
-	{
-		Fileinfo_list_last->nextListItem = AllocateFileinfo();
-		Fileinfo_list_last = Fileinfo_list_last->nextListItem;
-	}
-	Fileinfo_list_last->nextListItem = NULL; // set end of the list
-
-	return;
-}*/
-
-/*****************************************************************************
-VOID DeallocateFileinfoMemory(CONST HWND hListView);
-	hListView	: (IN) handle to the listview
-
-Return Value:
-- returns nothing
-
-Notes:
-- dealloctates the FILEINFO list
-*****************************************************************************/
-/*VOID DeallocateFileinfoMemory(CONST HWND hListView)
-{
-	FILEINFO * Fileinfo;
-
-	// we delete all items in the listview because
-	// 1.) otherwise in textcallback mode it would be possible that item point to 
-	//     fileinfo list item that does not exist anymore
-	// 2.) it's more logically that there are no item anymore that can't be accessed
-	ListView_DeleteAllItems(hListView);
-
-	while(g_fileinfo_list_first_item != NULL){
-		Fileinfo = g_fileinfo_list_first_item->nextListItem;
-		free(g_fileinfo_list_first_item);
-		g_fileinfo_list_first_item = Fileinfo;
-	}
-
-	return;
-}*/
-
-/*****************************************************************************
 BOOL IsApplDefError(CONST DWORD dwError)
 	dwError : (IN) error to be processed
 
@@ -707,21 +623,6 @@ Notes:
 *****************************************************************************/
 VOID CopyJustProgramOptions(CONST PROGRAM_OPTIONS * pprogram_options_src, PROGRAM_OPTIONS * pprogram_options_dst)
 {
-	/*StringCchCopy(pprogram_options_dst->szFilenamePattern, MAX_PATH_EX, pprogram_options_src->szFilenamePattern);
-	StringCchCopy(pprogram_options_dst->szExcludeString, MAX_PATH_EX, pprogram_options_src->szExcludeString);
-	pprogram_options_dst->bDisplayCrcInListView = pprogram_options_src->bDisplayCrcInListView;
-	pprogram_options_dst->bDisplayEd2kInListView = pprogram_options_src->bDisplayEd2kInListView;
-	pprogram_options_dst->bCreateUnixStyle = pprogram_options_src->bCreateUnixStyle;
-	pprogram_options_dst->bCreateUnicodeFiles = pprogram_options_src->bCreateUnicodeFiles;
-	pprogram_options_dst->bAutoScrollListView = pprogram_options_src->bAutoScrollListView;
-	pprogram_options_dst->bSortList = pprogram_options_src->bSortList;
-	pprogram_options_dst->bWinsfvComp = pprogram_options_src->bWinsfvComp;
-	pprogram_options_dst->bDisplayMd5InListView = pprogram_options_src->bDisplayMd5InListView;
-	pprogram_options_dst->bCalcCrcPerDefault = pprogram_options_src->bCalcCrcPerDefault;
-	pprogram_options_dst->bCalcMd5PerDefault = pprogram_options_src->bCalcMd5PerDefault;
-	pprogram_options_dst->bCalcEd2kPerDefault = pprogram_options_src->bCalcEd2kPerDefault;
-    pprogram_options_dst->iUnicodeSaveType = pprogram_options_src->iUnicodeSaveType;
-	pprogram_options_dst->bEnableQueue = pprogram_options_src->bEnableQueue;*/
 	memcpy(pprogram_options_dst,pprogram_options_src,sizeof(PROGRAM_OPTIONS));
 
 	return;
@@ -861,56 +762,6 @@ BOOL CheckOsVersion(DWORD version,DWORD minorVersion)
 
 	return (ovi.dwMajorVersion > version || (ovi.dwMajorVersion == version && ovi.dwMinorVersion >= minorVersion));
 }
-
-/*****************************************************************************
-FILEINFO ** GenArrayFromFileinfoList(UINT * puiNumElements)
-	puiNumElements	: (OUT) size of the new array
-
-Return Value:
-returns pointer to a new FILEINFO pointer array.
-
-Notes:
-- the caller is responsible to free the memory via 'free'
-*****************************************************************************/
-/*FILEINFO ** GenArrayFromFileinfoList(UINT * puiNumElements)
-{
-	FILEINFO ** Fileinfo_array;
-	FILEINFO * pFileinfo;
-	UINT uiNumElements, uiIndex;
-
-	if(g_fileinfo_list_first_item != NULL){
-		uiNumElements = 0;
-		pFileinfo = g_fileinfo_list_first_item;
-		while(pFileinfo != NULL){
-			uiNumElements++;
-			pFileinfo = pFileinfo->nextListItem;
-		}
-
-		Fileinfo_array = (FILEINFO **) malloc(sizeof(FILEINFO *) * uiNumElements);
-		if(Fileinfo_array == NULL){
-			MessageBox(NULL,
-				TEXT("Could not allocate memory. Reason might be, that the system is out of memory.\nThe program will exit now"),
-				TEXT("Heavy error"), MB_ICONERROR | MB_TASKMODAL | MB_OK);
-			ExitProcess(1);
-			return NULL;
-		}
-
-		uiIndex = 0;
-		pFileinfo = g_fileinfo_list_first_item;
-		while(pFileinfo != NULL){
-			Fileinfo_array[uiIndex] = pFileinfo;
-			pFileinfo = pFileinfo->nextListItem;
-			uiIndex++;
-		}
-
-		(*puiNumElements) = uiNumElements;
-		return Fileinfo_array;
-	}
-	else{
-		(*puiNumElements) = 0;
-		return NULL;
-	}
-}*/
 
 /*****************************************************************************
 VOID ReplaceChar(TCHAR * szString, CONST size_t stBufferLength, CONST TCHAR tcIn, CONST TCHAR tcOut)

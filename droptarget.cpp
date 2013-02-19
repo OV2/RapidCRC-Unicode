@@ -211,7 +211,6 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject)
 	FORMATETC fmtetc = { CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
 	STGMEDIUM stgmed;
 	UINT uiCount;
-	//FILEINFO * pFileinfo;
 	PVOID data;
 
 	lFILEINFO *pFInfoList;

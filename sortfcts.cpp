@@ -36,7 +36,6 @@ descending
 *****************************************************************************/
 int CALLBACK SortFilename(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 {
-	//int iResult = lstrcmpi( ((FILEINFO *)lParam1)->szFilenameShort, ((FILEINFO *)lParam2)->szFilenameShort);
 	int iResult = QuickCompFunction( &lParam1, &lParam2);
 
 	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
@@ -191,29 +190,9 @@ VOID QuickSortList()
 
 Return Value:
 - returns nothing
-
-Notes:
-- creates a pointer array from the list, then sorts this array with MS QuickSort fct,
-then builds a new list from the sorted list and frees the array
 *****************************************************************************/
 VOID QuickSortList(lFILEINFO *fileList)
 {
-	//FILEINFO ** arrFileinfo;
-	//UINT uiNumElements, uiIndex;
-
-	//arrFileinfo = GenArrayFromFileinfoList(& uiNumElements);
-
-	/*if(uiNumElements > 0){
-
-		qsort( (void *)arrFileinfo, (size_t)uiNumElements, sizeof(FILEINFO *), QuickCompFunction);
-
-		g_fileinfo_list_first_item = arrFileinfo[0];
-		for(uiIndex = 0; uiIndex < uiNumElements - 1; uiIndex++)
-			arrFileinfo[uiIndex]->nextListItem = arrFileinfo[uiIndex + 1];
-		arrFileinfo[uiNumElements - 1]->nextListItem = NULL;
-
-		free(arrFileinfo);
-	}*/
 	fileList->fInfos.sort(ListCompFunction);
 
 	return;
@@ -252,8 +231,3 @@ INT QuickCompFunction(const void * pElem1, const void * pElem2)
 	else
 		return lstrcmpi( pFileinfo1->szFilenameShort, pFileinfo2->szFilenameShort);
 }
-/*
-INT QuickCompFunction2(const void * pElem1, const void * pElem2)
-{
-	return lstrcmpi( (*(FILEINFO **)pElem1)->szFilenameShort, ( *(FILEINFO **)pElem2)->szFilenameShort);
-}*/

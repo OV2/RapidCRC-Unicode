@@ -394,8 +394,6 @@ typedef struct{
 //****** global variables *******
 
 extern HINSTANCE g_hInstance;
-//extern FILEINFO * g_fileinfo_list_first_item;
-//extern TCHAR g_szBasePath[MAX_PATH_EX];
 extern PROGRAM_OPTIONS g_program_options;
 extern PROGRAM_STATUS g_pstatus;
 extern CRITICAL_SECTION thread_fileinfo_crit;
@@ -465,9 +463,6 @@ VOID ReadOptions();
 VOID WriteOptions(CONST HWND hMainWnd, CONST LONG lACW, CONST LONG lACH);
 BOOL IsLegalFilename(CONST TCHAR szFilename[MAX_PATH_EX]);
 VOID SetDefaultOptions(PROGRAM_OPTIONS * pProgram_options);
-//FILEINFO * AllocateFileinfo();
-//VOID AllocateMultipleFileinfo(CONST UINT uiCount);
-//VOID DeallocateFileinfoMemory(CONST HWND hListView);
 BOOL IsApplDefError(CONST DWORD dwError);
 VOID CopyJustProgramOptions(CONST PROGRAM_OPTIONS * pProgram_options_src, PROGRAM_OPTIONS * pProgram_options_dst);
 BOOL IsStringPrefix(CONST TCHAR szSearchPattern[MAX_PATH_EX], CONST TCHAR szSearchString[MAX_PATH_EX]);
@@ -475,7 +470,6 @@ DWORD MyPriorityToPriorityClass(CONST UINT uiMyPriority);
 VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList);
 VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList, CONST INT iImageIndex);
 BOOL CheckOsVersion(DWORD version,DWORD minorVersion);
-//FILEINFO ** GenArrayFromFileinfoList(UINT * puiNumElements);
 VOID ReplaceChar(TCHAR * szString, CONST size_t stBufferLength, CONST TCHAR tcIn, CONST TCHAR tcOut);
 #ifdef USE_TIME_MEASUREMENT
 	VOID StartTimeMeasure(CONST BOOL bStart);
@@ -494,7 +488,6 @@ BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR * szExten
 BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc);
 VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params,lFILEINFO *fileList);
 VOID ProcessDirectories(lFILEINFO *fileList);
-//FILEINFO * ExpandDirectory(FILEINFO * pFileinfo_prev);
 list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it);
 VOID ProcessFileProperties(lFILEINFO *fileList);
 VOID MakePathsAbsolute(lFILEINFO *fileList);

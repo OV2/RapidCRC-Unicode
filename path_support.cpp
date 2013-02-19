@@ -597,14 +597,8 @@ Notes:
 VOID ProcessFileProperties(lFILEINFO *fileList)
 {
 	size_t stString;
-	//FILEINFO * pFileinfo;
 
 	StringCchLength(fileList->g_szBasePath, MAX_PATH_EX, & stString);
-	// g_szBasePath can have a trailing '\' or not. For example 'D:\' or 'D:\Bla'. If the trailing '\'
-	// is missing we increase stString by 1 because we don't want a \ as the first symbol in szFilename
-	/*if(stString > 0)
-		if( fileList->g_szBasePath[stString - 1] != TEXT('\\') )
-			++stString;*/
 
 	fileList->qwFilesizeSum = 0;
 
@@ -735,13 +729,10 @@ UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
 
 	if(sameBaseDir && *firstBasePathPointer != TEXT('\0')) {
 		StringCchLength(firstBasePathPointer,MAX_PATH_EX,&countSameChars);
-		countSameChars++;
 	}
 
 	while( (countSameChars > 0) && (fileInfoList->front()->szFilename[countSameChars - 1] != TEXT('\\')) )
 		countSameChars--;
-	/*if(countSameChars == 2) // this is the case for example for C:\ or C:\test.txt. Then we want soemthing like C:\ and not C:
-		countSameChars++;*/
 
 	return countSameChars;
 }
