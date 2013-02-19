@@ -7,7 +7,7 @@ STDMETHODIMP COpenFileListener::OnFileOk(IFileDialog* pfd)
 	IFileDialogCustomize *pfdc;
 	HRESULT hr;
 	IFileOpenDialog *fod;
-	FILEINFO fileinfoTmp={0};
+	FILEINFO fileinfoTmp = {0};
 	DWORD choice;
 
 	fileinfoTmp.parentList = pFInfoList;
@@ -27,8 +27,7 @@ STDMETHODIMP COpenFileListener::OnFileOk(IFileDialog* pfd)
 				psiaResults->GetItemAt(i,&isi);
 				isi->GetDisplayName(SIGDN_FILESYSPATH,&pwsz);
 				isi->Release();
-				ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
-				StringCchCopy(fileinfoTmp.szFilename,MAX_PATH_EX,pwsz);
+                fileinfoTmp.szFilename = pwsz;
 				pFInfoList->fInfos.push_back(fileinfoTmp);
 				CoTaskMemFree(pwsz);
 			}

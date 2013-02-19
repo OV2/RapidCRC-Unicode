@@ -215,7 +215,8 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject)
 	PVOID data;
 
 	lFILEINFO *pFInfoList;
-	FILEINFO fileinfoTmp={0};
+	FILEINFO fileinfoTmp = {0};
+    TCHAR szFilenameTemp[MAX_PATH_EX];
 
 	// See if the dataobject contains any files stored as a HGLOBAL
 	if(pDataObject->QueryGetData(&fmtetc) == S_OK)
@@ -233,8 +234,10 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject)
 
 			for (UINT i=0; i < uiCount; i++)
 			{
-				ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
-				DragQueryFile((HDROP)stgmed.hGlobal, i, fileinfoTmp.szFilename, MAX_PATH_EX);
+                szFilenameTemp[0] = TEXT('\0');
+				DragQueryFile((HDROP)stgmed.hGlobal, i, szFilenameTemp, MAX_PATH_EX);
+                fileinfoTmp.szFilename = szFilenameTemp;
+
 				pFInfoList->fInfos.push_back(fileinfoTmp);
 			}
 

@@ -779,59 +779,19 @@ returns nothing
 VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
 {
     if(fileList->bCalculated[HASH_TYPE_CRC32] && pFileinfo->dwError == NOERROR)
-        StringCchPrintf(CRCI(pFileinfo).szResult, CRC_AS_STRING_LENGHT, TEXT("%08LX"), CRCI(pFileinfo).r.dwCrc32Result);
+        CRCI(pFileinfo).szResult.Format(TEXT("%08LX"), CRCI(pFileinfo).r.dwCrc32Result);
 	else
-		StringCchPrintf(pFileinfo->hashInfo[HASH_TYPE_CRC32].szResult, CRC_AS_STRING_LENGHT, TEXT(""));
+        CRCI(pFileinfo).szResult = TEXT("");
 
     for(int i=1;i<NUM_HASH_TYPES;i++) {
+        CString &rPrint = pFileinfo->hashInfo[i].szResult;
+        rPrint = TEXT("");
         if(fileList->bCalculated[i] && pFileinfo->dwError == NOERROR) {
-            TCHAR *pPrint = pFileinfo->hashInfo[i].szResult;
             for(int j=0;j<g_hash_lengths[i];j++) {
-                StringCchPrintf(pPrint,3,TEXT("%02lx"),*((BYTE *)&pFileinfo->hashInfo[i].r + j));
-                pPrint+=2;
+                rPrint.AppendFormat(TEXT("%02lx"),*((BYTE *)&pFileinfo->hashInfo[i].r + j));
             }
-        } else {
-            StringCchPrintf(pFileinfo->hashInfo[i].szResult, 2, TEXT(""));
         }
     }
-
-	/*if(fileList->bCalculated[HASH_TYPE_MD5] && pFileinfo->dwError == NOERROR)
-		StringCchPrintf(MD5I(pFileinfo).szResult, MD5_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
-		MD5I(pFileinfo).r.abMd5Result[0], MD5I(pFileinfo).r.abMd5Result[1], MD5I(pFileinfo).r.abMd5Result[2], MD5I(pFileinfo).r.abMd5Result[3], 
-		MD5I(pFileinfo).r.abMd5Result[4], MD5I(pFileinfo).r.abMd5Result[5], MD5I(pFileinfo).r.abMd5Result[6], MD5I(pFileinfo).r.abMd5Result[7], 
-		MD5I(pFileinfo).r.abMd5Result[8], MD5I(pFileinfo).r.abMd5Result[9], MD5I(pFileinfo).r.abMd5Result[10], MD5I(pFileinfo).r.abMd5Result[11], 
-		MD5I(pFileinfo).r.abMd5Result[12], MD5I(pFileinfo).r.abMd5Result[13], MD5I(pFileinfo).r.abMd5Result[14], MD5I(pFileinfo).r.abMd5Result[15]);
-	else
-		StringCchPrintf(MD5I(pFileinfo).szResult, MD5_AS_STRING_LENGHT, TEXT(""));
-
-	if(fileList->bCalculated[HASH_TYPE_SHA1] && pFileinfo->dwError == NOERROR)
-		StringCchPrintf(SHA1I(pFileinfo).szResult, SHA1_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
-		SHA1I(pFileinfo).r.abSha1Result[0], SHA1I(pFileinfo).r.abSha1Result[1], SHA1I(pFileinfo).r.abSha1Result[2], SHA1I(pFileinfo).r.abSha1Result[3], 
-		SHA1I(pFileinfo).r.abSha1Result[4], SHA1I(pFileinfo).r.abSha1Result[5], SHA1I(pFileinfo).r.abSha1Result[6], SHA1I(pFileinfo).r.abSha1Result[7], 
-		SHA1I(pFileinfo).r.abSha1Result[8], SHA1I(pFileinfo).r.abSha1Result[9], SHA1I(pFileinfo).r.abSha1Result[10], SHA1I(pFileinfo).r.abSha1Result[11], 
-		SHA1I(pFileinfo).r.abSha1Result[12], SHA1I(pFileinfo).r.abSha1Result[13], SHA1I(pFileinfo).r.abSha1Result[14], SHA1I(pFileinfo).r.abSha1Result[15],
-		SHA1I(pFileinfo).r.abSha1Result[16], SHA1I(pFileinfo).r.abSha1Result[17], SHA1I(pFileinfo).r.abSha1Result[18], SHA1I(pFileinfo).r.abSha1Result[19]);
-	else
-		StringCchPrintf(SHA1I(pFileinfo).szResult, SHA1_AS_STRING_LENGHT, TEXT(""));
-
-	if(fileList->bCalculated[HASH_TYPE_ED2K] && pFileinfo->dwError == NOERROR)
-        StringCchPrintf(ED2KI(pFileinfo).szResult, ED2K_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
-		ED2KI(pFileinfo).r.abEd2kResult[0], ED2KI(pFileinfo).r.abEd2kResult[1], ED2KI(pFileinfo).r.abEd2kResult[2], ED2KI(pFileinfo).r.abEd2kResult[3], 
-		ED2KI(pFileinfo).r.abEd2kResult[4], ED2KI(pFileinfo).r.abEd2kResult[5], ED2KI(pFileinfo).r.abEd2kResult[6], ED2KI(pFileinfo).r.abEd2kResult[7], 
-		ED2KI(pFileinfo).r.abEd2kResult[8], ED2KI(pFileinfo).r.abEd2kResult[9], ED2KI(pFileinfo).r.abEd2kResult[10], ED2KI(pFileinfo).r.abEd2kResult[11], 
-		ED2KI(pFileinfo).r.abEd2kResult[12], ED2KI(pFileinfo).r.abEd2kResult[13], ED2KI(pFileinfo).r.abEd2kResult[14], ED2KI(pFileinfo).r.abEd2kResult[15]);
-	else
-		StringCchPrintf(ED2KI(pFileinfo).szResult, ED2K_AS_STRING_LENGHT, TEXT(""));
-
-    if(fileList->bCalculated[HASH_TYPE_SHA512] && pFileinfo->dwError == NOERROR)
-		StringCchPrintf(SHA512I(pFileinfo).szResult, SHA512_AS_STRING_LENGHT, TEXT("%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx%02lx"),
-		SHA1I(pFileinfo).r.abSha1Result[0], SHA1I(pFileinfo).r.abSha1Result[1], SHA1I(pFileinfo).r.abSha1Result[2], SHA1I(pFileinfo).r.abSha1Result[3], 
-		SHA1I(pFileinfo).r.abSha1Result[4], SHA1I(pFileinfo).r.abSha1Result[5], SHA1I(pFileinfo).r.abSha1Result[6], SHA1I(pFileinfo).r.abSha1Result[7], 
-		SHA1I(pFileinfo).r.abSha1Result[8], SHA1I(pFileinfo).r.abSha1Result[9], SHA1I(pFileinfo).r.abSha1Result[10], SHA1I(pFileinfo).r.abSha1Result[11], 
-		SHA1I(pFileinfo).r.abSha1Result[12], SHA1I(pFileinfo).r.abSha1Result[13], SHA1I(pFileinfo).r.abSha1Result[14], SHA1I(pFileinfo).r.abSha1Result[15],
-		SHA1I(pFileinfo).r.abSha1Result[16], SHA1I(pFileinfo).r.abSha1Result[17], SHA1I(pFileinfo).r.abSha1Result[18], SHA1I(pFileinfo).r.abSha1Result[19]);
-	else
-		StringCchPrintf(SHA1I(pFileinfo).szResult, SHA1_AS_STRING_LENGHT, TEXT(""));*/
 
 	SetInfoColumnText(pFileinfo, fileList, InfoToIntValue(pFileinfo) - 1);
 }

@@ -199,21 +199,22 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		
 		return 0;
 	case WM_COPYDATA:
-		fileList = new lFILEINFO;
-		FILEINFO fileinfoTmp;
-		LPTSTR* argv;
-		INT argc;
-		argv = CommandLineToArgv((TCHAR *)((PCOPYDATASTRUCT) lParam)->lpData, &argc);
-		fileList->uiCmdOpts = CMD_NORMAL;
-		fileinfoTmp.parentList = fileList;
-		for(INT i = 0; i < argc - 1; ++i){
-			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
-			StringCchCopy(fileinfoTmp.szFilename, MAX_PATH_EX, argv[i+1]);
-			fileList->fInfos.push_back(fileinfoTmp);
-		}
-		LocalFree(argv);
-		PostMessage(arrHwnd[ID_MAIN_WND],WM_THREAD_FILEINFO_START,(WPARAM)fileList,NULL);
-		return TRUE;
+        {
+		    fileList = new lFILEINFO;
+		    FILEINFO fileinfoTmp = {0};
+		    LPTSTR* argv;
+		    INT argc;
+		    argv = CommandLineToArgv((TCHAR *)((PCOPYDATASTRUCT) lParam)->lpData, &argc);
+		    fileList->uiCmdOpts = CMD_NORMAL;
+		    fileinfoTmp.parentList = fileList;
+		    for(INT i = 0; i < argc - 1; ++i){
+                fileinfoTmp.szFilename = argv[i+1];
+			    fileList->fInfos.push_back(fileinfoTmp);
+		    }
+		    LocalFree(argv);
+		    PostMessage(arrHwnd[ID_MAIN_WND],WM_THREAD_FILEINFO_START,(WPARAM)fileList,NULL);
+		    return TRUE;
+        }
 	case WM_TIMER:
 		if(!SyncQueue.bThreadDone && thread_params_calc.pFileinfo_cur != NULL){
 			if(thread_params_calc.pFileinfo_cur->qwFilesize != 0){
@@ -811,7 +812,7 @@ __inline VOID ProcessTextQuery(NMLVDISPINFO * pnmlvdispinfo)
 		if(md5Num) md5Num+=crcNum;*/
 
 		if(pnmlvdispinfo->item.iSubItem==0) {
-			pnmlvdispinfo->item.pszText = pFileinfo->szFilenameShort;
+            pnmlvdispinfo->item.pszText = pFileinfo->szFilenameShort;
         } else {
             pnmlvdispinfo->item.pszText = pFileinfo->szInfo;
             int itemNum = pnmlvdispinfo->item.iSubItem - 1;
@@ -819,7 +820,7 @@ __inline VOID ProcessTextQuery(NMLVDISPINFO * pnmlvdispinfo)
             for(int i=0;i<NUM_HASH_TYPES;i++) {
                 if(g_program_options.bDisplayInListView[i]) {
                     if(curCol == itemNum) {
-                        pnmlvdispinfo->item.pszText = pFileinfo->hashInfo[i].szResult;
+                        pnmlvdispinfo->item.pszText = pFileinfo->hashInfo[i].szResult.GetBuffer();
                         break;
                     }
                     curCol++;

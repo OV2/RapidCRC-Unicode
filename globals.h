@@ -21,6 +21,7 @@
 #define _GLOBALS_H_
 
 #include <windows.h>
+#include <atlstr.h>
 #include <strsafe.h>
 #pragma warning(disable:4995)
 #include <list>
@@ -249,14 +250,14 @@ typedef unsigned __int64 QWORD, *LPQWORD;
 
 struct _lFILEINFO;
 
-typedef struct _FILEINFO{
+typedef struct _FILEINFO {
 	QWORD	qwFilesize;
 	FLOAT	fSeconds;
     FILETIME ftModificationTime;
     DWORD	dwError;
     TCHAR	szInfo[INFOTEXT_STRING_LENGTH];
-	TCHAR	szFilename[MAX_PATH_EX];
-	TCHAR *	szFilenameShort;
+	CString szFilename;
+	TCHAR  *szFilenameShort;
     _lFILEINFO * parentList;
     struct _hashInfo {
         union {
@@ -274,11 +275,11 @@ typedef struct _FILEINFO{
             BYTE	abSha256Found[32];
             BYTE	abSha512Found[64];
         } f;
-        TCHAR   szResult[RESULT_AS_STRING_MAX_LENGTH];
+        CString szResult;
         DWORD   dwFound;
-
+        _hashInfo() { ZeroMemory(&r,sizeof(r)); ZeroMemory(&f,sizeof(f)); dwFound = 0; };
     } hashInfo[NUM_HASH_TYPES];
-}FILEINFO;
+} FILEINFO;
 
 typedef struct _lFILEINFO {
 	list<FILEINFO> fInfos;

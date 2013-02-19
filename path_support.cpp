@@ -293,7 +293,7 @@ Return Value:
 	returns TRUE if a CRC was found in the :CRC32 stream. Otherwise FALSE
 
 *****************************************************************************/
-BOOL GetCrcFromStream(TCHAR *szFileName, DWORD * pdwFoundCrc)
+BOOL GetCrcFromStream(TCHAR CONST *szFileName, DWORD * pdwFoundCrc)
 {
 	BOOL bFound;
 	CHAR szCrc[9];
@@ -542,7 +542,7 @@ list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::i
 {
 	HANDLE hFileSearch;
 	WIN32_FIND_DATA  findFileData;
-	FILEINFO fileinfoTmp={0};
+	FILEINFO fileinfoTmp = {0};
 	fileinfoTmp.parentList=(*it).parentList;
 	UINT insertCount=0;
     TCHAR savedPath[MAX_PATH_EX];
@@ -563,9 +563,7 @@ list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::i
 
 	do{
 		if( (lstrcmpi(findFileData.cFileName, TEXT(".")) != 0) && (lstrcmpi(findFileData.cFileName, TEXT("..")) != 0) ){
-			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
-			//GetFullPathName(findFileData.cFileName, MAX_PATH_EX, fileinfoTmp.szFilename, NULL);
-            StringCchPrintf(fileinfoTmp.szFilename,MAX_PATH_EX,TEXT("%s\\%s"),savedPath,findFileData.cFileName);
+            fileinfoTmp.szFilename.Format(TEXT("%s\\%s"),savedPath,findFileData.cFileName);
 			
 			// now create a new item amd increase the count of inserted items
 			if(IsThisADirectory(fileinfoTmp.szFilename) || !CheckExcludeStringMatch(fileinfoTmp.szFilename)) {
@@ -611,7 +609,7 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 	fileList->qwFilesizeSum = 0;
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
-		(*it).szFilenameShort = (*it).szFilename + stString;
+        (*it).szFilenameShort = (*it).szFilename.GetBuffer() + stString;
 		if(!IsApplDefError((*it).dwError)){
 			SetFileinfoAttributes(&(*it));
 			if ((*it).dwError == NO_ERROR){
@@ -647,19 +645,22 @@ Notes:
 VOID MakePathsAbsolute(lFILEINFO *fileList)
 {
 	TCHAR szFilenameTemp[MAX_PATH_EX];
+    TCHAR szFilenameTempExtended[MAX_PATH_EX];
+
     TCHAR *szFilenameStart;
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
-		ReplaceChar((*it).szFilename, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
+        (*it).szFilename.Replace(TEXT('/'), TEXT('\\'));
 		GetFullPathName((*it).szFilename, MAX_PATH_EX, szFilenameTemp, NULL);
         szFilenameStart = szFilenameTemp;
-        StringCchCopy((*it).szFilename, MAX_PATH_EX, TEXT("\\\\?\\"));
+        StringCchCopy(szFilenameTempExtended, MAX_PATH_EX, TEXT("\\\\?\\"));
         if(lstrlen(szFilenameTemp) && szFilenameTemp[0]== TEXT('\\') && szFilenameTemp[1]== TEXT('\\')) {
             szFilenameStart += 2;
-            StringCchCat((*it).szFilename, MAX_PATH_EX, TEXT("UNC\\"));
+            StringCchCat(szFilenameTempExtended, MAX_PATH_EX, TEXT("UNC\\"));
         }
-        StringCchCat((*it).szFilename, MAX_PATH_EX, szFilenameStart);
-        GetLongPathName((*it).szFilename, (*it).szFilename, MAX_PATH_EX);
+        StringCchCat(szFilenameTempExtended, MAX_PATH_EX, szFilenameStart);
+        GetLongPathName(szFilenameTempExtended, szFilenameTempExtended, MAX_PATH_EX);
+        (*it).szFilename = szFilenameTempExtended;
 	}
 
 	return;

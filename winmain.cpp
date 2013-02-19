@@ -43,7 +43,7 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 	TCHAR prevInstTitle[MAX_PATH_EX];
 
 	lFILEINFO *fileList;
-	FILEINFO fileinfoTmp={0};
+	FILEINFO fileinfoTmp = {0};
 
 	fileList = new lFILEINFO;
 	fileinfoTmp.parentList = fileList;
@@ -135,8 +135,7 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 		}
 
 		for(INT i = 0; i < iNumFiles; ++i){
-			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
-			StringCchCopy(fileinfoTmp.szFilename, MAX_PATH_EX, argv[i+1]);
+            fileinfoTmp.szFilename = argv[i+1];
 			fileList->fInfos.push_back(fileinfoTmp);
 		}
 	}

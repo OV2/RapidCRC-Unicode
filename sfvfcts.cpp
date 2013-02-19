@@ -48,7 +48,7 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 	UNICODE_TYPE detectedBOM;
     UINT    codePage;
 
-	FILEINFO fileinfoTmp;
+	FILEINFO fileinfoTmp = {0};
 
 	// save SFV filename and path
 	// => g_szBasePath in SFV-mode is the path part of the complete filename of the .sfv file
@@ -108,7 +108,6 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 
 		if(uiStringLength > 8){
 
-			ZeroMemory(&fileinfoTmp,sizeof(FILEINFO));
 			fileinfoTmp.parentList = fileList;
 
 #ifdef UNICODE
@@ -154,7 +153,7 @@ BOOL EnterSfvMode(lFILEINFO *fileList)
 
                 ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
 
-                StringCchPrintf(fileinfoTmp.szFilename,MAX_PATH_EX,TEXT("%s%s"),fileList->g_szBasePath, szLine);
+                fileinfoTmp.szFilename.Format(TEXT("%s%s"),fileList->g_szBasePath, szLine);
 
 				fileList->fInfos.push_back(fileinfoTmp);
 			}
@@ -297,7 +296,7 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
     UINT    codePage;
 	UNICODE_TYPE detectedBOM;
 
-	FILEINFO fileinfoTmp;
+	FILEINFO fileinfoTmp = {0};
 
 	// save hash filename and path
 	// => g_szBasePath in is the path part of the complete filename of the .xyz file
@@ -357,7 +356,6 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 
 		if(uiStringLength > uiHashLengthChars){ // a valid line has uiHashLengthChars hex values for the hash value and then either "  " or " *"
 
-			ZeroMemory(&fileinfoTmp,sizeof(FILEINFO));
 			fileinfoTmp.parentList=fileList;
 
 #ifdef UNICODE
@@ -401,7 +399,7 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 
                 ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
 
-                StringCchPrintf(fileinfoTmp.szFilename,MAX_PATH_EX,TEXT("%s%s"),fileList->g_szBasePath, szLine + uiIndex);
+                fileinfoTmp.szFilename.Format(TEXT("%s%s"),fileList->g_szBasePath, szLine + uiIndex);
 
 				fileList->fInfos.push_back(fileinfoTmp);
 			}
@@ -444,7 +442,7 @@ DWORD WriteFileComment(CONST HANDLE hFile, CONST FILEINFO *pFileInfo, UINT start
     FileTimeToSystemTime( &ft, &st );
     int chars = GetTimeFormat( LOCALE_USER_DEFAULT, 0, &st, TEXT("HH':'mm'.'ss"), szTimeStamp, 50 );
     GetDateFormat( LOCALE_USER_DEFAULT, 0, &st, TEXT("' 'yyyy'-'MM'-'dd"), szTimeStamp + chars - 1, 50 - chars );
-    StringCbPrintf(szLine, MAX_LINE_LENGTH, TEXT(";%13I64d  %s %s%s"), pFileInfo->qwFilesize, szTimeStamp, pFileInfo->szFilename + startChar,
+    StringCbPrintf(szLine, MAX_LINE_LENGTH, TEXT(";%13I64d  %s %s%s"), pFileInfo->qwFilesize, szTimeStamp, pFileInfo->szFilename.GetString() + startChar,
 		g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
 	StringCbLength(szLine, MAX_LINE_LENGTH, & stStringLength);
 

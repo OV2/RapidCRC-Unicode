@@ -27,7 +27,7 @@
 static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *finalList);
 static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode, CONST TCHAR szChkSumFilename[MAX_PATH_EX], list<FILEINFO*> *finalList);
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList);
-static BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult);
+static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult);
 static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode);
 
 /*****************************************************************************
@@ -124,7 +124,7 @@ Return Value:
 Notes:
 	helper function for ActionCrcIntoStream - this is the actual writing logic
 *****************************************************************************/
-static BOOL SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult) {
+static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult) {
 	TCHAR szFileOut[MAX_PATH_EX]=TEXT("");
 	CHAR szCrcInHex[9];
 	HANDLE hFile;
@@ -204,7 +204,8 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list
 					bAFileWasProcessed = TRUE;
 					GenerateNewFilename(szFilenameTemp, pFileinfo->szFilename, CRCI(pFileinfo).r.dwCrc32Result, g_program_options.szFilenamePattern);
 					if(MoveFile(pFileinfo->szFilename, szFilenameTemp)){
-						StringCchCopy(pFileinfo->szFilename, MAX_PATH_EX, szFilenameTemp);
+                        pFileinfo->szFilename = szFilenameTemp;
+                        pFileinfo->szFilenameShort = pFileinfo->szFilename.GetBuffer() + lstrlen(pFileinfo->parentList->g_szBasePath);
 						// this updates pFileinfo->szFilenameShort automatically
 						CRCI(pFileinfo).f.dwCrc32Found = CRCI(pFileinfo).r.dwCrc32Result;
 						CRCI(pFileinfo).dwFound = CRC_FOUND_FILENAME;
@@ -318,7 +319,7 @@ BOOL OpenFilesXPPrev(HWND hwnd, lFILEINFO *pFInfoList)
 	TCHAR * szBuffer, * szBufferPart;
 	TCHAR szCurrentPath[MAX_PATH_EX];
 	size_t stStringLength;
-	FILEINFO fileinfoTmp={0};
+    FILEINFO fileinfoTmp = {0};
 
 	szBuffer = (TCHAR *) malloc(MAX_BUFFER_SIZE_OFN * sizeof(TCHAR)); 
 	if(szBuffer == NULL){
@@ -339,7 +340,7 @@ BOOL OpenFilesXPPrev(HWND hwnd, lFILEINFO *pFInfoList)
 	GetCurrentDirectory(MAX_PATH_EX, szCurrentPath);
 	if(!GetOpenFileName( & ofn )){
 		if(CommDlgExtendedError() == FNERR_BUFFERTOOSMALL){
-			MessageBox(hwnd, TEXT("You selected too many files. The buffers was too small. You can select as many files as you want, if you use the rightclick shell extension of RapidCRC!"),
+			MessageBox(hwnd, TEXT("You selected too many files. The buffers was too small. You can select as many files as you want if you use the rightclick shell extension of RapidCRC!"),
 						TEXT("Buffer too small error"), MB_OK);
 		}
 		free(szBuffer);
@@ -362,8 +363,7 @@ BOOL OpenFilesXPPrev(HWND hwnd, lFILEINFO *pFInfoList)
 
 		//pFileinfo = g_fileinfo_list_first_item;
 		while(szBufferPart[0]!= TEXT('\0')){
-			ZeroMemory(fileinfoTmp.szFilename,MAX_PATH_EX * sizeof(TCHAR));
-			StringCchPrintf(fileinfoTmp.szFilename, MAX_PATH_EX, TEXT("%s\\%s"), pFInfoList->g_szBasePath, szBufferPart);
+            fileinfoTmp.szFilename.Format(TEXT("%s\\%s"), pFInfoList->g_szBasePath, szBufferPart);
 			pFInfoList->fInfos.push_back(fileinfoTmp);
 
 			// go to the next part the buffer
@@ -372,7 +372,7 @@ BOOL OpenFilesXPPrev(HWND hwnd, lFILEINFO *pFInfoList)
 		}
 	}
 	else{ // only one file is selected
-		StringCchCopy(fileinfoTmp.szFilename, MAX_PATH_EX, szBuffer);
+        fileinfoTmp.szFilename = szBuffer;
 		pFInfoList->fInfos.push_back(fileinfoTmp);
 	}
 
@@ -739,7 +739,7 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
     }
 
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
-        dwResult = WriteHashLine(hFile, (*it)->szFilename + uiSameCharCount, (*it)->hashInfo[uiMode].szResult, uiMode == MODE_SFV);
+        dwResult = WriteHashLine(hFile, (*it)->szFilename.GetString() + uiSameCharCount, (*it)->hashInfo[uiMode].szResult, uiMode == MODE_SFV);
 		
 		if(dwResult != NOERROR){
 			CloseHandle(hFile);
