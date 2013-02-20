@@ -235,6 +235,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define FDIALOG_OPENCHOICES 0
 #define FDIALOG_CHOICE_OPEN 0
 #define FDIALOG_CHOICE_REPARENT 1
+#define FDIALOG_CHOICE_ALLHASHES 2
 
 
 //****** custom datatypes *******

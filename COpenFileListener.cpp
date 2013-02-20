@@ -44,6 +44,9 @@ STDMETHODIMP COpenFileListener::OnFileOk(IFileDialog* pfd)
 			if(choice==FDIALOG_CHOICE_REPARENT) {
 				pFInfoList->uiCmdOpts = CMD_REPARENT;
 			}
+            else if(choice==FDIALOG_CHOICE_ALLHASHES) {
+                pFInfoList->uiCmdOpts = CMD_ALLHASHES;
+            }
 		}
 
 		pfdc->Release();

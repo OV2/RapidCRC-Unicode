@@ -263,6 +263,9 @@ BOOL OpenFilesVistaUp(HWND hwnd, lFILEINFO *pFInfoList)
 					hr = pfdc->AddControlItem(FDIALOG_OPENCHOICES, 
 											  FDIALOG_CHOICE_REPARENT, 
 											  L"&Reparent SFV/MD5");
+                    hr = pfdc->AddControlItem(FDIALOG_OPENCHOICES, 
+											  FDIALOG_CHOICE_ALLHASHES, 
+											  L"&Open all hash files");
 				}
 			}
 		}
