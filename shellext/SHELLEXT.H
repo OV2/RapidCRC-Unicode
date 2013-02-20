@@ -103,15 +103,7 @@ public:
 private:
 	IconBitmapUtils m_iconBitmapUtils;
 
-	void doRapidCrcOpen(void);
-	void doRapidCrcOpenReparent(void);
-	void doRapidCrcSFV(void);
-	void doRapidCrcMD5(void);
-	void doRapidCrcSHA1(void);
-    void doRapidCrcSHA256(void);
-    void doRapidCrcSHA512(void);
-	void doRapidCrcNAME(void);
-	void doRapidCrcNTFS(void);
+	void doRapidCrcOpen(TCHAR *command);
 };
 typedef CShellExt *LPCSHELLEXT;
 

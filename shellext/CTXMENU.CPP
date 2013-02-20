@@ -496,39 +496,39 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     {
         if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCOpen"))
         {
-            doRapidCrcOpen();
+            doRapidCrcOpen(NULL);
         }
 		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCOpenReparent"))
         {
-            doRapidCrcOpenReparent();
+            doRapidCrcOpen(TEXT(" -Reparent"));
         }
 		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSFV"))
 		{
-			doRapidCrcSFV();
+			doRapidCrcOpen(TEXT(" -CreateSFV"));
 		}
 		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateMD5"))
 		{
-			doRapidCrcMD5();
+			doRapidCrcOpen(TEXT(" -CreateMD5"));
 		}
 		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA1"))
 		{
-			doRapidCrcSHA1();
+			doRapidCrcOpen(TEXT(" -CreateSHA1"));
 		}
         else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA256"))
 		{
-			doRapidCrcSHA256();
+			doRapidCrcOpen(TEXT(" -CreateSHA256"));
 		}
         else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA512"))
 		{
-			doRapidCrcSHA512();
+			doRapidCrcOpen(TEXT(" -CreateSHA512"));
 		}
 		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCPutName"))
 		{
-			doRapidCrcNAME();
+			doRapidCrcOpen(TEXT(" -PutNAME"));
 		}
 		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCPutNTFS"))
 		{
-			doRapidCrcNTFS();
+			doRapidCrcOpen(TEXT(" -PutNTFS"));
 		}
 		else
 		{
@@ -541,39 +541,39 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     {
         if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCOpen"))
         {
-            doRapidCrcOpen();
+            doRapidCrcOpen(NULL);
         }
 		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCOpenReparent"))
         {
-            doRapidCrcOpenReparent();
+            doRapidCrcOpen(TEXT(" -Reparent"));
         }
 		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSFV"))
 		{
-			doRapidCrcSFV();
+			doRapidCrcOpen(TEXT(" -CreateSFV"));
 		}
 		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateMD5"))
 		{
-			doRapidCrcMD5();
+			doRapidCrcOpen(TEXT(" -CreateMD5"));
 		}
 		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA1"))
 		{
-			doRapidCrcSHA1();
+			doRapidCrcOpen(TEXT(" -CreateSHA1"));
 		}
         else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA256"))
 		{
-			doRapidCrcSHA256();
+			doRapidCrcOpen(TEXT(" -CreateSHA256"));
 		}
         else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA512"))
 		{
-			doRapidCrcSHA512();
+			doRapidCrcOpen(TEXT(" -CreateSHA512"));
 		}
 		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCPutName"))
 		{
-			doRapidCrcNAME();
+			doRapidCrcOpen(TEXT(" -PutNAME"));
 		}
 		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCPutNTFS"))
 		{
-			doRapidCrcNTFS();
+			doRapidCrcOpen(TEXT(" -PutNTFS"));
 		}
 		else
 		{
@@ -583,39 +583,39 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
     else if(LOWORD(lpcmi->lpVerb) == IDM_RAPIDCRC)
     {
-        doRapidCrcOpen();
+        doRapidCrcOpen(NULL);
     }
 	else if(LOWORD(lpcmi->lpVerb) == IDM_REPARENT)
     {
-        doRapidCrcOpenReparent();
+        doRapidCrcOpen(TEXT(" -Reparent"));
     }
 	else if(LOWORD(lpcmi->lpVerb) == IDM_SFV)
 	{
-		doRapidCrcSFV();
+		doRapidCrcOpen(TEXT(" -CreateSFV"));
 	}
 	else if(LOWORD(lpcmi->lpVerb) == IDM_MD5)
 	{
-		doRapidCrcMD5();
+		doRapidCrcOpen(TEXT(" -CreateMD5"));
 	}
 	else if(LOWORD(lpcmi->lpVerb) == IDM_SHA1)
 	{
-		doRapidCrcSHA1();
+		doRapidCrcOpen(TEXT(" -CreateSHA1"));
 	}
     else if(LOWORD(lpcmi->lpVerb) == IDM_SHA256)
 	{
-		doRapidCrcSHA256();
+		doRapidCrcOpen(TEXT(" -CreateSHA256"));
 	}
     else if(LOWORD(lpcmi->lpVerb) == IDM_SHA512)
 	{
-		doRapidCrcSHA512();
+		doRapidCrcOpen(TEXT(" -CreateSHA512"));
 	}
 	else if(LOWORD(lpcmi->lpVerb) == IDM_NAME)
 	{
-		doRapidCrcNAME();
+		doRapidCrcOpen(TEXT(" -PutNAME"));
 	}
 	else if(LOWORD(lpcmi->lpVerb) == IDM_NTFS)
 	{
-		doRapidCrcNTFS();
+		doRapidCrcOpen(TEXT(" -PutNTFS"));
 	}
     else // and here is the real action
     {
@@ -625,89 +625,10 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     return S_OK;
 }
 
-void CShellExt::doRapidCrcOpen(void) {
+void CShellExt::doRapidCrcOpen(TCHAR *command) {
 	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
 	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
-	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, NULL);
-	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
-		free(my_proc_params_shex_stringarray.FileNameArray[i]);
-	free(my_proc_params_shex_stringarray.FileNameArray);
-}
-
-void CShellExt::doRapidCrcOpenReparent(void) {
-	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
-	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
-	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, TEXT(" -Reparent"));
-	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
-		free(my_proc_params_shex_stringarray.FileNameArray[i]);
-	free(my_proc_params_shex_stringarray.FileNameArray);
-}
-
-void CShellExt::doRapidCrcSFV(void)
-{
-	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
-	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
-	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, TEXT(" -CreateSFV"));
-	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
-		free(my_proc_params_shex_stringarray.FileNameArray[i]);
-	free(my_proc_params_shex_stringarray.FileNameArray);
-}
-
-void CShellExt::doRapidCrcMD5(void)
-{
-	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
-	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
-	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, TEXT(" -CreateMD5"));
-	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
-		free(my_proc_params_shex_stringarray.FileNameArray[i]);
-	free(my_proc_params_shex_stringarray.FileNameArray);
-}
-
-void CShellExt::doRapidCrcSHA1(void)
-{
-	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
-	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
-	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, TEXT(" -CreateSHA1"));
-	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
-		free(my_proc_params_shex_stringarray.FileNameArray[i]);
-	free(my_proc_params_shex_stringarray.FileNameArray);
-}
-
-void CShellExt::doRapidCrcSHA256(void)
-{
-	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
-	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
-	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, TEXT(" -CreateSHA256"));
-	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
-		free(my_proc_params_shex_stringarray.FileNameArray[i]);
-	free(my_proc_params_shex_stringarray.FileNameArray);
-}
-
-void CShellExt::doRapidCrcSHA512(void)
-{
-	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
-	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
-	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, TEXT(" -CreateSHA512"));
-	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
-		free(my_proc_params_shex_stringarray.FileNameArray[i]);
-	free(my_proc_params_shex_stringarray.FileNameArray);
-}
-
-void CShellExt::doRapidCrcNAME(void)
-{
-	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
-	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
-	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, TEXT(" -PutNAME"));
-	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
-		free(my_proc_params_shex_stringarray.FileNameArray[i]);
-	free(my_proc_params_shex_stringarray.FileNameArray);
-}
-
-void CShellExt::doRapidCrcNTFS(void)
-{
-	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
-	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
-	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, TEXT(" -PutNTFS"));
+	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, command);
 	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
 		free(my_proc_params_shex_stringarray.FileNameArray[i]);
 	free(my_proc_params_shex_stringarray.FileNameArray);

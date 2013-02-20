@@ -41,14 +41,15 @@
 //
 #define IDM_RAPIDCRC 0
 #define IDM_REPARENT 1
-#define IDM_SFV 2
-#define IDM_MD5 3
-#define IDM_SHA1 4
-#define IDM_SHA256 5
-#define IDM_SHA512 6
-#define IDM_NAME 7
-#define IDM_NTFS 8
-#define IDM_SUBMENU 9
+#define IDM_OPENHASHFILES 2
+#define IDM_SFV 3
+#define IDM_MD5 4
+#define IDM_SHA1 5
+#define IDM_SHA256 6
+#define IDM_SHA512 7
+#define IDM_NAME 8
+#define IDM_NTFS 9
+#define IDM_SUBMENU 10
 #define ResultFromShort(i)  ResultFromScode(MAKE_SCODE(SEVERITY_SUCCESS, 0, (USHORT)(i)))
 
 //***************************
