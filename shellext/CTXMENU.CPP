@@ -88,14 +88,15 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 		hSubMenu = CreateMenu();
 		InsertMenu(hSubMenu,0,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_RAPIDCRC,TEXT("Open"));
 		InsertMenu(hSubMenu,1,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_REPARENT,TEXT("Open with reparent"));
-		InsertMenu(hSubMenu,2,MF_SEPARATOR | MF_BYPOSITION,0,NULL);
-		InsertMenu(hSubMenu,3,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SFV,TEXT("Create SFV"));
-		InsertMenu(hSubMenu,4,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_MD5,TEXT("Create MD5"));
-		InsertMenu(hSubMenu,5,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SHA1,TEXT("Create SHA1"));
-        InsertMenu(hSubMenu,6,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SHA256,TEXT("Create SHA256"));
-        InsertMenu(hSubMenu,7,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SHA512,TEXT("Create SHA512"));
-		InsertMenu(hSubMenu,8,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NAME,TEXT("Put CRC in Filename"));
-		InsertMenu(hSubMenu,9,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NTFS,TEXT("Put CRC in NTFS Stream"));
+        InsertMenu(hSubMenu,2,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_OPENHASHFILES,TEXT("Open all hash files"));
+		InsertMenu(hSubMenu,3,MF_SEPARATOR | MF_BYPOSITION,0,NULL);
+		InsertMenu(hSubMenu,4,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SFV,TEXT("Create SFV"));
+		InsertMenu(hSubMenu,5,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_MD5,TEXT("Create MD5"));
+		InsertMenu(hSubMenu,6,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SHA1,TEXT("Create SHA1"));
+        InsertMenu(hSubMenu,7,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SHA256,TEXT("Create SHA256"));
+        InsertMenu(hSubMenu,8,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SHA512,TEXT("Create SHA512"));
+		InsertMenu(hSubMenu,9,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NAME,TEXT("Put CRC in Filename"));
+		InsertMenu(hSubMenu,10,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NTFS,TEXT("Put CRC in NTFS Stream"));
 
 		mii.fMask = MIIM_SUBMENU | MIIM_STRING | MIIM_ID;
 		mii.cbSize = sizeof(mii);
@@ -120,15 +121,16 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 			mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_OPEN_FOLDER);
 			SetMenuItemInfo(hSubMenu, 0, TRUE, &mii);
 			SetMenuItemInfo(hSubMenu, 1, TRUE, &mii);
+            SetMenuItemInfo(hSubMenu, 2, TRUE, &mii);
 
 			mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_HASH_FILE);
-			SetMenuItemInfo(hSubMenu, 3, TRUE, &mii);
 			SetMenuItemInfo(hSubMenu, 4, TRUE, &mii);
 			SetMenuItemInfo(hSubMenu, 5, TRUE, &mii);
 			SetMenuItemInfo(hSubMenu, 6, TRUE, &mii);
 			SetMenuItemInfo(hSubMenu, 7, TRUE, &mii);
-            SetMenuItemInfo(hSubMenu, 8, TRUE, &mii);
+			SetMenuItemInfo(hSubMenu, 8, TRUE, &mii);
             SetMenuItemInfo(hSubMenu, 9, TRUE, &mii);
+            SetMenuItemInfo(hSubMenu, 10, TRUE, &mii);
 		} else {
 			hBmp = LoadIconAsBitmap(g_hmodThisDll, IDI_RAPIDCRC);
 			SetMenuItemBitmaps(hMenu,indexMenu,MF_BYPOSITION,hBmp,hBmp);
@@ -136,15 +138,16 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 			hBmp = LoadIconAsBitmap(g_hmodThisDll, IDI_OPEN_WITH);
 			SetMenuItemBitmaps(hSubMenu,0,MF_BYPOSITION,hBmp,hBmp);
 			SetMenuItemBitmaps(hSubMenu,1,MF_BYPOSITION,hBmp,hBmp);
+            SetMenuItemBitmaps(hSubMenu,2,MF_BYPOSITION,hBmp,hBmp);
 
 			hBmp = LoadIconAsBitmap(g_hmodThisDll, IDI_CREATE_SFV);
-			SetMenuItemBitmaps(hSubMenu,3,MF_BYPOSITION,hBmp,hBmp);
 			SetMenuItemBitmaps(hSubMenu,4,MF_BYPOSITION,hBmp,hBmp);
 			SetMenuItemBitmaps(hSubMenu,5,MF_BYPOSITION,hBmp,hBmp);
 			SetMenuItemBitmaps(hSubMenu,6,MF_BYPOSITION,hBmp,hBmp);
 			SetMenuItemBitmaps(hSubMenu,7,MF_BYPOSITION,hBmp,hBmp);
-            SetMenuItemBitmaps(hSubMenu,8,MF_BYPOSITION,hBmp,hBmp);
+			SetMenuItemBitmaps(hSubMenu,8,MF_BYPOSITION,hBmp,hBmp);
             SetMenuItemBitmaps(hSubMenu,9,MF_BYPOSITION,hBmp,hBmp);
+            SetMenuItemBitmaps(hSubMenu,10,MF_BYPOSITION,hBmp,hBmp);
 		}
 
 		return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(IDM_SUBMENU+1));
@@ -233,6 +236,33 @@ STDMETHODIMP CShellExt::GetCommandString(THIS_
 	
 			case GCS_VERBW:
 	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCOpenReparent");
+				break; 
+	
+			default:
+	            hr = S_OK;
+				break; 
+		}
+	}
+    else if(idCommand == IDM_OPENHASHFILES)
+    {
+	    switch(uFlags)
+		{
+			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
+			// that windows wants ANSI strings in certain situations
+			case GCS_HELPTEXTA:
+	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens all hash files in RapidCRC and calculates checksums");
+				break; 
+
+	        case GCS_HELPTEXTW: 
+				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens all hash files in RapidCRC and calculates checksums");
+				break;
+	
+			case GCS_VERBA:
+	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCOpenHashFiles");
+				break; 
+	
+			case GCS_VERBW:
+	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCOpenHashFiles");
 				break; 
 	
 			default:
@@ -502,6 +532,10 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         {
             doRapidCrcOpen(TEXT(" -Reparent"));
         }
+        else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCOpenHashFiles"))
+        {
+            doRapidCrcOpen(TEXT(" -HashFilesOnly"));
+        }
 		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSFV"))
 		{
 			doRapidCrcOpen(TEXT(" -CreateSFV"));
@@ -547,6 +581,10 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         {
             doRapidCrcOpen(TEXT(" -Reparent"));
         }
+        else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCHashFiles"))
+        {
+            doRapidCrcOpen(TEXT(" -HashFilesOnly"));
+        }
 		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSFV"))
 		{
 			doRapidCrcOpen(TEXT(" -CreateSFV"));
@@ -588,6 +626,10 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 	else if(LOWORD(lpcmi->lpVerb) == IDM_REPARENT)
     {
         doRapidCrcOpen(TEXT(" -Reparent"));
+    }
+    else if(LOWORD(lpcmi->lpVerb) == IDM_OPENHASHFILES)
+    {
+        doRapidCrcOpen(TEXT(" -HashFilesOnly"));
     }
 	else if(LOWORD(lpcmi->lpVerb) == IDM_SFV)
 	{
