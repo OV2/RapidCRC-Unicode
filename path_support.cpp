@@ -497,7 +497,7 @@ returns nothing
 Notes:
 - essentially gives some additional code to call ExpandDirectory correctly
 *****************************************************************************/
-VOID ProcessDirectories(lFILEINFO *fileList)
+VOID ProcessDirectories(lFILEINFO *fileList, BOOL bOnlyHashFiles)
 {
 	TCHAR szCurrentPath[MAX_PATH_EX];
 
@@ -506,11 +506,12 @@ VOID ProcessDirectories(lFILEINFO *fileList)
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();) {
 		if(IsThisADirectory((*it).szFilename))
-			it = ExpandDirectory(&fileList->fInfos,it);
-		else{
+			it = ExpandDirectory(&fileList->fInfos,it, bOnlyHashFiles);
+		else {
             // check to see if the current file-extension matches our exclude string
             // if so, we remove it from the list
-			if(CheckExcludeStringMatch((*it).szFilename)) {
+			if(bOnlyHashFiles && !CheckHashFileMatch((*it).szFilename) ||
+                !bOnlyHashFiles && CheckExcludeStringMatch((*it).szFilename)) {
 				it = fileList->fInfos.erase(it);
 			}
 			else it++;
@@ -538,7 +539,7 @@ knows where to go on in the list
 Notes:
 - expands the item at "it"
 *****************************************************************************/
-list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it)
+list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it, BOOL bOnlyHashFiles)
 {
 	HANDLE hFileSearch;
 	WIN32_FIND_DATA  findFileData;
@@ -565,8 +566,11 @@ list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::i
 		if( (lstrcmpi(findFileData.cFileName, TEXT(".")) != 0) && (lstrcmpi(findFileData.cFileName, TEXT("..")) != 0) ){
             fileinfoTmp.szFilename.Format(TEXT("%s\\%s"),savedPath,findFileData.cFileName);
 			
-			// now create a new item amd increase the count of inserted items
-			if(IsThisADirectory(fileinfoTmp.szFilename) || !CheckExcludeStringMatch(fileinfoTmp.szFilename)) {
+			// now create a new item and increase the count of inserted items
+            // also check include/exclude here to avoid unnecessary fileinfo copies
+			if(IsThisADirectory(fileinfoTmp.szFilename) ||
+                bOnlyHashFiles && CheckHashFileMatch(fileinfoTmp.szFilename) ||
+                !bOnlyHashFiles && !CheckExcludeStringMatch(fileinfoTmp.szFilename)) {
 				fList->insert(it,fileinfoTmp);
 				insertCount++;
 			}
@@ -644,6 +648,8 @@ VOID MakePathsAbsolute(lFILEINFO *fileList)
     TCHAR *szFilenameStart;
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
+        if((*it).szFilename.Left(4)==TEXT("\\\\?\\"))
+            continue;
         (*it).szFilename.Replace(TEXT('/'), TEXT('\\'));
 		GetFullPathName((*it).szFilename, MAX_PATH_EX, szFilenameTemp, NULL);
         szFilenameStart = szFilenameTemp;

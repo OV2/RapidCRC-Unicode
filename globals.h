@@ -111,6 +111,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_NAME			21
 #define CMD_NTFS			22
 #define CMD_REPARENT		23
+#define CMD_ALLHASHES       24
 
 
 #define CRCI(x) (x)->hashInfo[HASH_TYPE_CRC32]
@@ -455,6 +456,7 @@ DWORD HexToDword(CONST TCHAR * szHex, UINT uiStringSize);
 BOOL GetVersionString(TCHAR *buffer,CONST int buflen);
 UNICODE_TYPE CheckForBOM(CONST HANDLE hFile);
 UINT DetermineFileCP(CONST HANDLE hFile);
+BOOL CheckHashFileMatch(CONST TCHAR *szFilename);
 BOOL CheckExcludeStringMatch(CONST TCHAR *szFilename);
 VOID AnsiFromUnicode(CHAR *szAnsiString,CONST int max_line,TCHAR *szUnicodeString);
 VOID UnicodeFromAnsi(TCHAR *szUnicodeString,CONST int max_line,CHAR *szAnsiString);
@@ -487,8 +489,8 @@ CONST TCHAR * GetFilenameWithoutPathPointer(CONST TCHAR szFilenameLong[MAX_PATH_
 BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR * szExtension);
 BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc);
 VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params,lFILEINFO *fileList);
-VOID ProcessDirectories(lFILEINFO *fileList);
-list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it);
+VOID ProcessDirectories(lFILEINFO *fileList, BOOL bOnlyHashFiles = FALSE);
+list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it, BOOL bOnlyHashFiles);
 VOID ProcessFileProperties(lFILEINFO *fileList);
 VOID MakePathsAbsolute(lFILEINFO *fileList);
 UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList);

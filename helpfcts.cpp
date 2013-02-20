@@ -256,7 +256,7 @@ Return Value:
 *****************************************************************************/
 BOOL CheckExcludeStringMatch(CONST TCHAR *szFilename) {
 	TCHAR *szExString = g_program_options.szExcludeString;
-	TCHAR szCurExt[MAX_PATH_EX];
+	TCHAR szCurExt[MAX_PATH];
 	TCHAR *szExtension;
 	int i=0;
 	
@@ -273,6 +273,26 @@ BOOL CheckExcludeStringMatch(CONST TCHAR *szFilename) {
 		i++;
 	}
 	return FALSE;
+}
+
+/*****************************************************************************
+BOOL CheckHashFileMatch(CONST TCHAR *szFilename)
+	szFilename	: (IN) pointer to filename to check
+
+
+Return Value:
+	returns TRUE if szFilename has any of the extensions specified in
+	g_hash_ext, FALSE otherwise
+*****************************************************************************/
+BOOL CheckHashFileMatch(CONST TCHAR *szFilename) {
+	TCHAR *szExtension;
+	
+	szExtension = PathFindExtension(szFilename)	+ 1;
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        if(lstrcmpi(g_hash_ext[i],szExtension)==0)
+			return TRUE;
+    }
+    return FALSE;
 }
 
 /*****************************************************************************

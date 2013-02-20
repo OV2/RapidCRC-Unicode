@@ -97,6 +97,10 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 			{
 				fileList->uiCmdOpts = CMD_REPARENT;
 			}
+            else if(lstrcmpi(argv[2], TEXT("-HashFilesOnly")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_ALLHASHES;
+			}
 		}
 		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH_EX)) {
 			prevInst = NULL;

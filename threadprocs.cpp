@@ -347,6 +347,19 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 		ClearAllItems(arrHwnd,pshowresult_params);
 	}
 
+    if(fileList->uiCmdOpts==CMD_ALLHASHES)
+    {
+        MakePathsAbsolute(fileList);
+        ProcessDirectories(fileList,TRUE);
+        for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
+            lFILEINFO *pHashList = new lFILEINFO;
+            pHashList->fInfos.push_back((*it));
+            PostProcessList(arrHwnd, pshowresult_params, pHashList);
+            SyncQueue.pushQueue(pHashList);
+        }
+        fileList->fInfos.clear();
+    }
+
 	PostProcessList(arrHwnd, pshowresult_params, fileList);
 
 	if(fileList->fInfos.empty()) {
