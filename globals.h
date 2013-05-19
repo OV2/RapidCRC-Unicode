@@ -224,12 +224,12 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 
 #define IDM_HIDE_VERIFIED           9
 
-#define IDM_CRC_COLUMN              0
-#define IDM_MD5_COLUMN              1
-#define IDM_ED2K_COLUMN             2
-#define IDM_SHA1_COLUMN             3
-#define IDM_SHA256_COLUMN           4
-#define IDM_SHA512_COLUMN           5
+#define IDM_CRC_COLUMN              1
+#define IDM_MD5_COLUMN              2
+#define IDM_ED2K_COLUMN             3
+#define IDM_SHA1_COLUMN             4
+#define IDM_SHA256_COLUMN           5
+#define IDM_SHA512_COLUMN           6
 
 //****** file open dialog *******
 #define FDIALOG_OPENCHOICES 0

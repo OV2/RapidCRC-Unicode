@@ -85,7 +85,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
                     // we need screen coordintes for the popup window
                     DWORD dwPos;
                     dwPos = GetMessagePos();
-				    if(ListViewHeaderPopup(arrHwnd[ID_LISTVIEW],headerPopupMenu,LOWORD (dwPos),HIWORD (dwPos)))
+				    if(ListViewHeaderPopup(arrHwnd[ID_LISTVIEW],headerPopupMenu, (signed short)(dwPos & 0xffff), (signed short)((dwPos>>16) & 0xffff)))
                         UpdateListViewColumns(arrHwnd, lAveCharWidth);
                     return 0;
             }

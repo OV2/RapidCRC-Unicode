@@ -561,7 +561,7 @@ BOOL ListViewHeaderPopup(HWND pHwnd,HMENU popup,int x,int y) {
     }
 	
     ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,pHwnd,NULL);
-    if(ret >= 0) {
+    if(ret > 0) {
         g_program_options.bDisplayInListView[ret - IDM_CRC_COLUMN] = !g_program_options.bDisplayInListView[ret - IDM_CRC_COLUMN];
         return TRUE;
     }
