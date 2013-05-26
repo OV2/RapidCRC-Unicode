@@ -666,7 +666,7 @@ Notes:
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList)
 {
 
-	TCHAR szCurrentPath[MAX_PATH_EX];
+	TCHAR szCurrentPath[MAX_PATH_EX] = TEXT("");
 	TCHAR szFileOut[MAX_PATH_EX] = TEXT("");
 	HANDLE hFile;
 	UINT uiSameCharCount;
@@ -676,9 +676,19 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 
     StringCchCopy(szCurrentPath, MAX_PATH_EX, finalList->front()->parentList->g_szBasePath);
     StringCchLength(szCurrentPath, MAX_PATH_EX, &strLen);
-    if(strLen > 4) {
-	    StringCchCopy(szFileOut, MAX_PATH_EX, szCurrentPath + 4);
-        szCurrentPath[strLen - 1] = TEXT('\0');
+    if(strLen > 4) { // if < 4 no extended path - something went wrong
+        // get rid of \\?\(UNC)
+        if(strLen > 6 && !_tcsncmp(szCurrentPath + 4, TEXT("UNC"), 3)) {
+            szCurrentPath[0] = TEXT('\\');
+            StringCchCopy(szCurrentPath + 1, MAX_PATH_EX, finalList->front()->parentList->g_szBasePath + 7);
+            strLen -= 6;
+        } else {
+	        StringCchCopy(szCurrentPath, MAX_PATH_EX, finalList->front()->parentList->g_szBasePath + 4);
+            strLen -= 4;
+        }
+
+        StringCchCopy(szFileOut, MAX_PATH_EX, szCurrentPath);
+        szCurrentPath[strLen - 1] = TEXT('\0'); // get rid of last backslash for GetFilenameWithoutPathPointer
         StringCchCat(szFileOut, MAX_PATH_EX, GetFilenameWithoutPathPointer(szCurrentPath));
         if(szCurrentPath[strLen - 2] == TEXT(':'))
             szFileOut[4] = TEXT('\0');
@@ -697,7 +707,7 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	ofn.lpstrFilter       = filterString ;
 	ofn.lpstrFile         = szFileOut ;
 	ofn.nMaxFile          = MAX_PATH_EX ;
-    ofn.lpstrInitialDir   = strLen > 4 ? finalList->front()->parentList->g_szBasePath + 4 : TEXT("");
+    ofn.lpstrInitialDir   = szCurrentPath;
 	ofn.lpstrTitle        = msgString;
 	ofn.Flags             = OFN_OVERWRITEPROMPT | OFN_EXPLORER ;
 	ofn.lpstrDefExt       = hashExt;
