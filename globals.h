@@ -100,6 +100,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MODE_SHA1				3
 #define MODE_SHA256				4
 #define MODE_SHA512				5
+#define MODE_BSD                21
 
 //CMDLINE Options for the shell extension
 #define CMD_NORMAL			20

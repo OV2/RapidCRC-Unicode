@@ -117,37 +117,31 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 {
 	// File OK < File not OK < No CRC/MD5 found < Error
 	int iResult;
-	//BOOL bEqual;
 
 	if(pFileinfo->dwError != NO_ERROR)
 		iResult = 4;
-	else{
-        if(pFileinfo->parentList->uiRapidCrcMode != MODE_NORMAL && pFileinfo->parentList->uiRapidCrcMode != MODE_SFV) {
-            if( (pFileinfo->parentList->bCalculated[pFileinfo->parentList->uiRapidCrcMode] && pFileinfo->hashInfo[pFileinfo->parentList->uiRapidCrcMode].dwFound) ){
-                if(memcmp( &pFileinfo->hashInfo[pFileinfo->parentList->uiRapidCrcMode].r,
-                           &pFileinfo->hashInfo[pFileinfo->parentList->uiRapidCrcMode].f,
-                           g_hash_lengths[pFileinfo->parentList->uiRapidCrcMode] ) == 0)
+	else {
+        iResult = 3;
+        if( CRCI(pFileinfo).dwFound ) {
+            if( pFileinfo->parentList->bCalculated[HASH_TYPE_CRC32] ){
+				if(CRCI(pFileinfo).r.dwCrc32Result == CRCI(pFileinfo).f.dwCrc32Found)
 					iResult = 1;
 				else
 					iResult = 2;
+			} else {
+				iResult = CRCI(pFileinfo).dwFound == CRC_FOUND_FILENAME ? 5 : 6;
 			}
-			else
-				iResult = 3;
         }
-		else{ // MODE_SFV and MODE_NORMAL; the icon does not differ between these modes
-			if( CRCI(pFileinfo).dwFound ) {
-				if( pFileinfo->parentList->bCalculated[HASH_TYPE_CRC32] ){
-					if(CRCI(pFileinfo).r.dwCrc32Result == CRCI(pFileinfo).f.dwCrc32Found)
-						iResult = 1;
-					else
-						iResult = 2;
-				} else {
-					iResult = CRCI(pFileinfo).dwFound == CRC_FOUND_FILENAME ? 5 : 6;
-				}
-			}
-			else
-				iResult = 3;
-		}
+        for(int i=1; i < NUM_HASH_TYPES; i++) {
+            if( (pFileinfo->parentList->bCalculated[i] && pFileinfo->hashInfo[i].dwFound) ){
+                if(memcmp( &pFileinfo->hashInfo[i].r,
+                           &pFileinfo->hashInfo[i].f,
+                           g_hash_lengths[i] ) == 0)
+				    iResult = 1;
+			    else
+				    iResult = 2;
+		    }
+        }
 	}
 
 	return iResult;

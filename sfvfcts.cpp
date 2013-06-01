@@ -21,6 +21,9 @@
 #include "globals.h"
 #include <shlobj.h>
 
+void InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEINFO *fileList);
+void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList);
+
 /*****************************************************************************
 BOOL EnterSfvMode(lFILEINFO *fileList)
 	fileList	: (IN/OUT) pointer to the job structure whose files are to be processed
@@ -288,10 +291,7 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 	HANDLE	hFile;
 	UINT	uiStringLength;
 	BOOL	bErrorOccured, bEndOfFile;
-	UINT	uiIndex;
-    UINT    uiHashLengthChars = g_hash_lengths[uiMode] * 2;
 
-	BOOL	bHashOK;
 	BOOL	fileIsUTF16;
     UINT    codePage;
 	UNICODE_TYPE detectedBOM;
@@ -352,58 +352,33 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 		return FALSE;
 	}
 
-	while( !(bEndOfFile && uiStringLength == 0) ){
-
-		if(uiStringLength > uiHashLengthChars){ // a valid line has uiHashLengthChars hex values for the hash value and then either "  " or " *"
-
-			fileinfoTmp.parentList=fileList;
+	while( !(bEndOfFile && uiStringLength == 0) ) {
 
 #ifdef UNICODE
-            // if we already read unicode characters we don't need the conversion here
-			if(!fileIsUTF16) {
-				AnsiFromUnicode(szLineAnsi,MAX_LINE_LENGTH,szLine);
-				MultiByteToWideChar(codePage,	// ANSI Codepage
-					0,						    // we use no flags; ANSI isn't a 'real' MBCC
-					szLineAnsi,			    	// the ANSI String
-					-1,						    // ANSI String is 0 terminated
-					szLine,					    // the UNICODE destination string
-					MAX_LINE_LENGTH );		    // size of the UNICODE String in chars
-                uiStringLength = lstrlen(szLine);
-			}
+        // if we already read unicode characters we don't need the conversion here
+		if(!fileIsUTF16) {
+			AnsiFromUnicode(szLineAnsi,MAX_LINE_LENGTH,szLine);
+			MultiByteToWideChar(codePage,	// ANSI Codepage
+				0,						    // we use no flags; ANSI isn't a 'real' MBCC
+				szLineAnsi,			    	// the ANSI String
+				-1,						    // ANSI String is 0 terminated
+				szLine,					    // the UNICODE destination string
+				MAX_LINE_LENGTH );		    // size of the UNICODE String in chars
+            uiStringLength = lstrlen(szLine);
+		}
 #endif
 
-			if( IsLegalHexSymbol(szLine[0]) ){
-				bHashOK = TRUE;
-				for(uiIndex=0; uiIndex < uiHashLengthChars; ++uiIndex)
-					if(! IsLegalHexSymbol(szLine[uiIndex]))
-						bHashOK = FALSE;
-				if(bHashOK){
-					fileinfoTmp.hashInfo[uiMode].dwFound = TRUE;
-					for(uiIndex=0; uiIndex < g_hash_lengths[uiMode]; ++uiIndex)
-						*((BYTE *)&fileinfoTmp.hashInfo[uiMode].f + uiIndex) = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
-					fileinfoTmp.dwError = NOERROR;
-				}
-				else
-					fileinfoTmp.dwError = APPL_ERROR_ILLEGAL_CRC;
-
-				//delete trailing spaces
-				while(szLine[uiStringLength - 1] == TEXT(' ')){
-					szLine[uiStringLength - 1] = NULL;
-					uiStringLength--;
-				}
-
-				//find leading spaces and '*'
-				uiIndex = uiHashLengthChars; // szLine[uiHashLengthChars] is the first char after the hash
-				while( (uiIndex < uiStringLength) && ((szLine[uiIndex] == TEXT(' ')) || (szLine[uiIndex] == TEXT('*'))) )
-					uiIndex++;
-
-                ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
-
-                fileinfoTmp.szFilename.Format(TEXT("%s%s"),fileList->g_szBasePath, szLine + uiIndex);
-
-				fileList->fInfos.push_back(fileinfoTmp);
-			}
-		}
+        switch(uiMode) {
+            case MODE_MD5:
+            case MODE_SHA1:
+            case MODE_SHA256:
+            case MODE_SHA512:
+                InterpretMDSHALine(szLine, uiStringLength, uiMode, fileList);
+                break;
+            case MODE_BSD:
+                InterpretBSDLine(szLine, uiStringLength, fileList);
+                break;
+        }
 
 		GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUTF16);
 		if(bErrorOccured){
@@ -415,6 +390,123 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 	CloseHandle(hFile);
 
 	return TRUE;
+}
+
+void InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEINFO *fileList)
+{
+    UINT    uiHashLengthChars = g_hash_lengths[uiMode] * 2;
+    UINT	uiIndex;
+    BOOL	bHashOK;
+
+    FILEINFO fileinfoTmp = {0};
+    fileinfoTmp.parentList=fileList;
+
+    if(uiStringLength < uiHashLengthChars)
+        return;
+
+    if( IsLegalHexSymbol(szLine[0]) ){
+	    bHashOK = TRUE;
+	    for(uiIndex=0; uiIndex < uiHashLengthChars; ++uiIndex)
+		    if(! IsLegalHexSymbol(szLine[uiIndex]))
+			    bHashOK = FALSE;
+	    if(bHashOK){
+		    fileinfoTmp.hashInfo[uiMode].dwFound = TRUE;
+		    for(uiIndex=0; uiIndex < g_hash_lengths[uiMode]; ++uiIndex)
+			    *((BYTE *)&fileinfoTmp.hashInfo[uiMode].f + uiIndex) = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
+		    fileinfoTmp.dwError = NOERROR;
+	    }
+	    else
+		    fileinfoTmp.dwError = APPL_ERROR_ILLEGAL_CRC;
+
+	    //delete trailing spaces
+	    while(szLine[uiStringLength - 1] == TEXT(' ')){
+		    szLine[uiStringLength - 1] = NULL;
+		    uiStringLength--;
+	    }
+
+	    //find leading spaces and '*'
+	    uiIndex = uiHashLengthChars; // szLine[uiHashLengthChars] is the first char after the hash
+	    while( (uiIndex < uiStringLength) && ((szLine[uiIndex] == TEXT(' ')) || (szLine[uiIndex] == TEXT('*'))) )
+		    uiIndex++;
+
+        ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
+
+        fileinfoTmp.szFilename.Format(TEXT("%s%s"),fileList->g_szBasePath, szLine + uiIndex);
+
+	    fileList->fInfos.push_back(fileinfoTmp);
+    }
+}
+
+void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
+{
+    UINT	uiIndex;
+    BOOL	bHashOK;
+    int     iHashIndex = -1;
+
+    FILEINFO fileinfoTmp = {0};
+    fileinfoTmp.parentList=fileList;
+
+    if(uiStringLength < 5)
+        return;
+
+    for(int i=0; i < NUM_HASH_TYPES; i++) {
+        if(!_tcsncmp(szLine, g_hash_names[i], lstrlen(g_hash_names[i]))) {
+            iHashIndex = i;
+            break;
+        }
+    }
+    if(iHashIndex<0)
+        return;
+
+    TCHAR *szFirstBrace = _tcschr(szLine, TEXT('('));
+    TCHAR *szLastBrace = _tcsrchr(szLine, TEXT(')'));
+    if(!szFirstBrace || !szLastBrace || szFirstBrace > szLastBrace)
+        return;
+
+    *szLastBrace = TEXT('\0');
+    szLastBrace++;
+    fileinfoTmp.szFilename.Format(TEXT("%s%s"), fileList->g_szBasePath, szFirstBrace + 1);
+    fileinfoTmp.szFilename.Replace(TEXT("/"), TEXT("\\"));
+
+    while(*szLastBrace == TEXT(' '))
+        szLastBrace++;
+
+    UINT    uiHashLengthChars = g_hash_lengths[iHashIndex] * 2;
+
+    if(lstrlen(szLastBrace) < uiHashLengthChars)
+        return;
+
+    FILEINFO *fileInfo = &fileinfoTmp;
+    bool alreadyInList = false;
+    for(list<FILEINFO>::reverse_iterator it = fileList->fInfos.rbegin(); it != fileList->fInfos.rend(); it++) {
+        if(it->szFilename == fileinfoTmp.szFilename) {
+            fileInfo = &(*it);
+            alreadyInList = true;
+            break;
+        }
+    }
+
+    if( IsLegalHexSymbol(*szLastBrace) ){
+	    bHashOK = TRUE;
+	    for(uiIndex=0; uiIndex < uiHashLengthChars; ++uiIndex)
+		    if(! IsLegalHexSymbol(szLastBrace[uiIndex]))
+			    bHashOK = FALSE;
+	    if(bHashOK){
+		    fileInfo->hashInfo[iHashIndex].dwFound = TRUE;
+            if(iHashIndex == HASH_TYPE_CRC32) {
+                fileInfo->hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found = HexToDword(szLastBrace + uiIndex, 8);
+            } else {
+		        for(uiIndex=0; uiIndex < g_hash_lengths[iHashIndex]; ++uiIndex)
+			        *((BYTE *)&fileInfo->hashInfo[iHashIndex].f + uiIndex) = (BYTE)HexToDword(szLastBrace + uiIndex * 2, 2);
+            }
+		    fileInfo->dwError = NOERROR;
+	    }
+	    else
+		    fileInfo->dwError = APPL_ERROR_ILLEGAL_CRC;
+        if(!alreadyInList)
+	        fileList->fInfos.push_back(fileinfoTmp);
+        fileList->bDoCalculate[iHashIndex] = true;
+    }
 }
 
 /*****************************************************************************

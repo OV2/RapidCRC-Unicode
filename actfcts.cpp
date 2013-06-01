@@ -840,9 +840,7 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 			lvitem.iItem = uiIndex;
 			ListView_GetItem(arrHwnd[ID_LISTVIEW],&lvitem);
 			pList = ((FILEINFO *)lvitem.lParam)->parentList;
-			if( (uiMode == MODE_SFV) && !pList->bCalculated[HASH_TYPE_CRC32] ||
-				(uiMode == MODE_MD5) && !pList->bCalculated[HASH_TYPE_MD5] ||
-				(uiMode == MODE_SHA1) && !pList->bCalculated[HASH_TYPE_SHA1] )
+			if( uiMode != MODE_NORMAL && !pList->bCalculated[uiMode] )
 				rehashList.push_back(pList);
 		} while((uiIndex = ListView_GetNextItem(arrHwnd[ID_LISTVIEW],uiIndex,LVNI_SELECTED))!=-1);
 		rehashList.sort();
