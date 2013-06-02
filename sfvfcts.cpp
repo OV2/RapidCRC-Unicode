@@ -21,158 +21,9 @@
 #include "globals.h"
 #include <shlobj.h>
 
+void InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList);
 void InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEINFO *fileList);
 void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList);
-
-/*****************************************************************************
-BOOL EnterSfvMode(lFILEINFO *fileList)
-	fileList	: (IN/OUT) pointer to the job structure whose files are to be processed
-
-Return Value:
-	returns TRUE if everything went fine. FALSE went something went wrong
-
-Notes:
-	- takes fileList->fInfos.front().szFilename as .sfv file and creates new list entries
-	  based on that
-*****************************************************************************/
-BOOL EnterSfvMode(lFILEINFO *fileList)
-{
-#ifdef UNICODE
-	CHAR	szLineAnsi[MAX_LINE_LENGTH];
-#endif
-	TCHAR	szLine[MAX_LINE_LENGTH];
-	TCHAR	szFilenameSfv[MAX_PATH_EX];
-	HANDLE	hFile;
-	UINT	uiStringLength;
-	BOOL	bErrorOccured, bEndOfFile;
-
-	BOOL	bCrcOK;
-	BOOL	fileIsUTF16;
-	UNICODE_TYPE detectedBOM;
-    UINT    codePage;
-
-	FILEINFO fileinfoTmp = {0};
-
-	// save SFV filename and path
-	// => g_szBasePath in SFV-mode is the path part of the complete filename of the .sfv file
-	StringCchCopy(szFilenameSfv, MAX_PATH_EX, fileList->fInfos.front().szFilename);
-	StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, szFilenameSfv);
-	ReduceToPath(fileList->g_szBasePath);
-
-	if(fileList->uiCmdOpts==CMD_REPARENT) {
-		TCHAR	szReparentPath[MAX_PATH_EX];
-		LPITEMIDLIST iidl=NULL;
-		BROWSEINFO bInfo = {0};
-		bInfo.lpszTitle = TEXT("Select folder for sfv reparenting");
-		bInfo.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
-		bInfo.lpfn = BrowseFolderSetSelProc;
-		bInfo.lParam = (LPARAM)(fileList->g_szBasePath + 4);
-		if(iidl=SHBrowseForFolder(&bInfo)) {
-			SHGetPathFromIDList(iidl,szReparentPath);
-			CoTaskMemFree(iidl);
-            StringCchPrintf(fileList->g_szBasePath, MAX_PATH_EX, TEXT("\\\\?\\%s\\"),szReparentPath);
-            if(fileList->g_szBasePath[lstrlen(fileList->g_szBasePath) - 2] == TEXT('\\'))
-                fileList->g_szBasePath[lstrlen(fileList->g_szBasePath) - 1] = TEXT('\0');
-		}
-	}
-
-	// set sfv mode
-	fileList->uiRapidCrcMode = MODE_SFV;
-
-	// free everything we did so far
-	fileList->fInfos.clear();
-
-	hFile = CreateFile(szFilenameSfv, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
-	if(hFile == INVALID_HANDLE_VALUE){
-		MessageBox(NULL, TEXT("SFV file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		return FALSE;
-	}
-
-    // check for the BOM and read accordingly
-	detectedBOM = CheckForBOM(hFile);
-	fileIsUTF16 = (detectedBOM == UTF_16LE);
-	if(!fileIsUTF16) {
-		if(detectedBOM==UTF_8_BOM)
-			codePage = CP_UTF8;
-        else if(g_program_options.bUseDefaultCP)
-            codePage = g_program_options.uiDefaultCP;
-		else
-			codePage = DetermineFileCP(hFile);
-	}
-
-	GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUTF16);
-
-	if(bErrorOccured){
-		MessageBox(NULL, TEXT("SFV file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-		return FALSE;
-	}
-
-	while( !(bEndOfFile && uiStringLength == 0) ){
-
-		if(uiStringLength > 8){
-
-			fileinfoTmp.parentList = fileList;
-
-#ifdef UNICODE
-            // if we already read unicode characters we don't need the conversion here
-			if(!fileIsUTF16) {
-				AnsiFromUnicode(szLineAnsi,MAX_LINE_LENGTH,szLine);
-				MultiByteToWideChar(codePage,				// ANSI Codepage
-									0,						// we use no flags; ANSI isn't a 'real' MBCC
-									szLineAnsi,				// the ANSI String
-									-1,						// ANSI String is 0 terminated
-									szLine,					// the UNICODE destination string
-									MAX_LINE_LENGTH );		// size of the UNICODE String in chars
-                uiStringLength = lstrlen(szLine);
-			}
-#endif
-
-			//delete trailing spaces
-			while( (szLine[uiStringLength - 1] == TEXT(' ')) && (uiStringLength > 8) ){
-				szLine[uiStringLength - 1] = NULL;
-				uiStringLength--;
-			}
-
-			if( (szLine[0] != TEXT(';')) && (szLine[0] != TEXT('\0')) ){
-				bCrcOK = TRUE;
-				for(int i=1; i <= 8; ++i)
-					if(! IsLegalHexSymbol(szLine[uiStringLength-i]))
-						bCrcOK = FALSE;
-				if(bCrcOK){
-                    fileinfoTmp.hashInfo[HASH_TYPE_CRC32].dwFound = CRC_FOUND_SFV;
-                    fileinfoTmp.hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found = HexToDword(szLine + uiStringLength - 8, 8);
-					fileinfoTmp.dwError = NOERROR;
-				}
-				else
-					fileinfoTmp.dwError = APPL_ERROR_ILLEGAL_CRC;
-
-				uiStringLength -= 8;
-				szLine[uiStringLength] = NULL; // keep only the filename
-				//delete trailing spaces
-				while( (szLine[uiStringLength - 1] == TEXT(' ')) && (uiStringLength > 0) ){
-					szLine[uiStringLength - 1] = NULL;
-					uiStringLength--;
-				}
-
-                ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
-
-                fileinfoTmp.szFilename.Format(TEXT("%s%s"),fileList->g_szBasePath, szLine);
-
-				fileList->fInfos.push_back(fileinfoTmp);
-			}
-		}
-		
-		GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUTF16);
-		if(bErrorOccured){
-			MessageBox(NULL, TEXT("SFV file could not be read"), TEXT("Error"), MB_ICONERROR | MB_OK);
-			fileList->fInfos.clear();
-			return FALSE;
-		}
-	}
-	CloseHandle(hFile);
-
-	return TRUE;
-}
 
 /*****************************************************************************
 DWORD WriteSfvHeader(CONST HANDLE hFile)
@@ -369,6 +220,9 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 #endif
 
         switch(uiMode) {
+            case MODE_SFV:
+                InterpretSFVLine(szLine, uiStringLength, fileList);
+                break;
             case MODE_MD5:
             case MODE_SHA1:
             case MODE_SHA256:
@@ -390,6 +244,51 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 	CloseHandle(hFile);
 
 	return TRUE;
+}
+
+void InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
+{
+    BOOL	bCrcOK;
+
+    FILEINFO fileinfoTmp = {0};
+    fileinfoTmp.parentList=fileList;
+
+    if(uiStringLength < 9)
+        return;
+
+    //delete trailing spaces
+	while( (szLine[uiStringLength - 1] == TEXT(' ')) && (uiStringLength > 8) ){
+		szLine[uiStringLength - 1] = NULL;
+		uiStringLength--;
+	}
+
+	if( (szLine[0] != TEXT(';')) && (szLine[0] != TEXT('\0')) ){
+		bCrcOK = TRUE;
+		for(int i=1; i <= 8; ++i)
+			if(! IsLegalHexSymbol(szLine[uiStringLength-i]))
+				bCrcOK = FALSE;
+		if(bCrcOK){
+            fileinfoTmp.hashInfo[HASH_TYPE_CRC32].dwFound = HASH_FOUND_FILE;
+            fileinfoTmp.hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found = HexToDword(szLine + uiStringLength - 8, 8);
+			fileinfoTmp.dwError = NOERROR;
+		}
+		else
+			fileinfoTmp.dwError = APPL_ERROR_ILLEGAL_CRC;
+
+		uiStringLength -= 8;
+		szLine[uiStringLength] = NULL; // keep only the filename
+		//delete trailing spaces
+		while( (szLine[uiStringLength - 1] == TEXT(' ')) && (uiStringLength > 0) ){
+			szLine[uiStringLength - 1] = NULL;
+			uiStringLength--;
+		}
+
+        ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
+
+        fileinfoTmp.szFilename.Format(TEXT("%s%s"),fileList->g_szBasePath, szLine);
+
+		fileList->fInfos.push_back(fileinfoTmp);
+	}
 }
 
 void InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEINFO *fileList)
@@ -439,7 +338,6 @@ void InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEIN
 
 void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
 {
-    UINT	uiIndex;
     BOOL	bHashOK;
     int     iHashIndex = -1;
 
@@ -488,15 +386,15 @@ void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
 
     if( IsLegalHexSymbol(*szLastBrace) ){
 	    bHashOK = TRUE;
-	    for(uiIndex=0; uiIndex < uiHashLengthChars; ++uiIndex)
+	    for(UINT uiIndex=0; uiIndex < uiHashLengthChars; ++uiIndex)
 		    if(! IsLegalHexSymbol(szLastBrace[uiIndex]))
 			    bHashOK = FALSE;
 	    if(bHashOK){
 		    fileInfo->hashInfo[iHashIndex].dwFound = TRUE;
             if(iHashIndex == HASH_TYPE_CRC32) {
-                fileInfo->hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found = HexToDword(szLastBrace + uiIndex, 8);
+                fileInfo->hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found = HexToDword(szLastBrace, 8);
             } else {
-		        for(uiIndex=0; uiIndex < g_hash_lengths[iHashIndex]; ++uiIndex)
+		        for(UINT uiIndex=0; uiIndex < g_hash_lengths[iHashIndex]; ++uiIndex)
 			        *((BYTE *)&fileInfo->hashInfo[iHashIndex].f + uiIndex) = (BYTE)HexToDword(szLastBrace + uiIndex * 2, 2);
             }
 		    fileInfo->dwError = NOERROR;
