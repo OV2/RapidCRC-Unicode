@@ -129,7 +129,7 @@ INT InfoToIntValue(CONST FILEINFO * pFileinfo)
 				else
 					iResult = 2;
 			} else {
-				iResult = CRCI(pFileinfo).dwFound == CRC_FOUND_FILENAME ? 5 : 6;
+				iResult = CRCI(pFileinfo).dwFound == HASH_FOUND_FILENAME ? 5 : 6;
 			}
         }
         for(int i=1; i < NUM_HASH_TYPES; i++) {

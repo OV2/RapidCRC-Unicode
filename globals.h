@@ -146,11 +146,11 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define PATH_TYPE_ABS_WITHOUT_DRIVE		1
 #define PATH_TYPE_ABSOLUTE				2
 
-//CRC Locations
-#define CRC_FOUND_NONE		0
-#define CRC_FOUND_SFV		1
-#define CRC_FOUND_FILENAME	2
-#define CRC_FOUND_STREAM	3
+// HASH Locations
+#define HASH_FOUND_NONE		    0
+#define HASH_FOUND_FILE		    1
+#define HASH_FOUND_FILENAME	    2
+#define HASH_FOUND_STREAM	    3
 
 // these are the different possibilities for how to create SFV and MD5 files
 #define CREATE_ONE_PER_FILE		0
@@ -489,7 +489,7 @@ BOOL SeparatePathFilenameExt(CONST TCHAR szCompleteFilename[MAX_PATH_EX], TCHAR 
 INT ReduceToPath(TCHAR szString[MAX_PATH_EX]);
 CONST TCHAR * GetFilenameWithoutPathPointer(CONST TCHAR szFilenameLong[MAX_PATH_EX]);
 BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR * szExtension);
-BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc);
+BOOL GetHashFromFilename(FILEINFO *fileInfo);
 VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params,lFILEINFO *fileList);
 VOID ProcessDirectories(lFILEINFO *fileList, BOOL bOnlyHashFiles = FALSE);
 list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it, BOOL bOnlyHashFiles);

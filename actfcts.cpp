@@ -92,7 +92,7 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<F
 					bAFileWasProcessed = TRUE;
 					if(SaveCRCIntoStream(pFileinfo->szFilename,CRCI(pFileinfo).r.dwCrc32Result)){
 						CRCI(pFileinfo).f.dwCrc32Found = CRCI(pFileinfo).r.dwCrc32Result;
-						CRCI(pFileinfo).dwFound = CRC_FOUND_STREAM;
+						CRCI(pFileinfo).dwFound = HASH_FOUND_STREAM;
 					}
 					else{
 						pFileinfo->dwError = GetLastError();
@@ -208,7 +208,7 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list
                         pFileinfo->szFilenameShort = pFileinfo->szFilename.GetBuffer() + lstrlen(pFileinfo->parentList->g_szBasePath);
 						// this updates pFileinfo->szFilenameShort automatically
 						CRCI(pFileinfo).f.dwCrc32Found = CRCI(pFileinfo).r.dwCrc32Result;
-						CRCI(pFileinfo).dwFound = CRC_FOUND_FILENAME;
+						CRCI(pFileinfo).dwFound = HASH_FOUND_FILENAME;
 					}
 					else{
 						pFileinfo->dwError = GetLastError();

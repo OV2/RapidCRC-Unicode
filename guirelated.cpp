@@ -923,7 +923,7 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 			}
 			else if(CRCI(pFileinfo).dwFound)
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE,
-					(CRCI(pFileinfo).dwFound == CRC_FOUND_FILENAME ?
+					(CRCI(pFileinfo).dwFound == HASH_FOUND_FILENAME ?
 					TEXT("CRC found in filename"):
 					TEXT("CRC found in stream"))
 				);

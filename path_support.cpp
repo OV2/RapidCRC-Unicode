@@ -320,7 +320,7 @@ BOOL GetCrcFromStream(TCHAR CONST *szFileName, DWORD * pdwFoundCrc)
 }
 
 /*****************************************************************************
-BOOL GetCrcFromFilename(TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc)
+BOOL GetHashFromFilename(TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc)
 	szFilename		: (IN) string; assumed to be the szFilenameShort member of the
 						   FILEINFO struct
 	pdwFoundCrc		: (OUT) return value is TRUE this parameter is set to the found
@@ -334,15 +334,17 @@ Notes:
 	- if a ']' or ')' is found we check if 9 chars before is an '[' or '(' and if
 	  there are 8 legal Hex characters in between (via IsLegalHexSymbol)
 *****************************************************************************/
-BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc)
+BOOL GetHashFromFilename(FILEINFO *fileInfo)
 {
 	size_t StringSize;
 	INT iIndex;
 	BOOL bFound;
-	TCHAR szCrc[9];
-	TCHAR szFileWithoutPath[MAX_PATH_EX];
+	TCHAR const *szFileWithoutPath;
+    TCHAR const *szHashStart;
+    UINT uiFoundHexSymbols;
+    int iHashIndex;
 
-	StringCchCopy(szFileWithoutPath, MAX_PATH_EX, GetFilenameWithoutPathPointer(szFilename));
+    szFileWithoutPath = GetFilenameWithoutPathPointer(fileInfo->szFilename);
 
 	if(FAILED(StringCchLength(szFileWithoutPath, MAX_PATH_EX, &StringSize)))
 		return FALSE;
@@ -354,18 +356,17 @@ BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc
 	bFound = FALSE;
 	do{
 		--iIndex;
+        uiFoundHexSymbols = 0;
 		if(g_program_options.bAllowCrcAnywhere) {
 			if(IsLegalHexSymbol(szFileWithoutPath[iIndex]) )
 			{
 				if ((iIndex - 7) < 0)
 					break;
-				else{
-					bFound = TRUE;
-					for(int i=0; i <= 7; ++i)
-						if(! IsLegalHexSymbol(szFileWithoutPath[iIndex-i]))
-							bFound = FALSE;
-					if(bFound)
-						iIndex -= 7;
+				else {
+                    int i;
+					for(i = 0; iIndex - i >= 0 && IsLegalHexSymbol(szFileWithoutPath[iIndex-i]); ++i)
+						uiFoundHexSymbols++;
+					iIndex -= i;
 				}
 			}
 		} else {
@@ -373,26 +374,50 @@ BOOL GetCrcFromFilename(CONST TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc
 			{
 				if ((iIndex - 9) < 0)
 					break;
-				else{
-					bFound = TRUE;
-					if (! (IsValidCRCDelim(szFileWithoutPath[iIndex-9])) )
-						bFound = FALSE;
-					for(int i=1; i <= 8; ++i)
-						if(! IsLegalHexSymbol(szFileWithoutPath[iIndex-i]))
-							bFound = FALSE;
-					if(bFound)
-						iIndex -= 8;
+				else {
+                    bool valid = false;
+                    int i;
+                    for(i = 1; iIndex - i >= 0; ++i) {
+                        if(IsLegalHexSymbol(szFileWithoutPath[iIndex-i])) {
+						    uiFoundHexSymbols++;
+                        } else {
+                            if(IsValidCRCDelim(szFileWithoutPath[iIndex-i]))
+                                valid = true;
+                            break;
+                        }
+                    }
+                    if(!valid)
+                        uiFoundHexSymbols = 0;
+
+				    iIndex -= i;
 				}
 			}
 		}
+        if(uiFoundHexSymbols) {
+            for(int i = 0; i < NUM_HASH_TYPES; i++) {
+                // md5/ed2k have same size, but md5 will hit first
+                if(uiFoundHexSymbols == g_hash_lengths[i] * 2) {
+                    bFound = TRUE;
+                    iHashIndex = i;
+                    break;
+                }
+            }
+        }
 	}
 	while((iIndex > 0) && (!bFound));
 
 	if(!bFound)
 		return FALSE;
 	
-	StringCchCopyN(szCrc, 9, szFileWithoutPath + iIndex, 8);
-	(*pdwFoundCrc) = HexToDword(szCrc, 8);
+    szHashStart = szFileWithoutPath + iIndex + 1;
+
+    fileInfo->hashInfo[iHashIndex].dwFound = HASH_FOUND_FILENAME;
+    if(iHashIndex == HASH_TYPE_CRC32) {
+        fileInfo->hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found = HexToDword(szHashStart, 8);
+    } else {
+        for(UINT uiIndex=0; uiIndex < g_hash_lengths[iHashIndex]; ++uiIndex)
+            *((BYTE *)&fileInfo->hashInfo[iHashIndex].f + uiIndex) = (BYTE)HexToDword(szHashStart + uiIndex * 2, 2);
+    }
 
 	return TRUE;
 }
@@ -435,7 +460,7 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 
 	if(!fileList->fInfos.empty()) {
         if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sfv"))) {
-			EnterSfvMode(fileList);
+			EnterHashMode(fileList, MODE_SFV);
         } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".md5"))) {
 			EnterHashMode(fileList, MODE_MD5);
         } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sha1"))) {
@@ -617,13 +642,11 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 				fileList->qwFilesizeSum += (*it).qwFilesize;
 
 				if(fileList->uiRapidCrcMode == MODE_NORMAL)
-                    if(GetCrcFromFilename((*it).szFilenameShort, & (*it).hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found))
-						(*it).hashInfo[HASH_TYPE_CRC32].dwFound = CRC_FOUND_FILENAME;
-					else
-						if(GetCrcFromStream((*it).szFilename, & (*it).hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found))
-							(*it).hashInfo[HASH_TYPE_CRC32].dwFound = CRC_FOUND_STREAM;
-						else
-							(*it).hashInfo[HASH_TYPE_CRC32].dwFound = CRC_FOUND_NONE;
+                    if(!GetHashFromFilename(&(*it)))
+					    if(GetCrcFromStream((*it).szFilename, & (*it).hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found))
+						    (*it).hashInfo[HASH_TYPE_CRC32].dwFound = HASH_FOUND_STREAM;
+					    else
+						    (*it).hashInfo[HASH_TYPE_CRC32].dwFound = HASH_FOUND_NONE;
 			}
 		}
 
