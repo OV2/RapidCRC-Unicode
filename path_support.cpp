@@ -108,15 +108,15 @@ Notes:
   are replaced with filename, extension and CRC
 *****************************************************************************/
 BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH_EX], CONST TCHAR szFilenameOld[MAX_PATH_EX],
-						 CONST DWORD dwCrc32, CONST TCHAR szFilenamePattern[MAX_PATH_EX])
+						 CONST TCHAR *szHash, CONST TCHAR szFilenamePattern[MAX_PATH_EX])
 {
 	size_t size_temp, stIndex;
-	TCHAR szStringCrc[15];
+	//TCHAR szStringCrc[15];
 	TCHAR szPath[MAX_PATH_EX], szFilename[MAX_PATH_EX], szFileext[MAX_PATH_EX];
 
 	// fill the substrings for later use in the pattern string
 	SeparatePathFilenameExt(szFilenameOld, szPath, szFilename, szFileext);
-	StringCchPrintf(szStringCrc, 15, TEXT("%08LX"), dwCrc32 );
+	//StringCchPrintf(szStringCrc, 15, TEXT("%08LX"), dwCrc32 );
 
 	StringCchCopy(szFilenameNew, MAX_PATH_EX, szPath);
 	StringCchCat(szFilenameNew, MAX_PATH_EX, TEXT("\\"));
@@ -134,7 +134,7 @@ BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH_EX], CONST TCHAR szFilenam
 			stIndex += 8;
 		}
 		else if(IsStringPrefix(TEXT("%CRC"), szFilenamePattern + stIndex)){
-			StringCchCat(szFilenameNew, MAX_PATH_EX, szStringCrc);
+			StringCchCat(szFilenameNew, MAX_PATH_EX, szHash);
 			stIndex += 4;
 		}
 		else{
@@ -320,19 +320,16 @@ BOOL GetCrcFromStream(TCHAR CONST *szFileName, DWORD * pdwFoundCrc)
 }
 
 /*****************************************************************************
-BOOL GetHashFromFilename(TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc)
-	szFilename		: (IN) string; assumed to be the szFilenameShort member of the
-						   FILEINFO struct
-	pdwFoundCrc		: (OUT) return value is TRUE this parameter is set to the found
-							CRC32 as a DWORD
+BOOL GetHashFromFilename(FILEINFO *fileInfo)
+	fileInfo		: (IN/OUT) pointer to the FILEINFO struct to be checked
 
 Return Value:
-	returns TRUE if a CRC was found in the filename. Otherwise FALSE
+	returns TRUE if a hash was found in the filename. Otherwise FALSE
 
 Notes:
 	- walks through a filename from the rear to the front.
-	- if a ']' or ')' is found we check if 9 chars before is an '[' or '(' and if
-	  there are 8 legal Hex characters in between (via IsLegalHexSymbol)
+	- checks for legal Hex characters in between delimiters, or anywhere,
+      depending on settings (via IsLegalHexSymbol)
 *****************************************************************************/
 BOOL GetHashFromFilename(FILEINFO *fileInfo)
 {

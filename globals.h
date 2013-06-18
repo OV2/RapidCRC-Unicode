@@ -62,12 +62,6 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define WM_ACCEPT_PIPE				(WM_USER + 8)
 #define WM_THREAD_FILEINFO_START	(WM_USER + 9)
 
-// indexes for the icons in the image list (that is inserted into the listview)
-#define ICON_OK		0
-#define ICON_NOT_OK	1
-#define ICON_NO_CRC	2
-#define ICON_ERROR	3
-
 // some sizes for variables
 #define MAX_BUFFER_SIZE_CALC	0x10000
 #define MAX_BUFFER_SIZE_OFN 0xFFFFF // Win9x has a problem with values where just the first bit is set like 0x20000 for OFN buffer:
@@ -213,17 +207,19 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 
 #define ID_NUM_WINDOWS				52
 
-#define IDM_COPY_CRC				0
-#define IDM_COPY_MD5				1
-#define IDM_COPY_ED2K				2
-#define IDM_COPY_SHA1				3
-#define IDM_COPY_SHA256				4
-#define IDM_COPY_SHA512				5
-#define IDM_COPY_ED2K_LINK			6
-#define IDM_REMOVE_ITEMS			7
-#define IDM_CLEAR_LIST				8
+#define IDM_COPY_CRC				1
+#define IDM_COPY_MD5				2
+#define IDM_COPY_ED2K				3
+#define IDM_COPY_SHA1				4
+#define IDM_COPY_SHA256				5
+#define IDM_COPY_SHA512				6
+#define IDM_COPY_ED2K_LINK			7
+#define IDM_REMOVE_ITEMS			8
+#define IDM_CLEAR_LIST				9
 
-#define IDM_HIDE_VERIFIED           9
+#define IDM_HIDE_VERIFIED           10
+
+#define IDM_CRC_FILENAME            1
 
 #define IDM_CRC_COLUMN              1
 #define IDM_MD5_COLUMN              2
@@ -241,6 +237,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 
 //****** custom datatypes *******
 
+enum FILEINFO_STATUS {STATUS_OK = 0, STATUS_NOT_OK, STATUS_NO_CRC, STATUS_ERROR, STATUS_HASH_FILENAME, STATUS_HASH_STREAM};
 enum UNICODE_TYPE {NO_BOM = -1, UTF_16LE, UTF_8, UTF_8_BOM};
 typedef unsigned __int64 QWORD, *LPQWORD;
 
@@ -262,6 +259,7 @@ typedef struct _FILEINFO {
 	CString szFilename;
 	TCHAR  *szFilenameShort;
     _lFILEINFO * parentList;
+    FILEINFO_STATUS status;
     struct _hashInfo {
         union {
             DWORD   dwCrc32Result;
@@ -407,8 +405,8 @@ extern TCHAR *g_hash_ext[];
 //****** function prototypes *******
 
 //action functions (actfcts.cpp)
-VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
-VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList);
+VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], UINT uiHashType);
+VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], BOOL noPrompt, list<FILEINFO*> *finalList, UINT uiHashType);
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList);
 BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
@@ -444,6 +442,7 @@ DWORD ShowErrorMsg ( CONST HWND hWndMain, CONST DWORD dwError );
 VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST PROGRAM_OPTIONS * pProgram_options);
 VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStatus);
 void CreateListViewPopupMenu(HMENU *menu);
+void CreateHashFilenameButtonPopupMenu(HMENU *menu);
 void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU pupup,int x,int y, SHOWRESULT_PARAMS * pshowresult_params);
 void CreateListViewHeaderPopupMenu(HMENU *menu);
 BOOL ListViewHeaderPopup(HWND pHwnd,HMENU pupup,int x,int y);
@@ -472,7 +471,7 @@ VOID CopyJustProgramOptions(CONST PROGRAM_OPTIONS * pProgram_options_src, PROGRA
 BOOL IsStringPrefix(CONST TCHAR szSearchPattern[MAX_PATH_EX], CONST TCHAR szSearchString[MAX_PATH_EX]);
 DWORD MyPriorityToPriorityClass(CONST UINT uiMyPriority);
 VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList);
-VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList, CONST INT iImageIndex);
+VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList);
 BOOL CheckOsVersion(DWORD version,DWORD minorVersion);
 VOID ReplaceChar(TCHAR * szString, CONST size_t stBufferLength, CONST TCHAR tcIn, CONST TCHAR tcOut);
 #ifdef USE_TIME_MEASUREMENT
@@ -484,7 +483,7 @@ int CALLBACK BrowseFolderSetSelProc (HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM
 BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH_EX]);
 BOOL FileExists(CONST TCHAR szName[MAX_PATH_EX]);
 VOID SetFileinfoAttributes(FILEINFO *fileInfo);
-BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH_EX], CONST TCHAR szFilenameOld[MAX_PATH_EX], CONST DWORD dwCrc32, CONST TCHAR szFilenamePattern[MAX_PATH_EX]);
+BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH_EX], CONST TCHAR szFilenameOld[MAX_PATH_EX], CONST TCHAR *szHash, CONST TCHAR szFilenamePattern[MAX_PATH_EX]);
 BOOL SeparatePathFilenameExt(CONST TCHAR szCompleteFilename[MAX_PATH_EX], TCHAR szPath[MAX_PATH_EX], TCHAR szFilename[MAX_PATH_EX], TCHAR szFileext[MAX_PATH_EX]);
 INT ReduceToPath(TCHAR szString[MAX_PATH_EX]);
 CONST TCHAR * GetFilenameWithoutPathPointer(CONST TCHAR szFilenameLong[MAX_PATH_EX]);
@@ -514,7 +513,7 @@ BOOL WriteCurrentBOM(CONST HANDLE hFile);
 int CALLBACK SortFilename(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortInfo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortHash(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-INT InfoToIntValue(CONST FILEINFO * pFileinfo);
+FILEINFO_STATUS InfoToIntValue(CONST FILEINFO * pFileinfo);
 bool ListCompFunction(const FILEINFO& pFileinfo1, const FILEINFO& pFileinfo2);
 bool ListPointerCompFunction(const FILEINFO *pFileinfo1, const FILEINFO *pFileinfo2);
 bool ListPointerUniqFunction(const FILEINFO *pFileinfo1, const FILEINFO *pFileinfo2);

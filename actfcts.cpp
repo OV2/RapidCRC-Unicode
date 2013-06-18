@@ -154,11 +154,11 @@ Notes:
 	- wrapper for the three parameter version
 	- calls FillFinalList to get its list
 *****************************************************************************/
-VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], UINT uiHashType)
 {
 	list<FILEINFO*> finalList;
 
-	if(CheckIfRehashNecessary(arrHwnd,MODE_SFV))
+	if(CheckIfRehashNecessary(arrHwnd, uiHashType))
 		return;
 
 	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]));
@@ -166,7 +166,7 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 		finalList.sort(ListPointerCompFunction);
 		finalList.unique(ListPointerUniqFunction);
 	}
-	ActionCrcIntoFilename(arrHwnd,FALSE,&finalList);
+	ActionHashIntoFilename(arrHwnd, FALSE, &finalList, uiHashType);
 }
 
 /*****************************************************************************
@@ -182,7 +182,7 @@ Notes:
 	- Renames the files in the list
 	- noPrompt is used to suppress the prompt when called by the shell extension
 *****************************************************************************/
-VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList)
+VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], BOOL noPrompt, list<FILEINFO*> *finalList, UINT uiHashType)
 {
 	TCHAR szFilenameTemp[MAX_PATH_EX];
 	BOOL bAFileWasProcessed;
@@ -193,22 +193,22 @@ VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list
 
 	if(noPrompt || MessageBox(arrHwnd[ID_MAIN_WND],
 				(uiNumSelected?
-				TEXT("\'OK\' to put the CRC value into the filename of the selected files"):
-				TEXT("\'OK\' to put the CRC value into the filename of the files that miss a CRC (the \'blue\' ones)")),
+				TEXT("\'OK\' to put the hash value into the filename of the selected files"):
+				TEXT("\'OK\' to put the hash value into the filename of the files that miss a hash")),
 				TEXT("Question"),
 				MB_OKCANCEL | MB_ICONQUESTION | MB_APPLMODAL | MB_SETFOREGROUND) == IDOK){
 		bAFileWasProcessed = FALSE;
 		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 			pFileinfo = (*it);
-			if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(CRCI(pFileinfo).dwFound)) ){
+            if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (pFileinfo->hashInfo[uiHashType].dwFound != HASH_FOUND_FILENAME) ){
 					bAFileWasProcessed = TRUE;
-					GenerateNewFilename(szFilenameTemp, pFileinfo->szFilename, CRCI(pFileinfo).r.dwCrc32Result, g_program_options.szFilenamePattern);
+                    GenerateNewFilename(szFilenameTemp, pFileinfo->szFilename, pFileinfo->hashInfo[uiHashType].szResult, g_program_options.szFilenamePattern);
 					if(MoveFile(pFileinfo->szFilename, szFilenameTemp)){
                         pFileinfo->szFilename = szFilenameTemp;
                         pFileinfo->szFilenameShort = pFileinfo->szFilename.GetBuffer() + lstrlen(pFileinfo->parentList->g_szBasePath);
 						// this updates pFileinfo->szFilenameShort automatically
-						CRCI(pFileinfo).f.dwCrc32Found = CRCI(pFileinfo).r.dwCrc32Result;
-						CRCI(pFileinfo).dwFound = HASH_FOUND_FILENAME;
+                        memcpy((BYTE *)&pFileinfo->hashInfo[uiHashType].f, (BYTE *)&pFileinfo->hashInfo[uiHashType].r, g_hash_lengths[uiHashType]);
+						pFileinfo->hashInfo[uiHashType].dwFound = HASH_FOUND_FILENAME;
 					}
 					else{
 						pFileinfo->dwError = GetLastError();

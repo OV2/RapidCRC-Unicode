@@ -63,8 +63,8 @@ int CALLBACK SortInfo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 
 	int iResult1, iResult2;
 
-	iResult1 = InfoToIntValue((FILEINFO *)lParam1);
-	iResult2 = InfoToIntValue((FILEINFO *)lParam2);
+    iResult1 = ((FILEINFO *)lParam1)->status;
+    iResult2 = ((FILEINFO *)lParam2)->status;
 
 	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
 		return iResult1 - iResult2;
@@ -104,7 +104,7 @@ int CALLBACK SortHash(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 }
 
 /*****************************************************************************
-INT InfoToIntValue(CONST FILEINFO * pFileinfo)
+FILEINFO_STATUS InfoToIntValue(CONST FILEINFO * pFileinfo)
 Fileinfo	: (IN) item with the needed info
 
 Return Value:
@@ -113,35 +113,47 @@ returns a generated integer value
 Notes:
 - generated integer is used in MySortInfo to compare items
 *****************************************************************************/
-INT InfoToIntValue(CONST FILEINFO * pFileinfo)
+FILEINFO_STATUS InfoToIntValue(CONST FILEINFO * pFileinfo)
 {
 	// File OK < File not OK < No CRC/MD5 found < Error
-	int iResult;
+	FILEINFO_STATUS iResult;
+    UINT uiOkCount = 0, uiNotOkCount = 0, uiFilename = 0, uiStream = 0;
 
 	if(pFileinfo->dwError != NO_ERROR)
-		iResult = 4;
+		iResult = STATUS_ERROR;
 	else {
-        iResult = 3;
-        if( CRCI(pFileinfo).dwFound ) {
-            if( pFileinfo->parentList->bCalculated[HASH_TYPE_CRC32] ){
-				if(CRCI(pFileinfo).r.dwCrc32Result == CRCI(pFileinfo).f.dwCrc32Found)
-					iResult = 1;
-				else
-					iResult = 2;
-			} else {
-				iResult = CRCI(pFileinfo).dwFound == HASH_FOUND_FILENAME ? 5 : 6;
-			}
-        }
-        for(int i=1; i < NUM_HASH_TYPES; i++) {
-            if( (pFileinfo->parentList->bCalculated[i] && pFileinfo->hashInfo[i].dwFound) ){
-                if(memcmp( &pFileinfo->hashInfo[i].r,
-                           &pFileinfo->hashInfo[i].f,
-                           g_hash_lengths[i] ) == 0)
-				    iResult = 1;
-			    else
-				    iResult = 2;
+        for(int i=0; i < NUM_HASH_TYPES; i++) {
+            if(pFileinfo->hashInfo[i].dwFound) {
+                if( (pFileinfo->parentList->bCalculated[i]) ){
+                    bool bOk = false;
+                    if(i == HASH_TYPE_CRC32)
+                        bOk = (CRCI(pFileinfo).r.dwCrc32Result == CRCI(pFileinfo).f.dwCrc32Found);
+                    else
+                        bOk = (memcmp( &pFileinfo->hashInfo[i].r,
+                                   &pFileinfo->hashInfo[i].f,
+                                   g_hash_lengths[i] ) == 0);
+                    if(bOk)
+				        uiOkCount++;
+			        else
+				        uiNotOkCount++;
+                } else {
+                    if(pFileinfo->hashInfo[i].dwFound == HASH_FOUND_FILENAME)
+                        uiFilename++;
+                    else
+                        uiStream++;
+                }
 		    }
         }
+        if(uiNotOkCount)
+            iResult = STATUS_NOT_OK;
+        else if(uiOkCount)
+            iResult = STATUS_OK;
+        else if(uiFilename)
+            iResult = STATUS_HASH_FILENAME;
+        else if(uiStream)
+            iResult = STATUS_HASH_STREAM;
+        else
+            iResult = STATUS_NO_CRC;
 	}
 
 	return iResult;

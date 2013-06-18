@@ -125,14 +125,18 @@ void CSyncQueue::setFileAccForCalc()
 
 void CSyncQueue::adjustErrorCounters(FILEINFO *pFileinfo, DWORD amount)
 {
-    switch(InfoToIntValue(pFileinfo)) {
-	    case 1: dwCountOK += amount;
+    switch(pFileinfo->status) {
+	    case STATUS_OK:
+                dwCountOK += amount;
 			    break;
-	    case 2: dwCountNotOK += amount;
+	    case STATUS_NOT_OK:
+                dwCountNotOK += amount;
 			    break;
-	    case 3: dwCountNoCrcFound += amount;
+	    case STATUS_NO_CRC:
+                dwCountNoCrcFound += amount;
 			    break;
-        case 4: if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND || pFileinfo->dwError == ERROR_PATH_NOT_FOUND)
+        case STATUS_ERROR:
+                if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND || pFileinfo->dwError == ERROR_PATH_NOT_FOUND)
 				    dwCountNotFound += amount;
 			    else
 				    dwCountErrors += amount;

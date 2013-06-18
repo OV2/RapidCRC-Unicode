@@ -708,13 +708,13 @@ VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
         CString &rPrint = pFileinfo->hashInfo[i].szResult;
         rPrint = TEXT("");
         if(fileList->bCalculated[i] && pFileinfo->dwError == NOERROR) {
-            for(int j=0;j<g_hash_lengths[i];j++) {
+            for(UINT j=0;j<g_hash_lengths[i];j++) {
                 rPrint.AppendFormat(TEXT("%02lx"),*((BYTE *)&pFileinfo->hashInfo[i].r + j));
             }
         }
     }
 
-	SetInfoColumnText(pFileinfo, fileList, InfoToIntValue(pFileinfo) - 1);
+	SetInfoColumnText(pFileinfo, fileList);
 }
 
 /*****************************************************************************
@@ -722,7 +722,6 @@ VOID SetInfoColumnText(TCHAR * szString, CONST size_t stStringSize, CONST INT iI
 	szString		: (OUT) string that gets the output string
 	stStringSize	: (IN) size of szString
 	iImageIndex		: (IN) Icon that was chosen for this entry by the calling function
-	dwError			: (IN) Error for the entry
 
 Return Value:
 returns nothing
@@ -730,38 +729,34 @@ returns nothing
 Notes:
 - creates a describtive text that is used in the info column
 *****************************************************************************/
-VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList, CONST INT iImageIndex)
+VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList)
 {
 	// Step 1: We make all strings needed
-	if(pFileinfo->dwError != NO_ERROR){
+	if(pFileinfo->dwError != NO_ERROR) {
 		if(pFileinfo->dwError == APPL_ERROR_ILLEGAL_CRC)
 			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("CRC/MD5 Invalid"));
 		else if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND)
 			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("File not found"));
 		else
 			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("Error"));
-	}
-	else{
-        for(int i=0;i<NUM_HASH_TYPES;i++) {
-            if(fileList->bCalculated[i]) {
-			    if(iImageIndex == ICON_OK)
-				    StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("File OK"));
-			    else if (iImageIndex == ICON_NOT_OK)
-				    StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("File corrupt"));
-			    else  // iImageIndex == ICON_NO_CRC
-				    StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("No CRC found"));
-
-                return;
-            }
+	} else {
+        switch(pFileinfo->status) {
+            case STATUS_OK:
+			    StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("File OK"));
+                break;
+            case STATUS_NOT_OK:
+			    StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("File corrupt"));
+                break;
+            case STATUS_NO_CRC:
+			    StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("No hash found"));
+                break;
+            case STATUS_HASH_FILENAME:
+                StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("Checksum in filename"));
+                break;
+            case STATUS_HASH_STREAM:
+                StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("Checksum in stream"));
+                break;
 		}
-		if(CRCI(pFileinfo).f.dwCrc32Found)
-			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH,
-				(CRCI(pFileinfo).f.dwCrc32Found == CRC_FOUND_FILENAME?
-				TEXT("Checksum in filename"):
-				TEXT("Checksum in stream"))
-			);
-		else
-			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("No checksum calculated"));
 	}
 
 	return;	

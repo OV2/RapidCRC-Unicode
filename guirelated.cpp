@@ -247,8 +247,22 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 }
 
 /*****************************************************************************
+void CreateHashFilenameButtonPopupMenu(HMENU *menu)
+
+*****************************************************************************/
+void CreateHashFilenameButtonPopupMenu(HMENU *menu) {
+	*menu = CreatePopupMenu();
+    TCHAR menuText[100];
+
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        if(i==2) continue;
+        StringCchPrintf(menuText,100,TEXT("Put %s into Filename"),g_hash_names[i]);
+        InsertMenu(*menu,i, MF_BYPOSITION | MF_STRING, IDM_CRC_FILENAME + i,menuText);
+    }
+}
+
+/*****************************************************************************
 void CreateListViewPopupMenu(HMENU *menu)
-	arrHwnd			: (IN/OUT) HMENU for the listview containing the clipboard functions
 
 *****************************************************************************/
 void CreateListViewPopupMenu(HMENU *menu) {
@@ -353,7 +367,7 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 			curpos[hash_string_lengths[hash_type]] = TEXT('\n');
             curpos += hash_string_lengths[hash_type]+1;
 		}
-		*(curpos - 1) = TEXT('\0');
+		*(curpos - 2) = TEXT('\0');
 	}
 
 	GlobalUnlock(gAlloc);
@@ -432,7 +446,7 @@ void HideVerifiedItems(CONST HWND hListView) {
 	for(int i=ListView_GetItemCount(hListView)-1;i>=0;i--) {
 		lvitem.iItem = i;
 		ListView_GetItem(hListView,&lvitem);
-        if(InfoToIntValue((FILEINFO *)lvitem.lParam)==1)
+        if(((FILEINFO *)lvitem.lParam)->status==STATUS_OK)
 			ListView_DeleteItem(hListView,i);
 	}
 }
@@ -723,7 +737,7 @@ BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo,lFILEINFO *fi
 	INT iImageIndex;
 	LVITEM lvI;
 
-	iImageIndex = InfoToIntValue(pFileinfo) - 1;
+    iImageIndex = pFileinfo->status;
 
 	lvI.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE;
 	lvI.state = 0;
@@ -763,7 +777,7 @@ VOID UpdateListViewStatusIcons(CONST HWND hListView)
 		lvitem.mask = LVIF_PARAM | LVIF_IMAGE;
 		lvitem.iItem = i;
 		ListView_GetItem(hListView,&lvitem);
-		iImageIndex = InfoToIntValue((FILEINFO *)lvitem.lParam) - 1;
+        iImageIndex = ((FILEINFO *)lvitem.lParam)->status;
 		if(lvitem.iImage != iImageIndex) {
 			lvitem.iImage = iImageIndex;
 			lvitem.mask = LVIF_IMAGE;
@@ -1178,7 +1192,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
             ComboBox_SetCurSel(dlgItem,i);
     }
 	
-	GenerateNewFilename(szGenFilename, TEXT("C:\\MyFile.txt"), 0xAB01FB5D, pprogram_options->szFilenamePattern);
+	GenerateNewFilename(szGenFilename, TEXT("C:\\MyFile.txt"), TEXT("0xAB01FB5D"), pprogram_options->szFilenamePattern);
 	SetWindowText(GetDlgItem(hDlg, IDC_STATIC_FILENAME_EXAMPLE), szGenFilename);
 
 	if(bUpdateAll) {

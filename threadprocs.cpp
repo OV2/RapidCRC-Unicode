@@ -251,9 +251,10 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
                 }
 			}
 
+            curFileInfo.status = InfoToIntValue(&curFileInfo);
 			SetFileInfoStrings(&curFileInfo,fileList);
 
-            if(!g_pstatus.bHideVerified || InfoToIntValue(&curFileInfo)!=1) {
+            if(!g_pstatus.bHideVerified || curFileInfo.status != STATUS_OK) {
 			    InsertItemIntoList(arrHwnd[ID_LISTVIEW], &curFileInfo,fileList);
             }
 
@@ -288,7 +289,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 					CreateChecksumFiles(arrHwnd,fileList->uiCmdOpts,&finalList);
 					break;
 				case CMD_NAME:
-					ActionCrcIntoFilename(arrHwnd,TRUE,&finalList);
+                    ActionHashIntoFilename(arrHwnd, TRUE, &finalList, HASH_TYPE_CRC32);
 					break;
 				case CMD_NTFS:
 					ActionCrcIntoStream(arrHwnd,TRUE,&finalList);

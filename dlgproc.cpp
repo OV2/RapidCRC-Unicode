@@ -60,7 +60,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static UINT uiThreadID;
 	static DWORD dwSortStatus;
 	static SHOWRESULT_PARAMS showresult_params = {NULL, FALSE, FALSE};
-	static HMENU popupMenu,headerPopupMenu;
+	static HMENU popupMenu, headerPopupMenu, hashInNamePopup;
 	lFILEINFO *fileList;
 
 	switch (message)
@@ -72,9 +72,17 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		CreateAndInitChildWindows(arrHwnd, arrOldWndProcs, & lAveCharWidth, & lAveCharHeight, hWnd);
 		CreateListViewPopupMenu(&popupMenu);
         CreateListViewHeaderPopupMenu(&headerPopupMenu);
+        CreateHashFilenameButtonPopupMenu(&hashInNamePopup);
 		RegisterDropWindow(arrHwnd, & pDropTarget);
 
 		return 0;
+    case WM_CONTEXTMENU:
+        if((HWND)wParam == arrHwnd[ID_LISTVIEW]) {
+            //ClientToScreen(arrHwnd[ID_LISTVIEW],&(((NMITEMACTIVATE *)lParam)->ptAction));
+		    ListViewPopup(arrHwnd,popupMenu,GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&showresult_params);
+            return 0;
+        }
+        break;
 	case WM_NOTIFY:
 		switch(wParam)
 		{
@@ -109,8 +117,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				break;
 			case NM_RCLICK:
                 // we need screen coordintes for the popup window
-				ClientToScreen(arrHwnd[ID_LISTVIEW],&(((NMITEMACTIVATE *)lParam)->ptAction));
-				ListViewPopup(arrHwnd,popupMenu,((NMITEMACTIVATE *)lParam)->ptAction.x,((NMITEMACTIVATE *)lParam)->ptAction.y,&showresult_params);
+				//ClientToScreen(arrHwnd[ID_LISTVIEW],&(((NMITEMACTIVATE *)lParam)->ptAction));
+				//ListViewPopup(arrHwnd,popupMenu,((NMITEMACTIVATE *)lParam)->ptAction.x,((NMITEMACTIVATE *)lParam)->ptAction.y,&showresult_params);
 				return 0;
 			case LVN_KEYDOWN: //now handled by LVN_ITEMCHANGED
 				//ProcessKeyPressedInList(arrHwnd, (LPNMLVKEYDOWN) lParam, & showresult_params);
@@ -237,101 +245,101 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		break;
 	case WM_COMMAND:
 		switch(LOWORD(wParam)){
-		case ID_BTN_EXIT:
-			if(HIWORD(wParam) == BN_CLICKED){
-				SendMessage(hWnd, WM_CLOSE, 0, 0);
-				return 0;
-			}
-			break;
-		case ID_BTN_CRC_IN_STREAM:
-			if(HIWORD(wParam) == BN_CLICKED){
-				ActionCrcIntoStream(arrHwnd);
-				return 0;
-			}
-			break;
-		case ID_BTN_CRC_IN_FILENAME:
-			if(HIWORD(wParam) == BN_CLICKED){
-				ActionCrcIntoFilename(arrHwnd);
-				return 0;
-			}
-			break;
-		case ID_BTN_CRC_IN_SFV:
-			if(HIWORD(wParam) == BN_CLICKED){
-				CreateChecksumFiles(arrHwnd, MODE_SFV);
-				return 0;
-			}
-			break;
-		case ID_BTN_MD5_IN_MD5:
-			if(HIWORD(wParam) == BN_CLICKED){
-				CreateChecksumFiles(arrHwnd, MODE_MD5);
-				return 0;
-			}
-			break;
-		case ID_BTN_SHA1_IN_SHA1:
-			if(HIWORD(wParam) == BN_CLICKED){
-				CreateChecksumFiles(arrHwnd, MODE_SHA1);
-				return 0;
-			}
-			break;
-        case ID_BTN_SHA256_IN_SHA256:
-			if(HIWORD(wParam) == BN_CLICKED){
-				CreateChecksumFiles(arrHwnd, MODE_SHA256);
-				return 0;
-			}
-			break;
-        case ID_BTN_SHA512_IN_SHA512:
-			if(HIWORD(wParam) == BN_CLICKED){
-				CreateChecksumFiles(arrHwnd, MODE_SHA512);
-				return 0;
-			}
-			break;
-		case ID_BTN_ERROR_DESCR:
-			if(HIWORD(wParam) == BN_CLICKED){
-				ShowErrorMsg(hWnd, showresult_params.pFileinfo_cur_displayed->dwError );
-				return 0;
-			}
-			break;
-		case ID_BTN_OPENFILES_PAUSE:
-			if(HIWORD(wParam) == BN_CLICKED){
-					OpenFiles(arrHwnd);
-				return 0;
-			}
-			break;
-		case ID_BTN_PLAY_PAUSE:
-			if(!SyncQueue.bThreadDone)
-				if(SyncQueue.bThreadSuspended){
-					ResumeThread(hThread);
-					SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
-					SyncQueue.bThreadSuspended = FALSE;
-				}
-				else{
-					SuspendThread(hThread);
-					SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PLAY),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
-					SyncQueue.bThreadSuspended = TRUE;
-				}
-			break;
-		case ID_BTN_OPTIONS:
-			if(HIWORD(wParam) == BN_CLICKED){
-				BOOL prevQueue=g_program_options.bEnableQueue;
-				if( DialogBox(g_hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hWnd, DlgProcOptions) == IDOK) {
-					//if the queueing option has been changed we need to clear the lists, since this also enables/disables grouping
-					if(prevQueue!=g_program_options.bEnableQueue) {
-						ClearAllItems(arrHwnd,&showresult_params);
-						if(g_pstatus.bHaveComCtrlv6)
-							ListView_EnableGroupView(arrHwnd[ID_LISTVIEW],g_program_options.bEnableQueue);
-					}
-					UpdateListViewColumns(arrHwnd, lAveCharWidth);
-				}
-				return 0;
-			}
-			break;
-		case ID_COMBO_PRIORITY:
-			if(HIWORD(wParam) == CBN_SELCHANGE){
-				g_program_options.uiPriority = (UINT) SendMessage(arrHwnd[ID_COMBO_PRIORITY], CB_GETCURSEL, 0, 0);
-				SetPriorityClass(GetCurrentProcess(), MyPriorityToPriorityClass(g_program_options.uiPriority));
-				return 0;
-			}
-			break;
+		    case ID_BTN_EXIT:
+			    if(HIWORD(wParam) == BN_CLICKED){
+				    SendMessage(hWnd, WM_CLOSE, 0, 0);
+				    return 0;
+			    }
+			    break;
+		    case ID_BTN_CRC_IN_STREAM:
+			    if(HIWORD(wParam) == BN_CLICKED){
+				    ActionCrcIntoStream(arrHwnd);
+				    return 0;
+			    }
+			    break;
+		    case ID_BTN_CRC_IN_FILENAME:
+			    if(HIWORD(wParam) == BN_CLICKED){
+                    ActionHashIntoFilename(arrHwnd, HASH_TYPE_CRC32);
+				    return 0;
+			    }
+			    break;
+		    case ID_BTN_CRC_IN_SFV:
+			    if(HIWORD(wParam) == BN_CLICKED){
+				    CreateChecksumFiles(arrHwnd, MODE_SFV);
+				    return 0;
+			    }
+			    break;
+		    case ID_BTN_MD5_IN_MD5:
+			    if(HIWORD(wParam) == BN_CLICKED){
+				    CreateChecksumFiles(arrHwnd, MODE_MD5);
+				    return 0;
+			    }
+			    break;
+		    case ID_BTN_SHA1_IN_SHA1:
+			    if(HIWORD(wParam) == BN_CLICKED){
+				    CreateChecksumFiles(arrHwnd, MODE_SHA1);
+				    return 0;
+			    }
+			    break;
+            case ID_BTN_SHA256_IN_SHA256:
+			    if(HIWORD(wParam) == BN_CLICKED){
+				    CreateChecksumFiles(arrHwnd, MODE_SHA256);
+				    return 0;
+			    }
+			    break;
+            case ID_BTN_SHA512_IN_SHA512:
+			    if(HIWORD(wParam) == BN_CLICKED){
+				    CreateChecksumFiles(arrHwnd, MODE_SHA512);
+				    return 0;
+			    }
+			    break;
+		    case ID_BTN_ERROR_DESCR:
+			    if(HIWORD(wParam) == BN_CLICKED){
+				    ShowErrorMsg(hWnd, showresult_params.pFileinfo_cur_displayed->dwError );
+				    return 0;
+			    }
+			    break;
+		    case ID_BTN_OPENFILES_PAUSE:
+			    if(HIWORD(wParam) == BN_CLICKED){
+					    OpenFiles(arrHwnd);
+				    return 0;
+			    }
+			    break;
+		    case ID_BTN_PLAY_PAUSE:
+			    if(!SyncQueue.bThreadDone)
+				    if(SyncQueue.bThreadSuspended){
+					    ResumeThread(hThread);
+					    SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+					    SyncQueue.bThreadSuspended = FALSE;
+				    }
+				    else{
+					    SuspendThread(hThread);
+					    SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PLAY),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+					    SyncQueue.bThreadSuspended = TRUE;
+				    }
+			    break;
+		    case ID_BTN_OPTIONS:
+			    if(HIWORD(wParam) == BN_CLICKED){
+				    BOOL prevQueue=g_program_options.bEnableQueue;
+				    if( DialogBox(g_hInstance, MAKEINTRESOURCE(IDD_OPTIONS), hWnd, DlgProcOptions) == IDOK) {
+					    //if the queueing option has been changed we need to clear the lists, since this also enables/disables grouping
+					    if(prevQueue!=g_program_options.bEnableQueue) {
+						    ClearAllItems(arrHwnd,&showresult_params);
+						    if(g_pstatus.bHaveComCtrlv6)
+							    ListView_EnableGroupView(arrHwnd[ID_LISTVIEW],g_program_options.bEnableQueue);
+					    }
+					    UpdateListViewColumns(arrHwnd, lAveCharWidth);
+				    }
+				    return 0;
+			    }
+			    break;
+		    case ID_COMBO_PRIORITY:
+			    if(HIWORD(wParam) == CBN_SELCHANGE){
+				    g_program_options.uiPriority = (UINT) SendMessage(arrHwnd[ID_COMBO_PRIORITY], CB_GETCURSEL, 0, 0);
+				    SetPriorityClass(GetCurrentProcess(), MyPriorityToPriorityClass(g_program_options.uiPriority));
+				    return 0;
+			    }
+			    break;
 		}
 		break;
     case WM_ENDSESSION:
