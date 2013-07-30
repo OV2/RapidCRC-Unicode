@@ -78,8 +78,34 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		return 0;
     case WM_CONTEXTMENU:
         if((HWND)wParam == arrHwnd[ID_LISTVIEW]) {
-            //ClientToScreen(arrHwnd[ID_LISTVIEW],&(((NMITEMACTIVATE *)lParam)->ptAction));
-		    ListViewPopup(arrHwnd,popupMenu,GET_X_LPARAM(lParam),GET_Y_LPARAM(lParam),&showresult_params);
+            int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+            if(x == -1 && y == -1) {
+                POINT pt = {0, 0};
+                int index = ListView_GetNextItem(arrHwnd[ID_LISTVIEW], -1, LVNI_SELECTED);
+                if(index >= 0) {
+                    RECT rect;
+                    ListView_GetItemRect(arrHwnd[ID_LISTVIEW], index, &rect, LVIR_LABEL);
+                    pt.x = rect.left;
+                    pt.y = rect.top;
+                }
+                ClientToScreen(arrHwnd[ID_LISTVIEW], &pt);
+                x = pt.x;
+                y = pt.y;
+            }
+		    ListViewPopup(arrHwnd, popupMenu, x, y, &showresult_params);
+            return 0;
+        }
+        if((HWND)wParam == arrHwnd[ID_BTN_CRC_IN_FILENAME]) {
+            int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+            if(x == -1 && y == -1) {
+                POINT pt = {0, 0};
+                ClientToScreen(arrHwnd[ID_BTN_CRC_IN_FILENAME], &pt);
+                x = pt.x;
+                y = pt.y;
+            }
+            int ret = TrackPopupMenu(hashInNamePopup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_CRC_IN_FILENAME], NULL);
+            if(ret)
+                ActionHashIntoFilename(arrHwnd, ret - IDM_CRC_FILENAME);
             return 0;
         }
         break;
@@ -93,9 +119,9 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
                     // we need screen coordintes for the popup window
                     DWORD dwPos;
                     dwPos = GetMessagePos();
-				    if(ListViewHeaderPopup(arrHwnd[ID_LISTVIEW],headerPopupMenu, (signed short)(dwPos & 0xffff), (signed short)((dwPos>>16) & 0xffff)))
+				    if(ListViewHeaderPopup(arrHwnd[ID_LISTVIEW], headerPopupMenu, GET_X_LPARAM(dwPos), GET_Y_LPARAM(dwPos)))
                         UpdateListViewColumns(arrHwnd, lAveCharWidth);
-                    return 0;
+                    return 1;
             }
             break;
 		case ID_LISTVIEW:
