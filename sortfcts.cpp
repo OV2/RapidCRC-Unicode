@@ -165,8 +165,8 @@ bool ListCompFunction(const FILEINFO& pFileinfo1, const FILEINFO& pFileinfo2)
 	TCHAR szFilenameTemp2[MAX_PATH_EX];
 	INT iDiff;
 
-	StringCchCopy(szFilenameTemp1, MAX_PATH_EX, pFileinfo1.szFilenameShort);
-	StringCchCopy(szFilenameTemp2, MAX_PATH_EX, pFileinfo2.szFilenameShort);
+	StringCchCopy(szFilenameTemp1, MAX_PATH_EX, pFileinfo1.szFilename);
+	StringCchCopy(szFilenameTemp2, MAX_PATH_EX, pFileinfo2.szFilename);
 
 	ReduceToPath(szFilenameTemp1);
 	ReduceToPath(szFilenameTemp2);
