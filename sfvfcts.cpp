@@ -366,7 +366,7 @@ void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
     fileinfoTmp.szFilename.Format(TEXT("%s%s"), fileList->g_szBasePath, szFirstBrace + 1);
     fileinfoTmp.szFilename.Replace(TEXT("/"), TEXT("\\"));
 
-    while(*szLastBrace == TEXT(' '))
+    while(!IsLegalHexSymbol(*szLastBrace) && *szLastBrace != TEXT('\0') )
         szLastBrace++;
 
     UINT    uiHashLengthChars = g_hash_lengths[iHashIndex] * 2;
