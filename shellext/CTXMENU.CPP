@@ -86,17 +86,41 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
     if(!(CMF_DEFAULTONLY & uFlags))
     {
 		hSubMenu = CreateMenu();
-		InsertMenu(hSubMenu,0,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_RAPIDCRC,TEXT("Open"));
-		InsertMenu(hSubMenu,1,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_REPARENT,TEXT("Open with reparent"));
-        InsertMenu(hSubMenu,2,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_OPENHASHFILES,TEXT("Open all hash files"));
-		InsertMenu(hSubMenu,3,MF_SEPARATOR | MF_BYPOSITION,0,NULL);
-		InsertMenu(hSubMenu,4,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SFV,TEXT("Create SFV"));
-		InsertMenu(hSubMenu,5,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_MD5,TEXT("Create MD5"));
-		InsertMenu(hSubMenu,6,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SHA1,TEXT("Create SHA1"));
-        InsertMenu(hSubMenu,7,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SHA256,TEXT("Create SHA256"));
-        InsertMenu(hSubMenu,8,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_SHA512,TEXT("Create SHA512"));
-		InsertMenu(hSubMenu,9,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NAME,TEXT("Put CRC in Filename"));
-		InsertMenu(hSubMenu,10,MF_STRING | MF_BYPOSITION,idCmdFirst + IDM_NTFS,TEXT("Put CRC in NTFS Stream"));
+        unsigned int mask = 0;
+
+        HKEY hKey;
+        if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\RapidCRC"),
+					    0, KEY_QUERY_VALUE 
+#ifdef _WIN64
+					    | KEY_WOW64_32KEY 
+#endif
+					    , &hKey) == ERROR_SUCCESS)
+        {
+	        DWORD dwRegLength = 4;
+            DWORD dwRegContent, dwRegType;
+
+            if(RegQueryValueEx(hKey, TEXT("ShellExtMenuItemsMask"), NULL, & dwRegType, (LPBYTE)&dwRegContent, & dwRegLength) == ERROR_SUCCESS ) {
+                if(dwRegType == REG_DWORD)
+                    mask = dwRegContent;
+            }
+	        RegCloseKey(hKey);
+        }
+
+#define InsertOptional(f, id, t)\
+    if(!(1 << id & mask)) InsertMenu(hSubMenu, count++, f, idCmdFirst + id, t);
+
+        unsigned int count = 0;
+		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_RAPIDCRC, TEXT("Open"));
+		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_REPARENT, TEXT("Open with reparent"));
+        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_OPENHASHFILES, TEXT("Open all hash files"));
+		InsertOptional(MF_SEPARATOR | MF_BYPOSITION, 3, NULL);
+		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SFV, TEXT("Create SFV"));
+		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_MD5, TEXT("Create MD5"));
+		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA1, TEXT("Create SHA1"));
+        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA256, TEXT("Create SHA256"));
+        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA512, TEXT("Create SHA512"));
+		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_NAME, TEXT("Put CRC in Filename"));
+		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_NTFS, TEXT("Put CRC in NTFS Stream"));
 
 		mii.fMask = MIIM_SUBMENU | MIIM_STRING | MIIM_ID;
 		mii.cbSize = sizeof(mii);
@@ -117,40 +141,40 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 			mii.fMask = MIIM_BITMAP;
 			mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_RAPIDCRC);
 			SetMenuItemInfo(hMenu, indexMenu, TRUE, &mii);
-			
+
 			mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_OPEN_FOLDER);
-			SetMenuItemInfo(hSubMenu, 0, TRUE, &mii);
-			SetMenuItemInfo(hSubMenu, 1, TRUE, &mii);
-            SetMenuItemInfo(hSubMenu, 2, TRUE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_RAPIDCRC, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_REPARENT, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_OPENHASHFILES, FALSE, &mii);
 
 			mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_HASH_FILE);
-			SetMenuItemInfo(hSubMenu, 4, TRUE, &mii);
-			SetMenuItemInfo(hSubMenu, 5, TRUE, &mii);
-			SetMenuItemInfo(hSubMenu, 6, TRUE, &mii);
-			SetMenuItemInfo(hSubMenu, 7, TRUE, &mii);
-			SetMenuItemInfo(hSubMenu, 8, TRUE, &mii);
-            SetMenuItemInfo(hSubMenu, 9, TRUE, &mii);
-            SetMenuItemInfo(hSubMenu, 10, TRUE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SFV, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_MD5, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA1, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA256, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA512, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_NAME, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_NTFS, FALSE, &mii);
 		} else {
 			hBmp = LoadIconAsBitmap(g_hmodThisDll, IDI_RAPIDCRC);
 			SetMenuItemBitmaps(hMenu,indexMenu,MF_BYPOSITION,hBmp,hBmp);
 
 			hBmp = LoadIconAsBitmap(g_hmodThisDll, IDI_OPEN_WITH);
-			SetMenuItemBitmaps(hSubMenu,0,MF_BYPOSITION,hBmp,hBmp);
-			SetMenuItemBitmaps(hSubMenu,1,MF_BYPOSITION,hBmp,hBmp);
-            SetMenuItemBitmaps(hSubMenu,2,MF_BYPOSITION,hBmp,hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_RAPIDCRC, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_REPARENT, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_OPENHASHFILES, MF_BYCOMMAND, hBmp, hBmp);
 
 			hBmp = LoadIconAsBitmap(g_hmodThisDll, IDI_CREATE_SFV);
-			SetMenuItemBitmaps(hSubMenu,4,MF_BYPOSITION,hBmp,hBmp);
-			SetMenuItemBitmaps(hSubMenu,5,MF_BYPOSITION,hBmp,hBmp);
-			SetMenuItemBitmaps(hSubMenu,6,MF_BYPOSITION,hBmp,hBmp);
-			SetMenuItemBitmaps(hSubMenu,7,MF_BYPOSITION,hBmp,hBmp);
-			SetMenuItemBitmaps(hSubMenu,8,MF_BYPOSITION,hBmp,hBmp);
-            SetMenuItemBitmaps(hSubMenu,9,MF_BYPOSITION,hBmp,hBmp);
-            SetMenuItemBitmaps(hSubMenu,10,MF_BYPOSITION,hBmp,hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SFV, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_MD5, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA1, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA256, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA512, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_NAME, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_NTFS, MF_BYCOMMAND, hBmp, hBmp);
 		}
 
-		return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(IDM_SUBMENU+1));
+		return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(IDM_SUBMENU + 1));
     }
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(0));
