@@ -526,6 +526,12 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 			break;
+        case IDC_CHECK_HASHTYPE_FROM_FILENAME:
+			if(HIWORD(wParam) == BN_CLICKED){
+                program_options_temp.bHashtypeFromFilename = (IsDlgButtonChecked(hDlg, IDC_CHECK_HASHTYPE_FROM_FILENAME) == BST_CHECKED);
+				return TRUE;
+			}
+			break;
 		case IDC_CHECK_WINSFV_COMP:
 			if(HIWORD(wParam) == BN_CLICKED){
 				program_options_temp.bWinsfvComp = (IsDlgButtonChecked(hDlg, IDC_CHECK_WINSFV_COMP) == BST_CHECKED);

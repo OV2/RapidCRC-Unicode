@@ -23,6 +23,7 @@
 
 static DWORD GetTypeOfPath(CONST TCHAR szPath[MAX_PATH_EX]);
 static VOID SetBasePath(lFILEINFO *fileList);
+static UINT DetermineHashType(const CString &filename);
 
 /*****************************************************************************
 BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH_EX])
@@ -275,7 +276,7 @@ BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR *szExtens
 	StringCchLength(szFilename, MAX_PATH_EX, & stString);
 	StringCchLength(szExtension, MAX_PATH_EX, & stExtension);
 
-	// we compare the 4 last characters
+	// we compare the last characters
 	if( (stString > stExtension) && (lstrcmpi(szFilename + stString - stExtension, szExtension) == 0) )
 		return TRUE;
 	else
@@ -455,24 +456,20 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 	// enter normal mode
 	fileList->uiRapidCrcMode = MODE_NORMAL;
 
-	if(!fileList->fInfos.empty()) {
-        if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sfv"))) {
-			EnterHashMode(fileList, MODE_SFV);
-        } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".md5"))) {
-			EnterHashMode(fileList, MODE_MD5);
-        } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sha1"))) {
-			EnterHashMode(fileList, MODE_SHA1);
-        } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sha256"))) {
-			EnterHashMode(fileList, MODE_SHA256);
-        } else if(HasFileExtension(fileList->fInfos.front().szFilename, TEXT(".sha512"))) {
-			EnterHashMode(fileList, MODE_SHA512);
-        } else if(fileList->fInfos.front().szFilename.Find(TEXT("_hashes")) >= 0) {
-			EnterHashMode(fileList, MODE_BSD);
+    if(!fileList->fInfos.empty()) {
+        UINT detectedMode = MODE_NORMAL;
+        if(fileList->uiCmdOpts == CMD_FORCE_BSD)
+            detectedMode = MODE_BSD;
+        else
+            detectedMode = DetermineHashType(fileList->fInfos.front().szFilename);
+
+        if(detectedMode != MODE_NORMAL) {
+            EnterHashMode(fileList, detectedMode);
         } else {
-			SetBasePath(fileList);
-			ProcessDirectories(fileList);
-		}
-	}
+            SetBasePath(fileList);
+	        ProcessDirectories(fileList);
+        }
+    }
 
 	ProcessFileProperties(fileList);
 
@@ -764,4 +761,64 @@ UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
 		countSameChars--;
 
 	return countSameChars;
+}
+
+/*****************************************************************************
+UINT DetermineHashType(const CString &filename)
+	filename	: (IN) filename in question
+
+Return Value:
+returns the type of hashfile this file is likely to be
+
+Notes:
+- does not examine the contents, only guesses from the filename
+*****************************************************************************/
+UINT DetermineHashType(const CString &filename)
+{
+    if(HasFileExtension(filename, TEXT(".sfv"))) {
+		return MODE_SFV;
+    } else if(HasFileExtension(filename, TEXT(".md5"))) {
+		return MODE_MD5;
+    } else if(HasFileExtension(filename, TEXT(".sha1"))) {
+		return MODE_SHA1;
+    } else if(HasFileExtension(filename, TEXT(".sha256"))) {
+		return MODE_SHA256;
+    } else if(HasFileExtension(filename, TEXT(".sha512"))) {
+		return MODE_SHA512;
+    } else if(HasFileExtension(filename, TEXT(".bsdhash"))) {
+		return MODE_BSD;
+    }
+
+    if(!g_program_options.bHashtypeFromFilename)
+        return MODE_NORMAL;
+
+    CString filenameOnly = filename.Mid(filename.ReverseFind(TEXT('\\')) + 1);
+    CString ext;
+    int dot = filenameOnly.ReverseFind(TEXT('.'));
+    if(dot != -1) {
+        ext = filenameOnly.Mid(dot + 1);
+        filenameOnly = filenameOnly.Left(dot);
+    }
+
+    for(int i = 0; i < NUM_HASH_TYPES; i++) {
+        if(!filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("SUM")) ||
+           !filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("SUMS")) ||
+           !filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("CHECKSUM")) ||
+           !filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("CHECKSUMS")) ||
+           !filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("HASH")) ||
+           !filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("HASHES")))
+        {
+            if(ext.IsEmpty() || !ext.CompareNoCase(TEXT("txt")))
+                return i;
+        }
+        if(!filenameOnly.CompareNoCase(g_hash_names[i])) {
+            if(ext.IsEmpty() || !ext.CompareNoCase(TEXT("txt")))
+                return MODE_BSD;
+        }
+    }
+
+    if(filenameOnly.Find(TEXT("_hashes")) >= 0)
+        return MODE_BSD;
+
+    return MODE_NORMAL;
 }

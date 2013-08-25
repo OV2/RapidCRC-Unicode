@@ -612,6 +612,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
         pprogram_options->uiCreateFileMode[i] = CREATE_ONE_FILE;
         StringCchPrintf(pprogram_options->szFilename[i],MAX_PATH,TEXT("checksum.%s"),g_hash_ext[i]);
     }
+    pprogram_options->bHashtypeFromFilename = true;
 	return;
 }
 

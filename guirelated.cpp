@@ -1178,6 +1178,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 	CheckDlgButton(hDlg, IDC_CHECK_CREATE_UNICODE_FILES, pprogram_options->bCreateUnicodeFiles ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_ENABLE_QUEUE, pprogram_options->bEnableQueue ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_USE_DEFAULT_CP, pprogram_options->bUseDefaultCP ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg, IDC_CHECK_HASHTYPE_FROM_FILENAME, pprogram_options->bHashtypeFromFilename ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_ALLOW_CRC_ANYWHERE, pprogram_options->bAllowCrcAnywhere ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(hDlg, IDC_CHECK_INCLUDE_COMMENTS, pprogram_options->bIncludeFileComments ? BST_CHECKED : BST_UNCHECKED);
 

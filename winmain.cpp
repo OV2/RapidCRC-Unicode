@@ -101,6 +101,10 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 			{
 				fileList->uiCmdOpts = CMD_ALLHASHES;
 			}
+            else if(lstrcmpi(argv[2], TEXT("-ForceBSD")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_FORCE_BSD;
+			}
 		}
 		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH_EX)) {
 			prevInst = NULL;

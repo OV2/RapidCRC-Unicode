@@ -82,7 +82,7 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<F
 	if(noPrompt || MessageBox(arrHwnd[ID_MAIN_WND],
 				(uiNumSelected?
 				TEXT("\'OK\' to put the CRC value into the stream of the selected files"):
-				TEXT("\'OK\' to put the CRC value into the stream of the files that miss a CRC (the \'blue\' ones)")),
+				TEXT("\'OK\' to put the CRC value into the stream of the files that are missing a CRC (the \'blue\' ones)")),
 				TEXT("Question"),
 				MB_OKCANCEL | MB_ICONQUESTION | MB_APPLMODAL | MB_SETFOREGROUND) == IDOK){
 		bAFileWasProcessed = FALSE;
@@ -194,7 +194,7 @@ VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], BOOL noPrompt, l
 	if(noPrompt || MessageBox(arrHwnd[ID_MAIN_WND],
 				(uiNumSelected?
 				TEXT("\'OK\' to put the hash value into the filename of the selected files"):
-				TEXT("\'OK\' to put the hash value into the filename of the files that miss a hash")),
+				TEXT("\'OK\' to put the hash value into the filename of the files that are missing a hash")),
 				TEXT("Question"),
 				MB_OKCANCEL | MB_ICONQUESTION | MB_APPLMODAL | MB_SETFOREGROUND) == IDOK){
 		bAFileWasProcessed = FALSE;
@@ -266,6 +266,9 @@ BOOL OpenFilesVistaUp(HWND hwnd, lFILEINFO *pFInfoList)
                     hr = pfdc->AddControlItem(FDIALOG_OPENCHOICES, 
 											  FDIALOG_CHOICE_ALLHASHES, 
 											  L"&Open all hash files");
+                    hr = pfdc->AddControlItem(FDIALOG_OPENCHOICES, 
+											  FDIALOG_CHOICE_BSD, 
+											  L"&Force open as BSD-style");
 				}
 			}
 		}

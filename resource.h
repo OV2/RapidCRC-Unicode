@@ -25,6 +25,7 @@
 #define IDC_CHECK_WINSFV_COMP           1022
 #define IDC_CHECK_SORT_LIST             1023
 #define IDC_CHECK_OWN_SFV_FILE          1024
+#define IDC_CHECK_HASHTYPE_FROM_FILENAME 1024
 #define IDC_CHECK_CREATE_UNIX_STYLE     1025
 #define IDC_CHECK_AUTO_SCROLL           1026
 #define IDC_ENABLE_QUEUE                1027

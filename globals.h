@@ -107,6 +107,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_NTFS			22
 #define CMD_REPARENT		23
 #define CMD_ALLHASHES       24
+#define CMD_FORCE_BSD       25
 
 
 #define CRCI(x) (x)->hashInfo[HASH_TYPE_CRC32]
@@ -233,6 +234,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define FDIALOG_CHOICE_OPEN 0
 #define FDIALOG_CHOICE_REPARENT 1
 #define FDIALOG_CHOICE_ALLHASHES 2
+#define FDIALOG_CHOICE_BSD 3
 
 
 //****** custom datatypes *******
@@ -377,6 +379,7 @@ typedef struct{
     BOOL            bCalcPerDefault[10];
     UINT			uiCreateFileMode[10];
     TCHAR			szFilename[10][MAX_PATH];
+    BOOL            bHashtypeFromFilename;
 }PROGRAM_OPTIONS;
 
 typedef struct{
