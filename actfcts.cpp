@@ -222,6 +222,7 @@ VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], BOOL noPrompt, l
 		if(bAFileWasProcessed){
 			UpdateListViewStatusIcons(arrHwnd[ID_LISTVIEW]);
 			DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
+            InvalidateRect(arrHwnd[ID_LISTVIEW], NULL, FALSE);
 		}
 		else
 			MessageBox(arrHwnd[ID_MAIN_WND], TEXT("No files missing a found"), TEXT("Info"), MB_OK);
