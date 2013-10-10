@@ -18,6 +18,8 @@
 #define IDI_ICON_MODERN_NOTOK           124
 #define IDI_ICON_MODERN_OK              125
 #define IDI_ICON_MODERN_OK2             128
+#define IDD_DIALOG_CONTEXT_MENU         131
+#define IDB_BITMAP_CONTEXT              133
 #define IDC_EDIT_FILENAME_PATTERN       1018
 #define IDC_BTN_DEFAULT                 1019
 #define IDC_STATIC_FILENAME_EXAMPLE     1020
@@ -55,14 +57,27 @@
 #define IDC_CHECK_CREATE_UNICODE_FILES  1051
 #define IDC_UNICODE_TYPE                1052
 #define IDC_DEFAULT_CP                  1053
+#define IDC_BTN_CONTEXT_MENU            1054
+#define IDC_CHECK_CONTEXT1              1054
+#define IDC_CHECK_CONTEXT2              1055
+#define IDC_CHECK_CONTEXT3              1056
+#define IDC_CHECK_CONTEXT4              1057
+#define IDC_CHECK_CONTEXT5              1058
+#define IDC_CHECK_CONTEXT6              1059
+#define IDC_CHECK_CONTEXT7              1060
+#define IDC_CHECK_CONTEXT8              1061
+#define IDC_CHECK_CONTEXT9              1062
+#define IDC_CHECK_CONTEXT10             1063
+#define IDC_CHECK_CONTEXT11             1064
+#define IDC_STATIC_CTX                  1065
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        131
+#define _APS_NEXT_RESOURCE_VALUE        134
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1054
+#define _APS_NEXT_CONTROL_VALUE         1066
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

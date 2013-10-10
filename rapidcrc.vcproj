@@ -872,6 +872,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\context_menu.bmp"
+				>
+			</File>
+			<File
 				RelativePath=".\icons\error.ico"
 				>
 			</File>
@@ -930,5 +934,9 @@
 		</Filter>
 	</Files>
 	<Globals>
+		<Global
+			Name="RESOURCE_FILE"
+			Value="RapidCRC.rc"
+		/>
 	</Globals>
 </VisualStudioProject>

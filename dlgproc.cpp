@@ -490,6 +490,12 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 			break;
+        case IDC_BTN_CONTEXT_MENU:
+			if(HIWORD(wParam) == BN_CLICKED){
+                DialogBox(g_hInstance, MAKEINTRESOURCE(IDD_DIALOG_CONTEXT_MENU), hDlg, DlgProcCtxMenu);
+				return TRUE;
+			}
+			break;
 		case IDC_CHECK_DISPLAY_CRC_IN_LIST:
 			if(HIWORD(wParam) == BN_CLICKED){
 				program_options_temp.bDisplayInListView[HASH_TYPE_CRC32] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_CRC_IN_LIST) == BST_CHECKED);
@@ -640,6 +646,99 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		break;
 	}
 	return FALSE ;
+}
+
+INT_PTR CALLBACK DlgProcCtxMenu(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+#define MAX_CONTEX_CHECKBOXES_ID 11
+	switch (message)
+	{
+    case WM_INITDIALOG :
+	    {
+	        unsigned int mask = 0;
+
+	        HKEY hKey;
+	        if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\RapidCRC"),
+						    0, KEY_QUERY_VALUE 
+#ifdef _WIN64
+						    | KEY_WOW64_32KEY 
+#endif
+						    , &hKey) == ERROR_SUCCESS)
+	        {
+		        DWORD dwRegLength = 4;
+	            DWORD dwRegContent, dwRegType;
+
+	            if(RegQueryValueEx(hKey, TEXT("ShellExtMenuItemsMask"), NULL, & dwRegType, (LPBYTE)&dwRegContent, & dwRegLength) == ERROR_SUCCESS ) {
+	                if(dwRegType == REG_DWORD)
+	                    mask = dwRegContent;
+	            }
+		        RegCloseKey(hKey);
+	        }
+
+	        for(int i = 0; i < MAX_CONTEX_CHECKBOXES_ID; i++) {
+	            if(!(1 << i & mask)) {
+	                CheckDlgButton(hDlg, IDC_CHECK_CONTEXT1 + i, BST_CHECKED);
+	            }
+	        }
+	    }
+
+        return TRUE;
+    case WM_COMMAND :
+	    switch (LOWORD (wParam))
+	    {
+	    case IDCANCEL:
+		    if(HIWORD(wParam) == BN_CLICKED){
+			    // this is also TRUE if the user clicks on the close box in the title bar
+			    EndDialog (hDlg, IDCANCEL) ;
+			    return TRUE ;
+		    }
+		    break;
+	    case IDOK:
+		    if(HIWORD(wParam) == BN_CLICKED){
+                unsigned mask = 0;
+                for(int i = 0; i < MAX_CONTEX_CHECKBOXES_ID; i++) {
+                    if(!IsDlgButtonChecked(hDlg, IDC_CHECK_CONTEXT1 + i) == BST_CHECKED) {
+                        mask |= 1 << i;
+                    }
+                }
+                HKEY hKey;
+                if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\RapidCRC"),
+					            0, KEY_SET_VALUE 
+#ifdef _WIN64
+					            | KEY_WOW64_32KEY 
+#endif
+					            , &hKey) == ERROR_SUCCESS)
+                {
+                    if(LONG	regResult = RegSetValueEx(hKey, TEXT("ShellExtMenuItemsMask"), NULL, REG_DWORD, (BYTE *)&mask, 4) != ERROR_SUCCESS){
+		                ShowErrorMsg(NULL, regResult);
+	                }
+	                RegCloseKey(hKey);
+                }
+
+			    EndDialog (hDlg, IDOK) ;
+			    return TRUE;
+		    }
+		    break;
+        case IDC_STATIC_CTX:
+		    if(HIWORD(wParam) == STN_CLICKED){
+			    DWORD dwPos = GetMessagePos();
+                POINT pos = { GET_X_LPARAM(dwPos), GET_Y_LPARAM(dwPos) };
+                ScreenToClient(hDlg, &pos);
+                for(int i = 0; i < MAX_CONTEX_CHECKBOXES_ID; i++) {
+                    RECT rect;
+                    GetClientRect(GetDlgItem(hDlg, IDC_CHECK_CONTEXT1 + i), &rect);
+                    MapWindowPoints(GetDlgItem(hDlg, IDC_CHECK_CONTEXT1 + i), hDlg, (LPPOINT)&rect, 2);
+                    if(pos.y < rect.bottom) {
+                        CheckDlgButton(hDlg, IDC_CHECK_CONTEXT1 + i, IsDlgButtonChecked(hDlg, IDC_CHECK_CONTEXT1 + i) ? BST_UNCHECKED : BST_CHECKED);
+                        break;
+                    }
+                }
+			    return TRUE ;
+		    }
+		    break;
+        }
+    }
+    return FALSE ;
 }
 
 /*****************************************************************************

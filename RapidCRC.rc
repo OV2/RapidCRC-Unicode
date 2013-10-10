@@ -82,6 +82,7 @@ BEGIN
     CONTROL         "SHA256",IDC_CHECK_DISPLAY_SHA256_IN_LIST,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,138,56,37,10
     CONTROL         "Hashtype from filename",IDC_CHECK_HASHTYPE_FROM_FILENAME,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,126,87,92,10
+    PUSHBUTTON      "Menu",IDC_BTN_CONTEXT_MENU,277,174,44,14
 END
 
 IDD_DLG_FILE_CREATION DIALOGEX 0, 0, 251, 121
@@ -201,6 +202,52 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
 #endif //_WIN32
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG_CONTEXT_MENU DIALOGEX 0, 0, 169, 173
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Shell Extension"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,55,152,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,113,152,50,14
+    CONTROL         133,IDC_STATIC_CTX,"Static",SS_BITMAP | SS_NOTIFY | SS_REALSIZEIMAGE,26,7,136,143
+    CONTROL         "",IDC_CHECK_CONTEXT1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,10,10,10
+    CONTROL         "",IDC_CHECK_CONTEXT2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,24,10,9
+    CONTROL         "",IDC_CHECK_CONTEXT3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,37,10,10
+    CONTROL         "",IDC_CHECK_CONTEXT4,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,47,10,10
+    CONTROL         "",IDC_CHECK_CONTEXT5,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,56,10,11
+    CONTROL         "",IDC_CHECK_CONTEXT6,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,70,10,10
+    CONTROL         "",IDC_CHECK_CONTEXT7,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,84,10,8
+    CONTROL         "",IDC_CHECK_CONTEXT8,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,97,10,9
+    CONTROL         "",IDC_CHECK_CONTEXT9,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,111,10,10
+    CONTROL         "",IDC_CHECK_CONTEXT10,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,124,10,10
+    CONTROL         "",IDC_CHECK_CONTEXT11,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,138,10,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_DIALOG_CONTEXT_MENU, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 162
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 166
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -226,6 +273,13 @@ END
 
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP_CONTEXT      BITMAP                  "context_menu.bmp"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
