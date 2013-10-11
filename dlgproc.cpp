@@ -1174,8 +1174,13 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
     const float labelWidth = 7;
     const float editOffset = labelOffset + labelWidth + 1;
 
-    float resultGroupHeight = 75/10.0;
-    for(int i=HASH_TYPE_SHA1;i<NUM_HASH_TYPES;i++) {
+    float resultGroupHeight = 45/10.0;
+    // special handling for crc & ed2k since they are on the same line
+    if(g_program_options.bCalcPerDefault[HASH_TYPE_CRC32] || g_program_options.bCalcPerDefault[HASH_TYPE_ED2K])
+        resultGroupHeight += 15/10.0f;
+
+    for(int i=HASH_TYPE_MD5;i<NUM_HASH_TYPES;i++) {
+        if(i==2) continue; // skip ed2k, handled above
         if(g_program_options.bCalcPerDefault[i]) {
             resultGroupHeight += 15/10.0f;
         }
@@ -1191,15 +1196,25 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 
 	MoveWindow(arrHwnd[ID_STATIC_FILENAME], lACW * labelOffset, wHeight - lACH * (resultGroupY - 15/10.0), lACW * labelWidth, lACH, FALSE);
 	MoveWindow(arrHwnd[ID_EDIT_FILENAME], lACW * editOffset, wHeight - lACH * (resultGroupY - 15/10.0), wWidth - lACW * (editOffset + 6), lACH, FALSE);
-	MoveWindow(arrHwnd[ID_STATIC_CRC_VALUE], lACW * labelOffset, wHeight - lACH * (resultGroupY - 30/10.0), lACW * labelWidth, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * editOffset, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 51, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_STATIC_ED2K_VALUE], lACW * 63, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 5, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_ED2K_VALUE], lACW * 69, wHeight - lACH * (resultGroupY - 30/10.0), lACW * 42, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_STATIC_MD5_VALUE], lACW * labelOffset, wHeight - lACH * (resultGroupY - 45/10.0), lACW * labelWidth, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_MD5_VALUE], lACW * editOffset, wHeight - lACH * (resultGroupY - 45/10.0), wWidth - lACW * (editOffset + 6), lACH, FALSE);
 
-    float offset = 45/10.0;
-    for(int i=HASH_TYPE_SHA1;i<NUM_HASH_TYPES;i++) {
+    float offset = 15/10.0;
+
+    // special handling for crc & ed2k since they are on the same line
+    bool crc_or_ed2k_enabled = g_program_options.bCalcPerDefault[HASH_TYPE_CRC32] || g_program_options.bCalcPerDefault[HASH_TYPE_ED2K];
+    ShowWindow(arrHwnd[ID_STATIC_CRC_VALUE],crc_or_ed2k_enabled);
+    ShowWindow(arrHwnd[ID_EDIT_CRC_VALUE],crc_or_ed2k_enabled);
+    ShowWindow(arrHwnd[ID_STATIC_ED2K_VALUE],g_program_options.bCalcPerDefault[HASH_TYPE_ED2K]);
+    ShowWindow(arrHwnd[ID_EDIT_ED2K_VALUE],g_program_options.bCalcPerDefault[HASH_TYPE_ED2K]);
+    if(crc_or_ed2k_enabled) {
+        offset += 15/10.0f;
+	    MoveWindow(arrHwnd[ID_STATIC_CRC_VALUE], lACW * labelOffset, wHeight - lACH * (resultGroupY - offset), lACW * labelWidth, lACH, FALSE);
+	    MoveWindow(arrHwnd[ID_EDIT_CRC_VALUE], lACW * editOffset, wHeight - lACH * (resultGroupY - offset), lACW * 51, lACH, FALSE);
+	    MoveWindow(arrHwnd[ID_STATIC_ED2K_VALUE], lACW * 63, wHeight - lACH * (resultGroupY - offset), lACW * 5, lACH, FALSE);
+	    MoveWindow(arrHwnd[ID_EDIT_ED2K_VALUE], lACW * 69, wHeight - lACH * (resultGroupY - offset), lACW * 42, lACH, FALSE);
+    }
+    
+    for(int i=HASH_TYPE_MD5;i<NUM_HASH_TYPES;i++) {
+        if(i==2) continue; // skip ed2k, handled above
         ShowWindow(arrHwnd[ID_STATIC_CRC_VALUE + i],g_program_options.bCalcPerDefault[i]);
         ShowWindow(arrHwnd[ID_EDIT_CRC_VALUE + i],g_program_options.bCalcPerDefault[i]);
         if(g_program_options.bCalcPerDefault[i]) {
