@@ -364,7 +364,7 @@ BOOL GetHashFromFilename(FILEINFO *fileInfo)
                     int i;
 					for(i = 0; iIndex - i >= 0 && IsLegalHexSymbol(szFileWithoutPath[iIndex-i]); ++i)
 						uiFoundHexSymbols++;
-					iIndex -= i;
+					iIndex -= i - 1;
 				}
 			}
 		} else {
@@ -386,6 +386,8 @@ BOOL GetHashFromFilename(FILEINFO *fileInfo)
                     }
                     if(!valid)
                         uiFoundHexSymbols = 0;
+                    else
+                        i -= 1; // leave delim, might be the start of the next possible match
 
 				    iIndex -= i;
 				}
@@ -407,7 +409,7 @@ BOOL GetHashFromFilename(FILEINFO *fileInfo)
 	if(!bFound)
 		return FALSE;
 	
-    szHashStart = szFileWithoutPath + iIndex + 1;
+    szHashStart = szFileWithoutPath + iIndex;
 
     fileInfo->hashInfo[iHashIndex].dwFound = HASH_FOUND_FILENAME;
     if(iHashIndex == HASH_TYPE_CRC32) {
