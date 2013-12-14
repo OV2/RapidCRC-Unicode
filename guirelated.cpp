@@ -413,7 +413,7 @@ void RemoveItems(CONST HWND arrHwnd[ID_NUM_WINDOWS],list<FILEINFO*> *finalList)
 	}
 
 	doneList = SyncQueue.getDoneList();
-    SyncQueue.dwCountTotal -= finalList->size();
+    SyncQueue.dwCountTotal -= (DWORD)finalList->size();
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 		pFileinfo = (*it);
 		pList = pFileinfo->parentList;

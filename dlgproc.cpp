@@ -61,6 +61,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static DWORD dwSortStatus;
 	static SHOWRESULT_PARAMS showresult_params = {NULL, FALSE, FALSE};
 	static HMENU popupMenu, headerPopupMenu, hashInNamePopup;
+    static std::list<UINT> fileThreadIds;
 	lFILEINFO *fileList;
 
 	switch (message)
@@ -180,10 +181,15 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		return 0;
 	case WM_THREAD_FILEINFO_START:
 		fileList = (lFILEINFO *)wParam;
-		StartFileInfoThread(arrHwnd,&showresult_params,fileList);
+        fileThreadIds.push_back(StartFileInfoThread(arrHwnd,&showresult_params,fileList));
 		return TRUE;
 	case WM_THREAD_FILEINFO_DONE:
-
+        for(std::list<UINT>::iterator it = fileThreadIds.begin(); it != fileThreadIds.end(); it++) {
+            if((*it) == wParam) {
+                fileThreadIds.erase(it);
+                break;
+            }
+        }
 		// go on with the CRC Calculation
 	case WM_START_THREAD_CALC:
 		//only start thread if not currently running
@@ -381,6 +387,11 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				ResumeThread(hThread);
 			WaitForSingleObject(hThread,4000);
 		}
+        // if file info threads are still running simply kill them to avoid access violations
+        for(std::list<UINT>::iterator it = fileThreadIds.begin(); it != fileThreadIds.end(); it++) {
+            if(HANDLE thread = OpenThread(THREAD_TERMINATE, FALSE, (*it)))
+                TerminateThread(thread, 1);
+        }
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);

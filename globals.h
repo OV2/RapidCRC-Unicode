@@ -494,7 +494,7 @@ CONST TCHAR * GetFilenameWithoutPathPointer(CONST TCHAR szFilenameLong[MAX_PATH_
 BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR * szExtension);
 BOOL GetHashFromFilename(FILEINFO *fileInfo);
 VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params,lFILEINFO *fileList);
-VOID ProcessDirectories(lFILEINFO *fileList, BOOL bOnlyHashFiles = FALSE);
+VOID ProcessDirectories(lFILEINFO *fileList, CONST HWND hwndStatus, BOOL bOnlyHashFiles = FALSE);
 list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::iterator it, BOOL bOnlyHashFiles);
 VOID ProcessFileProperties(lFILEINFO *fileList);
 VOID MakePathsAbsolute(lFILEINFO *fileList);
@@ -532,7 +532,7 @@ DWORD WINAPI ThreadProc_Sha256Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Sha512Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam);
 DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam);
-void StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_params, lFILEINFO * fileList);
+UINT StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_params, lFILEINFO * fileList);
 void StartAcceptPipeThread(CONST HWND *arrHwnd, lFILEINFO * fileList);
 
 #endif

@@ -351,7 +351,7 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
     if(fileList->uiCmdOpts==CMD_ALLHASHES)
     {
         MakePathsAbsolute(fileList);
-        ProcessDirectories(fileList,TRUE);
+        ProcessDirectories(fileList, arrHwnd[ID_EDIT_STATUS], TRUE);
         for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
             lFILEINFO *pHashList = new lFILEINFO;
             pHashList->fInfos.push_back((*it));
@@ -370,7 +370,7 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 	}
 
 	// tell Window Proc that we are done...
-	PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, 0, 0);
+	PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_FILEINFO_DONE, GetCurrentThreadId(), 0);
 
 	LeaveCriticalSection(&thread_fileinfo_crit);
 
@@ -387,7 +387,7 @@ void StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_par
 Notes:
 Helper function to start a fileinfo thread
 *****************************************************************************/
-void StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_params, lFILEINFO * fileList) {
+UINT StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_params, lFILEINFO * fileList) {
 	HANDLE hThread;
 	UINT uiThreadID;
 	THREAD_PARAMS_FILEINFO *thread_params_fileinfo = new THREAD_PARAMS_FILEINFO;
@@ -396,6 +396,7 @@ void StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_par
 	thread_params_fileinfo->fileList = fileList;
 	hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc_FileInfo, thread_params_fileinfo, 0, &uiThreadID);
 	CloseHandle(hThread);
+    return uiThreadID;
 }
 
 /*****************************************************************************

@@ -371,7 +371,7 @@ void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
 
     UINT    uiHashLengthChars = g_hash_lengths[iHashIndex] * 2;
 
-    if(lstrlen(szLastBrace) < uiHashLengthChars)
+    if(lstrlen(szLastBrace) < (int)uiHashLengthChars)
         return;
 
     FILEINFO *fileInfo = &fileinfoTmp;

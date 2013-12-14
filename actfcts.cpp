@@ -492,7 +492,7 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
 	FILECREATION_OPTIONS fco;
 
 	fco.uiMode = uiMode;
-	fco.uiNumSelected = finalList->size();
+	fco.uiNumSelected = (UINT)finalList->size();
 
     fco.uiCreateFileMode = g_program_options.uiCreateFileMode[uiMode];
 	StringCchCopy(fco.szFilename, MAX_PATH_EX, g_program_options.szFilename[uiMode]);
@@ -562,7 +562,7 @@ static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *
             }
 
             if(g_program_options.bIncludeFileComments) {
-                dwResult = WriteFileComment(hFile, pFileinfo, GetFilenameWithoutPathPointer(pFileinfo->szFilenameShort) - pFileinfo->szFilename);
+                dwResult = WriteFileComment(hFile, pFileinfo, (UINT)(GetFilenameWithoutPathPointer(pFileinfo->szFilenameShort) - pFileinfo->szFilename));
                 if(dwResult != NOERROR){
                     CloseHandle(hFile);
                     return dwResult;
@@ -633,7 +633,7 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
                     do
                     {
                         if((*commentIt)->dwError == NO_ERROR) {
-                            WriteFileComment(hFile, (*commentIt), GetFilenameWithoutPathPointer((*commentIt)->szFilenameShort) - (*commentIt)->szFilename);
+                            WriteFileComment(hFile, (*commentIt), (UINT)(GetFilenameWithoutPathPointer((*commentIt)->szFilenameShort) - (*commentIt)->szFilename));
                         }
                         commentIt++;
                         if(commentIt == finalList->end())

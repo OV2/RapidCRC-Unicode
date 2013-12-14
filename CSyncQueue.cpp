@@ -38,7 +38,7 @@ void CSyncQueue::deleteFromListById(int i)
             for(itr = (*it)->fInfos.begin();itr!=(*it)->fInfos.end();itr++) {
                 adjustErrorCounters(&(*itr),-1);
             }
-            dwCountTotal -= (*it)->fInfos.size();
+            dwCountTotal -= (DWORD)(*it)->fInfos.size();
             doneList.erase(it);
 			break;
 		}
@@ -53,7 +53,7 @@ void CSyncQueue::deleteFromList(lFILEINFO *rList)
     for(it = rList->fInfos.begin();it!=rList->fInfos.end();it++) {
         adjustErrorCounters(&(*it),-1);
     }
-    dwCountTotal -= rList->fInfos.size();
+    dwCountTotal -= (DWORD)rList->fInfos.size();
 	LeaveCriticalSection(&this->dList);
 }
 
@@ -63,7 +63,7 @@ void CSyncQueue::pushQueue(lFILEINFO *fInfoGroup)
 	workQueue.push(fInfoGroup);
 	qwQueueFilesizeSum += fInfoGroup->qwFilesizeSum;
 	qwNewFileAcc += fInfoGroup->qwFilesizeSum;
-    dwCountTotal += fInfoGroup->fInfos.size();
+    dwCountTotal += (DWORD)fInfoGroup->fInfos.size();
 	LeaveCriticalSection(&this->wQueue);
 }
 

@@ -469,7 +469,7 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
             EnterHashMode(fileList, detectedMode);
         } else {
             SetBasePath(fileList);
-	        ProcessDirectories(fileList);
+	        ProcessDirectories(fileList, arrHwnd[ID_EDIT_STATUS]);
         }
     }
 
@@ -521,24 +521,30 @@ returns nothing
 Notes:
 - essentially gives some additional code to call ExpandDirectory correctly
 *****************************************************************************/
-VOID ProcessDirectories(lFILEINFO *fileList, BOOL bOnlyHashFiles)
+VOID ProcessDirectories(lFILEINFO *fileList, CONST HWND hwndStatus, BOOL bOnlyHashFiles)
 {
 	TCHAR szCurrentPath[MAX_PATH_EX];
+    TCHAR szStatusDisplay[MAX_PATH_EX];
 
 	// save org. path
 	GetCurrentDirectory(MAX_PATH_EX, szCurrentPath);
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();) {
-		if(IsThisADirectory((*it).szFilename))
-			it = ExpandDirectory(&fileList->fInfos,it, bOnlyHashFiles);
-		else {
+        if(IsThisADirectory((*it).szFilename)) {
+            if(SyncQueue.bThreadDone) {
+                StringCchPrintf(szStatusDisplay, MAX_PATH_EX, TEXT("Getting Fileinfo... %s"), (*it).szFilename);
+		        SetWindowText(hwndStatus, szStatusDisplay);
+	        }
+			it = ExpandDirectory(&fileList->fInfos, it, bOnlyHashFiles);
+        } else {
             // check to see if the current file-extension matches our exclude string
             // if so, we remove it from the list
 			if(bOnlyHashFiles && !CheckHashFileMatch((*it).szFilename) ||
                 !bOnlyHashFiles && CheckExcludeStringMatch((*it).szFilename)) {
 				it = fileList->fInfos.erase(it);
 			}
-			else it++;
+			else
+                it++;
 		}
 	}
 
@@ -759,10 +765,10 @@ UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
 		StringCchLength(firstBasePathPointer,MAX_PATH_EX,&countSameChars);
 	}
 
-	while( (countSameChars > 0) && (fileInfoList->front()->szFilename[countSameChars - 1] != TEXT('\\')) )
+	while( (countSameChars > 0) && (fileInfoList->front()->szFilename[(int)countSameChars - 1] != TEXT('\\')) )
 		countSameChars--;
 
-	return countSameChars;
+	return (UINT)countSameChars;
 }
 
 /*****************************************************************************
