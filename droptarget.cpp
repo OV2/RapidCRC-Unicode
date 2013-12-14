@@ -216,12 +216,15 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject)
 	lFILEINFO *pFInfoList;
 	FILEINFO fileinfoTmp = {0};
     TCHAR szFilenameTemp[MAX_PATH_EX];
+    HRESULT hr;
 
 	// See if the dataobject contains any files stored as a HGLOBAL
-	if(pDataObject->QueryGetData(&fmtetc) == S_OK)
+    hr = pDataObject->QueryGetData(&fmtetc);
+	if(hr == S_OK)
 	{
 		// Yippie! the data is there, so go get it!
-		if(pDataObject->GetData(&fmtetc, &stgmed) == S_OK)
+        hr = pDataObject->GetData(&fmtetc, &stgmed);
+		if(hr == S_OK)
 		{
 			// we asked for the data as a HGLOBAL, so access it appropriately
 			data = GlobalLock(stgmed.hGlobal);
@@ -246,8 +249,10 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject)
 			ReleaseStgMedium(&stgmed);
 
 			PostMessage(arrHwnd[ID_MAIN_WND],WM_THREAD_FILEINFO_START,(WPARAM)pFInfoList,NULL);
-		}
-	}
+		} else
+            ShowErrorMsg(arrHwnd[ID_MAIN_WND], hr);
+	} else
+        ShowErrorMsg(arrHwnd[ID_MAIN_WND], hr);
 }
 
 VOID RegisterDropWindow(HWND arrHwnd[ID_NUM_WINDOWS], IDropTarget **ppDropTarget)

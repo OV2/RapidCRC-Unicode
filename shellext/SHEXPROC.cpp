@@ -36,10 +36,12 @@ DWORD PutFilenamesIntoStringArray(LPDATAOBJECT pDataObj,
 	STGMEDIUM   medium;
 	FORMATETC   fe = {CF_HDROP, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
 	HDROP		hDrop;
+    HRESULT     hr;
 
 	// Get an HDROP handle.
-	if( FAILED(pDataObj->GetData(&fe, &medium))){
-		ShowErrorMsg(NULL, GetLastError(), TEXT(""));
+    hr = pDataObj->GetData(&fe, &medium);
+	if( hr != S_OK ){
+		ShowErrorMsg(NULL, hr, TEXT(""));
 		return 0;
 	}
 	hDrop = (HDROP) GlobalLock ( medium.hGlobal );
@@ -71,7 +73,7 @@ DWORD PutFilenamesIntoStringArray(LPDATAOBJECT pDataObj,
 	pmy_proc_params_shex_stringarray->uCount			= uCount;
 	pmy_proc_params_shex_stringarray->FileNameArray		= FileNameArray;
 
-	return 0;
+	return uCount;
 }
 
 DWORD MainProgramCommunicationProc(PMY_PROC_PARAMS_SHEX_STRINGARRAY pmy_proc_params_shex_stringarray,TCHAR *szCommand)

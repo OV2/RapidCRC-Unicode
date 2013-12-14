@@ -693,9 +693,10 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 
 void CShellExt::doRapidCrcOpen(TCHAR *command) {
 	MY_PROC_PARAMS_SHEX_STRINGARRAY my_proc_params_shex_stringarray;
-	PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray);
-	MainProgramCommunicationProc( & my_proc_params_shex_stringarray, command);
-	for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
-		free(my_proc_params_shex_stringarray.FileNameArray[i]);
-	free(my_proc_params_shex_stringarray.FileNameArray);
+    if(PutFilenamesIntoStringArray(m_pDataObj, & my_proc_params_shex_stringarray)) {
+	    MainProgramCommunicationProc( & my_proc_params_shex_stringarray, command);
+	    for(UINT i = 0; i < my_proc_params_shex_stringarray.uCount; ++i)
+		    free(my_proc_params_shex_stringarray.FileNameArray[i]);
+	    free(my_proc_params_shex_stringarray.FileNameArray);
+    }
 }
