@@ -44,6 +44,7 @@
 #define IDC_CHECK_SHA256_DEFAULT        1038
 #define IDC_CHECK_SHA512_DEFAULT        1039
 #define IDC_RADIO_ONE_PER_FILE          1040
+#define IDC_CHECK_HIDE_VERIFIED         1040
 #define IDC_RADIO_ONE_PER_DIR           1041
 #define IDC_RADIO_ONE_FILE              1042
 #define IDC_USE_DEFAULT_CP              1043

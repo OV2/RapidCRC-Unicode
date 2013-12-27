@@ -441,7 +441,7 @@ Notes:
 void HideVerifiedItems(CONST HWND hListView) {
     LVITEM lvitem={0};
 
-    g_pstatus.bHideVerified = true;
+    g_program_options.bHideVerified = true;
     lvitem.mask = LVIF_PARAM;
 	for(int i=ListView_GetItemCount(hListView)-1;i>=0;i--) {
 		lvitem.iItem = i;
@@ -462,7 +462,7 @@ Notes:
 void RestoreVerifiedItems(CONST HWND arrHwnd[ID_NUM_WINDOWS]) {
     list<lFILEINFO *> *doneList;
 
-    g_pstatus.bHideVerified = false;
+    g_program_options.bHideVerified = false;
     ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
     doneList = SyncQueue.getDoneList();
     for(list<lFILEINFO *>::iterator it=doneList->begin();it!=doneList->end();it++) {
@@ -510,7 +510,7 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 	EnableMenuItem(popup,IDM_CLEAR_LIST,MF_BYCOMMAND | (SyncQueue.bThreadDone ? MF_ENABLED : MF_GRAYED));
 	EnableMenuItem(popup,IDM_REMOVE_ITEMS,MF_BYCOMMAND | ((SyncQueue.bThreadDone && uiSelected>0) ? MF_ENABLED : MF_GRAYED));
     EnableMenuItem(popup,IDM_HIDE_VERIFIED,MF_BYCOMMAND | (SyncQueue.bThreadDone ? MF_ENABLED : MF_GRAYED));
-    CheckMenuItem(popup,IDM_HIDE_VERIFIED,MF_BYCOMMAND | (g_pstatus.bHideVerified ? MF_CHECKED : MF_UNCHECKED));
+    CheckMenuItem(popup,IDM_HIDE_VERIFIED,MF_BYCOMMAND | (g_program_options.bHideVerified ? MF_CHECKED : MF_UNCHECKED));
 
     for(int i=0;i<NUM_HASH_TYPES;i++)
 	    EnableMenuItem(popup,IDM_COPY_CRC + i,MF_BYCOMMAND | (bCalculatedForSelected[i] ? MF_ENABLED : MF_GRAYED));
@@ -531,7 +531,7 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 									break;
 		case IDM_REMOVE_ITEMS:		RemoveItems(arrHwnd,&finalList);
 									break;
-        case IDM_HIDE_VERIFIED:     if(g_pstatus.bHideVerified)
+        case IDM_HIDE_VERIFIED:     if(g_program_options.bHideVerified)
                                         RestoreVerifiedItems(arrHwnd);
                                     else
                                         HideVerifiedItems(arrHwnd[ID_LISTVIEW]);
@@ -1181,6 +1181,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
     CheckDlgButton(hDlg, IDC_CHECK_HASHTYPE_FROM_FILENAME, pprogram_options->bHashtypeFromFilename ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_ALLOW_CRC_ANYWHERE, pprogram_options->bAllowCrcAnywhere ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(hDlg, IDC_CHECK_INCLUDE_COMMENTS, pprogram_options->bIncludeFileComments ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg, IDC_CHECK_HIDE_VERIFIED, pprogram_options->bHideVerified ? BST_CHECKED : BST_UNCHECKED);
 
     dlgItem = GetDlgItem(hDlg,IDC_UNICODE_TYPE);
     for(int i=0;i<ComboBox_GetCount(dlgItem);i++) {

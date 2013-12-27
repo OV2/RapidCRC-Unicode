@@ -613,6 +613,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
         StringCchPrintf(pprogram_options->szFilename[i],MAX_PATH,TEXT("checksum.%s"),g_hash_ext[i]);
     }
     pprogram_options->bHashtypeFromFilename = true;
+    pprogram_options->bHideVerified = false;
 	return;
 }
 

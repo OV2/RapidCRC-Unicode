@@ -254,7 +254,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
             curFileInfo.status = InfoToIntValue(&curFileInfo);
 			SetFileInfoStrings(&curFileInfo,fileList);
 
-            if(!g_pstatus.bHideVerified || curFileInfo.status != STATUS_OK) {
+            if(!g_program_options.bHideVerified || curFileInfo.status != STATUS_OK) {
 			    InsertItemIntoList(arrHwnd[ID_LISTVIEW], &curFileInfo,fileList);
             }
 

@@ -381,12 +381,12 @@ typedef struct{
     UINT			uiCreateFileMode[10];
     TCHAR			szFilename[10][MAX_PATH];
     BOOL            bHashtypeFromFilename;
+    BOOL            bHideVerified;
 }PROGRAM_OPTIONS;
 
 typedef struct{
 	BOOL bHaveComCtrlv6;							//are the common controls v6 available? (os>=winxp)
     BOOL bIsVista;
-    BOOL bHideVerified;
 }PROGRAM_STATUS;
 
 typedef struct{
