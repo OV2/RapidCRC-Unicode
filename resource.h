@@ -47,6 +47,7 @@
 #define IDC_RADIO_ONE_PER_DIR           1041
 #define IDC_RADIO_ONE_FILE              1042
 #define IDC_USE_DEFAULT_CP              1043
+#define IDC_RADIO_ONE_FILE_DIR_NAME     1043
 #define IDC_STATIC_EXPLANATION          1044
 #define IDC_CRC_DELIM_LIST              1045
 #define IDC_GRPBOX_CREATE_FILE          1046

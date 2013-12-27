@@ -26,7 +26,7 @@
 
 static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *finalList);
 static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode, CONST TCHAR szChkSumFilename[MAX_PATH_EX], list<FILEINFO*> *finalList);
-static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList);
+static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename);
 static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult);
 static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode);
 
@@ -512,7 +512,10 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
 			dwResult = CreateChecksumFiles_OnePerDir(uiMode, fco.szFilename, finalList);
 			break;
 		case CREATE_ONE_FILE:
-			dwResult = CreateChecksumFiles_OneFile(arrHwnd, uiMode, finalList);
+			dwResult = CreateChecksumFiles_OneFile(arrHwnd, uiMode, finalList, TRUE);
+			break;
+        case CREATE_ONE_FILE_DIR_NAME:
+			dwResult = CreateChecksumFiles_OneFile(arrHwnd, uiMode, finalList, FALSE);
 			break;
 	}
 	
@@ -659,6 +662,65 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 	return NOERROR;
 }
 
+static BOOL GenerateFilename_OneFile(CONST HWND owner, CONST TCHAR *szDefault, UINT uiMode, TCHAR szFileOut[MAX_PATH_EX], BOOL askForFilename)
+{
+    TCHAR szCurrentPath[MAX_PATH_EX] = TEXT("");
+	OPENFILENAME ofn;
+    size_t strLen;
+
+    StringCchCopy(szCurrentPath, MAX_PATH_EX, szDefault);
+    StringCchLength(szCurrentPath, MAX_PATH_EX, &strLen);
+    if(strLen > 4) { // if < 4 no extended path - something went wrong
+        // get rid of \\?\(UNC)
+        if(strLen > 6 && !_tcsncmp(szCurrentPath + 4, TEXT("UNC"), 3)) {
+            szCurrentPath[0] = TEXT('\\');
+            StringCchCopy(szCurrentPath + 1, MAX_PATH_EX, szDefault + 7);
+            strLen -= 6;
+        } else {
+	        StringCchCopy(szCurrentPath, MAX_PATH_EX, szDefault + 4);
+            strLen -= 4;
+        }
+
+        StringCchCopy(szFileOut, MAX_PATH_EX, szCurrentPath);
+        szCurrentPath[strLen - 1] = TEXT('\0'); // get rid of last backslash for GetFilenameWithoutPathPointer
+        StringCchCat(szFileOut, MAX_PATH_EX, GetFilenameWithoutPathPointer(szCurrentPath));
+        if(szCurrentPath[strLen - 2] == TEXT(':'))
+            szFileOut[4] = TEXT('\0');
+    }
+
+    TCHAR *hashExt = g_hash_ext[uiMode];
+
+    if(askForFilename) {
+	    TCHAR msgString[MAX_PATH_EX];
+	    TCHAR filterString[MAX_PATH_EX];
+
+	    StringCchPrintf(filterString,MAX_PATH_EX,TEXT(".%s files%c*.%s%cAll files%c*.*%c"),hashExt,TEXT('\0'),hashExt,TEXT('\0'),TEXT('\0'),TEXT('\0'));
+	    StringCchPrintf(msgString,MAX_PATH_EX,TEXT("Please choose a filename for the .%s file"),hashExt);
+
+	    ZeroMemory(& ofn, sizeof (OPENFILENAME));
+	    ofn.lStructSize       = sizeof (OPENFILENAME);
+	    ofn.hwndOwner         = owner;
+	    ofn.lpstrFilter       = filterString;
+	    ofn.lpstrFile         = szFileOut;
+	    ofn.nMaxFile          = MAX_PATH_EX;
+        ofn.lpstrInitialDir   = szCurrentPath;
+	    ofn.lpstrTitle        = msgString;
+	    ofn.Flags             = OFN_OVERWRITEPROMPT | OFN_EXPLORER;
+	    ofn.lpstrDefExt       = hashExt;
+
+	    GetCurrentDirectory(MAX_PATH_EX, szCurrentPath);
+	    if(! GetSaveFileName(& ofn) ){
+		    SetCurrentDirectory(szCurrentPath);
+		    return FALSE;
+	    }
+	    SetCurrentDirectory(szCurrentPath);
+    } else {
+        StringCchCat(szFileOut, MAX_PATH_EX, TEXT("."));
+        StringCchCat(szFileOut, MAX_PATH_EX, hashExt);
+    }
+    return TRUE;
+}
+
 /*****************************************************************************
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList)
 	arrHwnd			: (IN) array with window handles
@@ -671,61 +733,15 @@ returns NOERROR or GetLastError()
 Notes:
 - handles the situation if the user want one sfv/md5 file for whole directory tree
 *****************************************************************************/
-static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList)
+static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename)
 {
-
-	TCHAR szCurrentPath[MAX_PATH_EX] = TEXT("");
-	TCHAR szFileOut[MAX_PATH_EX] = TEXT("");
 	HANDLE hFile;
-	UINT uiSameCharCount;
-	OPENFILENAME ofn;
+    TCHAR szFileOut[MAX_PATH_EX];
+    UINT uiSameCharCount;
 	DWORD dwResult;
-    size_t strLen;
 
-    StringCchCopy(szCurrentPath, MAX_PATH_EX, finalList->front()->parentList->g_szBasePath);
-    StringCchLength(szCurrentPath, MAX_PATH_EX, &strLen);
-    if(strLen > 4) { // if < 4 no extended path - something went wrong
-        // get rid of \\?\(UNC)
-        if(strLen > 6 && !_tcsncmp(szCurrentPath + 4, TEXT("UNC"), 3)) {
-            szCurrentPath[0] = TEXT('\\');
-            StringCchCopy(szCurrentPath + 1, MAX_PATH_EX, finalList->front()->parentList->g_szBasePath + 7);
-            strLen -= 6;
-        } else {
-	        StringCchCopy(szCurrentPath, MAX_PATH_EX, finalList->front()->parentList->g_szBasePath + 4);
-            strLen -= 4;
-        }
-
-        StringCchCopy(szFileOut, MAX_PATH_EX, szCurrentPath);
-        szCurrentPath[strLen - 1] = TEXT('\0'); // get rid of last backslash for GetFilenameWithoutPathPointer
-        StringCchCat(szFileOut, MAX_PATH_EX, GetFilenameWithoutPathPointer(szCurrentPath));
-        if(szCurrentPath[strLen - 2] == TEXT(':'))
-            szFileOut[4] = TEXT('\0');
-    }
-
-	TCHAR *hashExt = g_hash_ext[uiMode];
-	TCHAR msgString[MAX_PATH_EX];
-	TCHAR filterString[MAX_PATH_EX];
-
-	StringCchPrintf(filterString,MAX_PATH_EX,TEXT(".%s files%c*.%s%cAll files%c*.*%c"),hashExt,TEXT('\0'),hashExt,TEXT('\0'),TEXT('\0'),TEXT('\0'));
-	StringCchPrintf(msgString,MAX_PATH_EX,TEXT("Please choose a filename for the .%s file"),hashExt);
-
-	ZeroMemory(& ofn, sizeof (OPENFILENAME));
-	ofn.lStructSize       = sizeof (OPENFILENAME) ;
-	ofn.hwndOwner         = arrHwnd[ID_MAIN_WND] ;
-	ofn.lpstrFilter       = filterString ;
-	ofn.lpstrFile         = szFileOut ;
-	ofn.nMaxFile          = MAX_PATH_EX ;
-    ofn.lpstrInitialDir   = szCurrentPath;
-	ofn.lpstrTitle        = msgString;
-	ofn.Flags             = OFN_OVERWRITEPROMPT | OFN_EXPLORER ;
-	ofn.lpstrDefExt       = hashExt;
-
-	GetCurrentDirectory(MAX_PATH_EX, szCurrentPath);
-	if(! GetSaveFileName(& ofn) ){
-		SetCurrentDirectory(szCurrentPath);
-		return NOERROR;
-	}
-	SetCurrentDirectory(szCurrentPath);
+    if(!GenerateFilename_OneFile(arrHwnd[ID_MAIN_WND], finalList->front()->parentList->g_szBasePath, uiMode, szFileOut, askForFilename))
+        return NOERROR;
 
 	hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 

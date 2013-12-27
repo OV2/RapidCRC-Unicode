@@ -148,9 +148,10 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define HASH_FOUND_STREAM	    3
 
 // these are the different possibilities for how to create SFV and MD5 files
-#define CREATE_ONE_PER_FILE		0
-#define CREATE_ONE_PER_DIR		1
-#define CREATE_ONE_FILE			2
+#define CREATE_ONE_PER_FILE		    0
+#define CREATE_ONE_PER_DIR		    1
+#define CREATE_ONE_FILE			    2
+#define CREATE_ONE_FILE_DIR_NAME    3
 
 // this is a constant to specify the used version of the program options struct
 #define PROG_OPTIONS_VERSION	1

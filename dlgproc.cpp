@@ -799,6 +799,10 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 			hashExt,  pfco->uiMode == MODE_MD5 ? TEXT(" (potentially not md5sum compatible *)") : TEXT("") );
 		SetWindowText(GetDlgItem(hDlg, IDC_RADIO_ONE_FILE), szString);
 
+        StringCchPrintf(szString, MAX_PATH_EX, TEXT("Create one .%s file for all files with automatic name%s"),
+			hashExt,  pfco->uiMode == MODE_MD5 ? TEXT(" (*)") : TEXT("") );
+        SetWindowText(GetDlgItem(hDlg, IDC_RADIO_ONE_FILE_DIR_NAME), szString);
+
 		SetWindowText(GetDlgItem(hDlg, IDC_STATIC_EXPLANATION),
 			pfco->uiMode == MODE_MD5 ? TEXT("* : md5sum compatible .MD5 files cannot hold directory information") : TEXT(""));
 
@@ -811,6 +815,9 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 			break;
 		case CREATE_ONE_FILE:
 			SendDlgItemMessage(hDlg, IDC_RADIO_ONE_FILE, BM_CLICK, 0, 0);
+			break;
+        case CREATE_ONE_FILE_DIR_NAME:
+            SendDlgItemMessage(hDlg, IDC_RADIO_ONE_FILE_DIR_NAME, BM_CLICK, 0, 0);
 			break;
 		}
 
@@ -839,6 +846,13 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 				return TRUE;
 			}
 			break;
+        case IDC_RADIO_ONE_FILE_DIR_NAME:
+			if(HIWORD(wParam) == BN_CLICKED){
+				SetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_CHECKSUM), TEXT("<You are asked in the next step>"));
+				EnableWindow(GetDlgItem(hDlg, IDC_EDIT_FILENAME_CHECKSUM), FALSE);
+				return TRUE;
+			}
+			break;
 		case IDC_EDIT_FILENAME_CHECKSUM:
 			if(HIWORD(wParam) == EN_CHANGE){
 				if(IsDlgButtonChecked(hDlg, IDC_RADIO_ONE_PER_DIR) == BST_CHECKED){
@@ -856,6 +870,8 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 			if(HIWORD(wParam) == BN_CLICKED){
 				if(IsDlgButtonChecked(hDlg, IDC_RADIO_ONE_PER_FILE) == BST_CHECKED)
 					pfco->uiCreateFileMode = CREATE_ONE_PER_FILE;
+                else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ONE_FILE_DIR_NAME) == BST_CHECKED)
+					pfco->uiCreateFileMode = CREATE_ONE_FILE_DIR_NAME;
 				else if(IsDlgButtonChecked(hDlg, IDC_RADIO_ONE_PER_DIR) == BST_CHECKED){
 					pfco->uiCreateFileMode = CREATE_ONE_PER_DIR;
 					GetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_CHECKSUM), pfco->szFilename, MAX_PATH_EX);
