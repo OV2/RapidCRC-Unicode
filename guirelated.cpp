@@ -463,11 +463,11 @@ void RestoreVerifiedItems(CONST HWND arrHwnd[ID_NUM_WINDOWS]) {
     list<lFILEINFO *> *doneList;
 
     g_program_options.bHideVerified = false;
-    ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
     doneList = SyncQueue.getDoneList();
     for(list<lFILEINFO *>::iterator it=doneList->begin();it!=doneList->end();it++) {
         for(list<FILEINFO>::iterator fit=(*it)->fInfos.begin();fit!=(*it)->fInfos.end();fit++) {
-            InsertItemIntoList(arrHwnd[ID_LISTVIEW],&(*fit),(*fit).parentList);
+            if(fit->status == STATUS_OK)
+                InsertItemIntoList(arrHwnd[ID_LISTVIEW],&(*fit),(*fit).parentList);
         }
     }
     SyncQueue.releaseDoneList();

@@ -29,6 +29,7 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode, CONST TCHAR szChkS
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename);
 static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult);
 static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode);
+void UpdateFileInfoStatus(FILEINFO *pFileInfo, const HWND hwndListView);
 
 /*****************************************************************************
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
@@ -93,8 +94,7 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<F
 					if(SaveCRCIntoStream(pFileinfo->szFilename,CRCI(pFileinfo).r.dwCrc32Result)){
 						CRCI(pFileinfo).f.dwCrc32Found = CRCI(pFileinfo).r.dwCrc32Result;
 						CRCI(pFileinfo).dwFound = HASH_FOUND_STREAM;
-                        pFileinfo->status = InfoToIntValue(pFileinfo);
-                        SetFileInfoStrings(pFileinfo, pFileinfo->parentList);
+                        UpdateFileInfoStatus(pFileinfo, arrHwnd[ID_LISTVIEW]);
 					}
 					else{
 						pFileinfo->dwError = GetLastError();
@@ -211,8 +211,7 @@ VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], BOOL noPrompt, l
 						// this updates pFileinfo->szFilenameShort automatically
                         memcpy((BYTE *)&pFileinfo->hashInfo[uiHashType].f, (BYTE *)&pFileinfo->hashInfo[uiHashType].r, g_hash_lengths[uiHashType]);
 						pFileinfo->hashInfo[uiHashType].dwFound = HASH_FOUND_FILENAME;
-                        pFileinfo->status = InfoToIntValue(pFileinfo);
-                        SetFileInfoStrings(pFileinfo, pFileinfo->parentList);
+                        UpdateFileInfoStatus(pFileinfo, arrHwnd[ID_LISTVIEW]);
 					}
 					else{
 						pFileinfo->dwError = GetLastError();
@@ -892,4 +891,19 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 		PostMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL, NULL);
 	}
 	return needRehash;
+}
+
+void UpdateFileInfoStatus(FILEINFO *pFileinfo, const HWND hwndListView)
+{
+    pFileinfo->status = InfoToIntValue(pFileinfo);
+    SetFileInfoStrings(pFileinfo, pFileinfo->parentList);
+    if(g_program_options.bHideVerified && pFileinfo->status == STATUS_OK) {
+        LVFINDINFO findInfo;
+        ZeroMemory(&findInfo, sizeof(LVFINDINFO));
+        findInfo.flags = LVFI_PARAM;
+        findInfo.lParam = (LPARAM)pFileinfo;
+        int pos = ListView_FindItem(hwndListView, -1, &findInfo);
+        if(pos >= 0)
+            ListView_DeleteItem(hwndListView, pos);
+    }
 }
