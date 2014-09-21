@@ -96,8 +96,8 @@ STDAPI DllRegisterServer()
 
 	GetModuleFileName(g_hmodThisDll,szFileName,MAX_PATH);
 
-	StringCchPrintf(szRegKey,255,TEXT("CLSID\\%s"),szCLSID);
-	if(regResult=RegCreateKeyEx(HKEY_CLASSES_ROOT, szRegKey,
+	StringCchPrintf(szRegKey,255,TEXT("Software\\Classes\\CLSID\\%s"),szCLSID);
+	if(regResult=RegCreateKeyEx(HKEY_LOCAL_MACHINE, szRegKey,
 					0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE , NULL , &hKey, &lpdwRegResult ) != ERROR_SUCCESS){
 		ShowErrorMsg(NULL, regResult, TEXT("DllRegisterServer failed on CLSID_ShellExtension"));
 		RegCloseKey(hKey);
@@ -109,8 +109,8 @@ STDAPI DllRegisterServer()
 		return S_FALSE;
 	}
 	RegCloseKey(hKey);
-	StringCchPrintf(szRegKey,255,TEXT("CLSID\\%s\\InprocServer32"),szCLSID);
-	if(regResult=RegCreateKeyEx(HKEY_CLASSES_ROOT, szRegKey,
+	StringCchPrintf(szRegKey,255,TEXT("Software\\Classes\\CLSID\\%s\\InprocServer32"),szCLSID);
+	if(regResult=RegCreateKeyEx(HKEY_LOCAL_MACHINE, szRegKey,
 					0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE , NULL, &hKey, &lpdwRegResult ) != ERROR_SUCCESS){
 		ShowErrorMsg(NULL, regResult, TEXT("DllRegisterServer failed on InprocServer32"));
 		RegCloseKey(hKey);
@@ -127,8 +127,8 @@ STDAPI DllRegisterServer()
 		return S_FALSE;
 	}
 	RegCloseKey(hKey);
-	StringCchPrintf(szRegKey,255,TEXT("*\\shellex\\ContextMenuHandlers\\%s\\"),szDescription);
-	if(regResult=RegCreateKeyEx(HKEY_CLASSES_ROOT, szRegKey,
+	StringCchPrintf(szRegKey,255,TEXT("Software\\Classes\\*\\shellex\\ContextMenuHandlers\\%s\\"),szDescription);
+	if(regResult=RegCreateKeyEx(HKEY_LOCAL_MACHINE, szRegKey,
 					0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE , NULL, &hKey, &lpdwRegResult ) != ERROR_SUCCESS){
 		ShowErrorMsg(NULL, regResult, TEXT("DllRegisterServer failed on *\\shellex\\ContextMenuHandlers"));
 		RegCloseKey(hKey);
@@ -140,8 +140,8 @@ STDAPI DllRegisterServer()
 		return S_FALSE;
 	}
 	RegCloseKey(hKey);
-	StringCchPrintf(szRegKey,255,TEXT("Directory\\shellex\\ContextMenuHandlers\\%s\\"),szDescription);
-	if(regResult=RegCreateKeyEx(HKEY_CLASSES_ROOT, szRegKey,
+	StringCchPrintf(szRegKey,255,TEXT("Software\\Classes\\Directory\\shellex\\ContextMenuHandlers\\%s\\"),szDescription);
+	if(regResult=RegCreateKeyEx(HKEY_LOCAL_MACHINE, szRegKey,
 					0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE , NULL, &hKey, &lpdwRegResult ) != ERROR_SUCCESS){
 		ShowErrorMsg(NULL, regResult, TEXT("DllRegisterServer failed on Directory\\shellex\\ContextMenuHandlers"));
 		RegCloseKey(hKey);
