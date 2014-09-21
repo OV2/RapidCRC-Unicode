@@ -633,6 +633,12 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 			break;
+        case IDC_CHECK_HIDE_VERIFIED:
+            if(HIWORD(wParam) == BN_CLICKED){
+				program_options_temp.bHideVerified = (IsDlgButtonChecked(hDlg, IDC_CHECK_HIDE_VERIFIED) == BST_CHECKED);
+				return TRUE;
+			}
+			break;
 		case IDC_ALLOW_CRC_ANYWHERE:
 			if(HIWORD(wParam) == BN_CLICKED){
 				program_options_temp.bAllowCrcAnywhere = (IsDlgButtonChecked(hDlg, IDC_ALLOW_CRC_ANYWHERE) == BST_CHECKED);
