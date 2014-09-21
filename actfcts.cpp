@@ -682,6 +682,11 @@ static BOOL GenerateFilename_OneFile(CONST HWND owner, CONST TCHAR *szDefault, U
 
     TCHAR *hashExt = g_hash_ext[uiMode];
 
+    // manually add file extension, windows dialog does not do this if the name already
+    // ends in a known extension
+    StringCchCat(szFileOut, MAX_PATH_EX, TEXT("."));
+    StringCchCat(szFileOut, MAX_PATH_EX, hashExt);
+
     if(askForFilename) {
 	    TCHAR msgString[MAX_PATH_EX];
 	    TCHAR filterString[MAX_PATH_EX];
