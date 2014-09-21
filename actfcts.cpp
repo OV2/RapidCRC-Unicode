@@ -239,10 +239,7 @@ BOOL OpenFilesVistaUp(HWND hwnd, lFILEINFO *pFInfoList)
     IFileOpenDialog *pfd;
 	IFileDialogCustomize *pfdc;
 	FILEOPENDIALOGOPTIONS dwOptions;
-	TCHAR szCurrentPath[MAX_PATH_EX];
 	DWORD dwCookie = 0;
-
-	GetCurrentDirectory(MAX_PATH_EX, szCurrentPath);
     
 	CoInitialize(NULL);
     
@@ -305,8 +302,6 @@ BOOL OpenFilesVistaUp(HWND hwnd, lFILEINFO *pFInfoList)
 
 	CoUninitialize();
 
-	SetCurrentDirectory(szCurrentPath);
-
     return SUCCEEDED(hr);
 }
 #endif
@@ -327,7 +322,6 @@ BOOL OpenFilesXPPrev(HWND hwnd, lFILEINFO *pFInfoList)
 {
 	OPENFILENAME ofn;
 	TCHAR * szBuffer, * szBufferPart;
-	TCHAR szCurrentPath[MAX_PATH_EX];
 	size_t stStringLength;
     FILEINFO fileinfoTmp = {0};
 
@@ -344,20 +338,17 @@ BOOL OpenFilesXPPrev(HWND hwnd, lFILEINFO *pFInfoList)
 	ofn.lpstrFilter       = TEXT("All files\0*.*\0\0") ;
 	ofn.lpstrFile         = szBuffer ;
 	ofn.nMaxFile          = MAX_BUFFER_SIZE_OFN ;
-	ofn.Flags             = OFN_ALLOWMULTISELECT | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLEHOOK;
+	ofn.Flags             = OFN_ALLOWMULTISELECT | OFN_EXPLORER | OFN_ENABLESIZING | OFN_ENABLEHOOK | OFN_NOCHANGEDIR;
 	ofn.lpfnHook		  = OFNHookProc;
 
-	GetCurrentDirectory(MAX_PATH_EX, szCurrentPath);
 	if(!GetOpenFileName( & ofn )){
 		if(CommDlgExtendedError() == FNERR_BUFFERTOOSMALL){
 			MessageBox(hwnd, TEXT("You selected too many files. The buffers was too small. You can select as many files as you want if you use the rightclick shell extension of RapidCRC!"),
 						TEXT("Buffer too small error"), MB_OK);
 		}
 		free(szBuffer);
-		SetCurrentDirectory(szCurrentPath);
 		return FALSE;
 	}
-	SetCurrentDirectory(szCurrentPath);	
 
 	fileinfoTmp.parentList = pFInfoList;
 
@@ -667,11 +658,10 @@ static BOOL GenerateFilename_OneFile(CONST HWND owner, CONST TCHAR *szDefault, U
 	OPENFILENAME ofn;
     size_t strLen;
 
-    StringCchCopy(szCurrentPath, MAX_PATH_EX, szDefault);
-    StringCchLength(szCurrentPath, MAX_PATH_EX, &strLen);
+    StringCchLength(szDefault, MAX_PATH_EX, &strLen);
     if(strLen > 4) { // if < 4 no extended path - something went wrong
         // get rid of \\?\(UNC)
-        if(strLen > 6 && !_tcsncmp(szCurrentPath + 4, TEXT("UNC"), 3)) {
+        if(strLen > 6 && !_tcsncmp(szDefault + 4, TEXT("UNC"), 3)) {
             szCurrentPath[0] = TEXT('\\');
             StringCchCopy(szCurrentPath + 1, MAX_PATH_EX, szDefault + 7);
             strLen -= 6;
@@ -685,6 +675,9 @@ static BOOL GenerateFilename_OneFile(CONST HWND owner, CONST TCHAR *szDefault, U
         StringCchCat(szFileOut, MAX_PATH_EX, GetFilenameWithoutPathPointer(szCurrentPath));
         if(szCurrentPath[strLen - 2] == TEXT(':'))
             szFileOut[4] = TEXT('\0');
+    } else {
+        StringCchCopy(szCurrentPath, MAX_PATH_EX, TEXT("C:\\"));
+        StringCchCopy(szFileOut, MAX_PATH_EX, TEXT("C:\\default"));
     }
 
     TCHAR *hashExt = g_hash_ext[uiMode];
@@ -704,15 +697,12 @@ static BOOL GenerateFilename_OneFile(CONST HWND owner, CONST TCHAR *szDefault, U
 	    ofn.nMaxFile          = MAX_PATH_EX;
         ofn.lpstrInitialDir   = szCurrentPath;
 	    ofn.lpstrTitle        = msgString;
-	    ofn.Flags             = OFN_OVERWRITEPROMPT | OFN_EXPLORER;
+	    ofn.Flags             = OFN_OVERWRITEPROMPT | OFN_EXPLORER | OFN_NOCHANGEDIR;
 	    ofn.lpstrDefExt       = hashExt;
 
-	    GetCurrentDirectory(MAX_PATH_EX, szCurrentPath);
 	    if(! GetSaveFileName(& ofn) ){
-		    SetCurrentDirectory(szCurrentPath);
 		    return FALSE;
 	    }
-	    SetCurrentDirectory(szCurrentPath);
     } else {
         StringCchCat(szFileOut, MAX_PATH_EX, TEXT("."));
         StringCchCat(szFileOut, MAX_PATH_EX, hashExt);
@@ -736,10 +726,14 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 {
 	HANDLE hFile;
     TCHAR szFileOut[MAX_PATH_EX];
+    TCHAR szDefaultDir[MAX_PATH_EX];
     UINT uiSameCharCount;
 	DWORD dwResult;
 
-    if(!GenerateFilename_OneFile(arrHwnd[ID_MAIN_WND], finalList->front()->parentList->g_szBasePath, uiMode, szFileOut, askForFilename))
+    uiSameCharCount = FindCommonPrefix(finalList);
+    StringCchCopyN(szDefaultDir, MAX_PATH_EX, finalList->front()->szFilename, uiSameCharCount);
+
+    if(!GenerateFilename_OneFile(arrHwnd[ID_MAIN_WND], szDefaultDir, uiMode, szFileOut, askForFilename))
         return NOERROR;
 
 	hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
@@ -760,8 +754,6 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 			return dwResult;
 		}
 	}
-
-	uiSameCharCount = FindCommonPrefix(finalList);
 
     if(g_program_options.bIncludeFileComments) {
         for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {

@@ -703,7 +703,7 @@ returns nothing
 
 Notes:
 - sets fileLists g_szBasePath based on the first file
-- if this is not a prefix (usually only via cmd line), we set g_szBasePath to nothing
+- if this is not a prefix (usually only via cmd line), we set g_szBasePath to \\?\
 *****************************************************************************/
 static VOID SetBasePath(lFILEINFO *fileList)
 {
@@ -722,7 +722,7 @@ static VOID SetBasePath(lFILEINFO *fileList)
 	}
 
 	if(!bIsPraefixForAll || !IsThisADirectory(fileList->g_szBasePath))
-		StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, TEXT(""));
+		StringCchCopy(fileList->g_szBasePath, MAX_PATH_EX, TEXT("\\\\?\\"));
 
 	return;
 }
@@ -761,7 +761,7 @@ UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
 		if(countSameChars<3) return 0;
 	}
 
-	if(sameBaseDir && *firstBasePathPointer != TEXT('\0')) {
+	if(sameBaseDir && lstrlen(firstBasePathPointer) > 4) {
 		StringCchLength(firstBasePathPointer,MAX_PATH_EX,&countSameChars);
 	}
 
