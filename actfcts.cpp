@@ -708,9 +708,6 @@ static BOOL GenerateFilename_OneFile(CONST HWND owner, CONST TCHAR *szDefault, U
 	    if(! GetSaveFileName(& ofn) ){
 		    return FALSE;
 	    }
-    } else {
-        StringCchCat(szFileOut, MAX_PATH_EX, TEXT("."));
-        StringCchCat(szFileOut, MAX_PATH_EX, hashExt);
     }
     return TRUE;
 }
