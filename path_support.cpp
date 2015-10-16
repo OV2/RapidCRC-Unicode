@@ -394,7 +394,7 @@ BOOL GetHashFromFilename(FILEINFO *fileInfo)
 			}
 		}
         if(uiFoundHexSymbols) {
-            for(int i = 0; i < NUM_HASH_TYPES; i++) {
+            for(int i = 0; i < HASH_TYPE_SHA3_224; i++) {
                 // md5/ed2k have same size, but md5 will hit first
                 if(uiFoundHexSymbols == g_hash_lengths[i] * 2) {
                     bFound = TRUE;
@@ -795,6 +795,12 @@ UINT DetermineHashType(const CString &filename)
 		return MODE_SHA512;
     } else if(HasFileExtension(filename, TEXT(".bsdhash"))) {
 		return MODE_BSD;
+    } else if(HasFileExtension(filename, TEXT(".sha3_224"))) {
+        return MODE_SHA3_224;
+    } else if(HasFileExtension(filename, TEXT(".sha3_256"))) {
+		return MODE_SHA3_256;
+    } else if(HasFileExtension(filename, TEXT(".sha3_512"))) {
+		return MODE_SHA3_512;
     }
 
     if(!g_program_options.bHashtypeFromFilename)

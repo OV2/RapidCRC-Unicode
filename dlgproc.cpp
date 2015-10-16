@@ -60,7 +60,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static UINT uiThreadID;
 	static DWORD dwSortStatus;
 	static SHOWRESULT_PARAMS showresult_params = {NULL, FALSE, FALSE};
-	static HMENU popupMenu, headerPopupMenu, hashInNamePopup;
+	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, sha3Popup;
     static std::list<UINT> fileThreadIds;
 	lFILEINFO *fileList;
 
@@ -74,6 +74,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		CreateListViewPopupMenu(&popupMenu);
         CreateListViewHeaderPopupMenu(&headerPopupMenu);
         CreateHashFilenameButtonPopupMenu(&hashInNamePopup);
+        CreateSha3ButtonPopupMenu(&sha3Popup);
 		RegisterDropWindow(arrHwnd, & pDropTarget);
 
 		return 0;
@@ -325,6 +326,17 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				    return 0;
 			    }
 			    break;
+            case ID_BTN_SHA3_IN_SHA3:
+			    if(HIWORD(wParam) == BN_CLICKED){
+                    RECT rect;
+                    GetWindowRect(arrHwnd[ID_BTN_SHA3_IN_SHA3], &rect);
+                    int x = rect.left, y = rect.bottom;
+                    int ret = TrackPopupMenu(sha3Popup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_SHA3_IN_SHA3], NULL);
+                    if(ret)
+                        CreateChecksumFiles(arrHwnd, MODE_SHA3_224 + ret - IDM_SHA3_224);
+                    return 0;
+			    }
+			    break;
 		    case ID_BTN_ERROR_DESCR:
 			    if(HIWORD(wParam) == BN_CLICKED){
 				    ShowErrorMsg(hWnd, showresult_params.pFileinfo_cur_displayed->dwError );
@@ -507,18 +519,6 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 			break;
-		case IDC_CHECK_DISPLAY_CRC_IN_LIST:
-			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bDisplayInListView[HASH_TYPE_CRC32] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_CRC_IN_LIST) == BST_CHECKED);
-				return TRUE;
-			}
-			break;
-		case IDC_CHECK_DISPLAY_ED2K_IN_LIST:
-			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bDisplayInListView[HASH_TYPE_ED2K] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_ED2K_IN_LIST) == BST_CHECKED);
-				return TRUE;
-			}
-			break;
 		case IDC_CHECK_SORT_LIST:
 			if(HIWORD(wParam) == BN_CLICKED){
 				program_options_temp.bSortList = (IsDlgButtonChecked(hDlg, IDC_CHECK_SORT_LIST) == BST_CHECKED);
@@ -574,62 +574,32 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			}
 			break;
 		case IDC_CHECK_CRC_DEFAULT:
-			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bCalcPerDefault[HASH_TYPE_CRC32] = (IsDlgButtonChecked(hDlg, IDC_CHECK_CRC_DEFAULT) == BST_CHECKED);
-				return TRUE;
-			}
-			break;
-		case IDC_CHECK_ED2K_DEFAULT:
-			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bCalcPerDefault[HASH_TYPE_ED2K] = (IsDlgButtonChecked(hDlg, IDC_CHECK_ED2K_DEFAULT) == BST_CHECKED);
-				return TRUE;
-			}
-			break;
-		case IDC_CHECK_SHA1_DEFAULT:
-			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bCalcPerDefault[HASH_TYPE_SHA1] = (IsDlgButtonChecked(hDlg, IDC_CHECK_SHA1_DEFAULT) == BST_CHECKED);
-				return TRUE;
-			}
-			break;
-		case IDC_CHECK_DISPLAY_SHA1_IN_LIST:
-			if(HIWORD(wParam) == BN_CLICKED){
-                program_options_temp.bDisplayInListView[HASH_TYPE_SHA1] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_SHA1_IN_LIST) == BST_CHECKED);
-				return TRUE;
-			}
-			break;
-		case IDC_CHECK_MD5_DEFAULT:
-			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bCalcPerDefault[HASH_TYPE_MD5] = (IsDlgButtonChecked(hDlg, IDC_CHECK_MD5_DEFAULT) == BST_CHECKED);
-				return TRUE;
-			}
-			break;
-		case IDC_CHECK_DISPLAY_MD5_IN_LIST:
-			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bDisplayInListView[HASH_TYPE_MD5] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_MD5_IN_LIST) == BST_CHECKED);
-				return TRUE;
-			}
-			break;
+        case IDC_CHECK_MD5_DEFAULT:
+        case IDC_CHECK_ED2K_DEFAULT:
+        case IDC_CHECK_SHA1_DEFAULT:
         case IDC_CHECK_SHA256_DEFAULT:
-			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bCalcPerDefault[HASH_TYPE_SHA256] = (IsDlgButtonChecked(hDlg, IDC_CHECK_SHA256_DEFAULT) == BST_CHECKED);
-				return TRUE;
-			}
-			break;
-		case IDC_CHECK_DISPLAY_SHA256_IN_LIST:
-			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bDisplayInListView[HASH_TYPE_SHA256] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_SHA256_IN_LIST) == BST_CHECKED);
-				return TRUE;
-			}
-			break;
         case IDC_CHECK_SHA512_DEFAULT:
+        case IDC_CHECK_SHA3_224_DEFAULT:
+        case IDC_CHECK_SHA3_256_DEFAULT:
+        case IDC_CHECK_SHA3_512_DEFAULT:
 			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bCalcPerDefault[HASH_TYPE_SHA512] = (IsDlgButtonChecked(hDlg, IDC_CHECK_SHA512_DEFAULT) == BST_CHECKED);
+                unsigned int offset = LOWORD(wParam) - IDC_CHECK_CRC_DEFAULT;
+				program_options_temp.bCalcPerDefault[offset] = (IsDlgButtonChecked(hDlg, LOWORD(wParam)) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
-		case IDC_CHECK_DISPLAY_SHA512_IN_LIST:
+        case IDC_CHECK_DISPLAY_CRC_IN_LIST:
+		case IDC_CHECK_DISPLAY_ED2K_IN_LIST:
+        case IDC_CHECK_DISPLAY_MD5_IN_LIST:
+		case IDC_CHECK_DISPLAY_SHA1_IN_LIST:
+        case IDC_CHECK_DISPLAY_SHA256_IN_LIST:
+        case IDC_CHECK_DISPLAY_SHA512_IN_LIST:
+        case IDC_CHECK_DISPLAY_SHA3_224_IN_LIST:
+        case IDC_CHECK_DISPLAY_SHA3_256_IN_LIST:
+        case IDC_CHECK_DISPLAY_SHA3_512_IN_LIST:
 			if(HIWORD(wParam) == BN_CLICKED){
-				program_options_temp.bDisplayInListView[HASH_TYPE_SHA512] = (IsDlgButtonChecked(hDlg, IDC_CHECK_DISPLAY_SHA512_IN_LIST) == BST_CHECKED);
+                unsigned int offset = LOWORD(wParam) - IDC_CHECK_DISPLAY_CRC_IN_LIST;
+                program_options_temp.bDisplayInListView[offset] = (IsDlgButtonChecked(hDlg, LOWORD(wParam)) == BST_CHECKED);
 				return TRUE;
 			}
 			break;
@@ -1204,7 +1174,7 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	const float leftMargin = 15/10.0f;
 	const float rightMargin = 3;
     const float labelOffset = 3;
-    const float labelWidth = 7;
+    const float labelWidth = 9;
     const float editOffset = labelOffset + labelWidth + 1;
 
     float resultGroupHeight = 45/10.0;
@@ -1264,11 +1234,12 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
     MoveWindow(arrHwnd[ID_STATIC_CREATE], lACW * leftMargin, wHeight - lACH * actButtonY + 5, lACW * 7, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * (leftMargin + 7 + 1), wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 17 + 2) + 16, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], lACW * (leftMargin + 27 + 3) + 32, wHeight - lACH * actButtonY, lACW * 11 + 16, lACH * 19/10.0, FALSE);
-    MoveWindow(arrHwnd[ID_BTN_SHA256_IN_SHA256], lACW * (leftMargin + 38 + 4) + 48, wHeight - lACH * actButtonY, lACW * 13 + 16, lACH * 19/10.0, FALSE);
-    MoveWindow(arrHwnd[ID_BTN_SHA512_IN_SHA512], lACW * (leftMargin + 51 + 5) + 64, wHeight - lACH * actButtonY, lACW * 13 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 64 + 6) + 80, wHeight - lACH * actButtonY, lACW * 24, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 88 + 7) + 80, wHeight - lACH * actButtonY, lACW * 28, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], lACW * (leftMargin + 27 + 3) + 32, wHeight - lACH * actButtonY, lACW * 7 + 16, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_BTN_SHA256_IN_SHA256], lACW * (leftMargin + 34 + 4) + 48, wHeight - lACH * actButtonY, lACW * 9 + 16, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_BTN_SHA512_IN_SHA512], lACW * (leftMargin + 43 + 5) + 64, wHeight - lACH * actButtonY, lACW * 9 + 16, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_BTN_SHA3_IN_SHA3], lACW * (leftMargin + 52 + 6) + 80, wHeight - lACH * actButtonY, lACW * 7 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 59 + 7) + 96, wHeight - lACH * actButtonY, lACW * 21, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 80 + 8) + 96, wHeight - lACH * actButtonY, lACW * 25, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, FALSE);
 	
 	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 37 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, FALSE);
@@ -1288,11 +1259,10 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	// resize listview columns
 	iCurrentWidthUsed = 0;
 	iCurrentSubItem = 1;
-    INT hash_widths[] = {14, 42, 42, 50, 75, 137};
     for(int i=0;i<NUM_HASH_TYPES;i++) {
         if(g_program_options.bDisplayInListView[i]){
-		    ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * hash_widths[i]);
-		    iCurrentWidthUsed += lACW * hash_widths[i];
+		    ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * g_hash_column_widths[i]);
+		    iCurrentWidthUsed += lACW * g_hash_column_widths[i];
 		    iCurrentSubItem++;
 	    }
     }

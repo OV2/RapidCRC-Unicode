@@ -30,7 +30,20 @@
 #include "md5_ossl.h"
 #include "sha256_ossl.h"
 #include "sha512_ossl.h"
+extern "C" {
+#include "sha3\KeccakNISTInterface.h"
+}
 #include "CSyncQueue.h"
+
+DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha1Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha256Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha512Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam);
+DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha3_224Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha3_256Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha3_512Calc(VOID * pParam);
 
 // used in UINT __stdcall ThreadProc_Calc(VOID * pParam)
 #define SWAPBUFFERS() \
@@ -50,6 +63,9 @@ threadfunc hash_function[] = {
     ThreadProc_Sha1Calc,
     ThreadProc_Sha256Calc,
     ThreadProc_Sha512Calc,
+    ThreadProc_Sha3_224Calc,
+    ThreadProc_Sha3_256Calc,
+    ThreadProc_Sha3_512Calc,
 };
 
 /*****************************************************************************
@@ -262,7 +278,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
             SyncQueue.adjustErrorCounters(&curFileInfo,1);
             SyncQueue.releaseDoneList();
 
-			ShowResult(arrHwnd, &curFileInfo, pshowresult_params);
+            if(!pthread_params_calc->signalExit)
+			    ShowResult(arrHwnd, &curFileInfo, pshowresult_params);
 		}
 
         for(int i=0;i<NUM_HASH_TYPES;i++) {
@@ -571,6 +588,102 @@ DWORD WINAPI ThreadProc_Sha512Calc(VOID * pParam)
 		SHA512_Update(&context, *buffer, **dwBytesRead);
 	} while (!(*bFileDone));
 	SHA512_Final(result,&context);
+	SetEvent(hEvtThreadReady);
+	return 0;
+}
+
+/*****************************************************************************
+DWORD WINAPI ThreadProc_Sha3_224Calc(VOID * pParam)
+	pParam	: (IN/OUT) THREAD_PARAMS_HASHCALC struct pointer special for this thread
+
+Return Value:
+	returns 0
+
+Notes:
+- initializes the sha3-224 hash calculation and loops through the calculation until
+  ThreadProc_Calc signalizes the end of the file
+- buffer synchronization is done through hEvtThreadReady and hEvtThreadGo
+*****************************************************************************/
+DWORD WINAPI ThreadProc_Sha3_224Calc(VOID * pParam)
+{
+	BYTE ** CONST buffer=((THREAD_PARAMS_HASHCALC *)pParam)->buffer;
+	DWORD ** CONST dwBytesRead=((THREAD_PARAMS_HASHCALC *)pParam)->dwBytesRead;
+	CONST HANDLE hEvtThreadReady=((THREAD_PARAMS_HASHCALC *)pParam)->hHandleReady;
+	CONST HANDLE hEvtThreadGo=((THREAD_PARAMS_HASHCALC *)pParam)->hHandleGo;
+	BYTE * CONST result=(BYTE *)((THREAD_PARAMS_HASHCALC *)pParam)->result;
+	BOOL * CONST bFileDone=((THREAD_PARAMS_HASHCALC *)pParam)->bFileDone;
+
+	sha3hashState hashState;
+	Sha3Init(&hashState, 224);
+	do {
+		SignalObjectAndWait(hEvtThreadReady,hEvtThreadGo,INFINITE,FALSE);
+		Sha3Update(&hashState, *buffer, **dwBytesRead * 8);
+	} while (!(*bFileDone));
+	Sha3Final(&hashState, result);
+	SetEvent(hEvtThreadReady);
+	return 0;
+}
+
+/*****************************************************************************
+DWORD WINAPI ThreadProc_Sha3_256Calc(VOID * pParam)
+	pParam	: (IN/OUT) THREAD_PARAMS_HASHCALC struct pointer special for this thread
+
+Return Value:
+	returns 0
+
+Notes:
+- initializes the sha3-256 hash calculation and loops through the calculation until
+  ThreadProc_Calc signalizes the end of the file
+- buffer synchronization is done through hEvtThreadReady and hEvtThreadGo
+*****************************************************************************/
+DWORD WINAPI ThreadProc_Sha3_256Calc(VOID * pParam)
+{
+	BYTE ** CONST buffer=((THREAD_PARAMS_HASHCALC *)pParam)->buffer;
+	DWORD ** CONST dwBytesRead=((THREAD_PARAMS_HASHCALC *)pParam)->dwBytesRead;
+	CONST HANDLE hEvtThreadReady=((THREAD_PARAMS_HASHCALC *)pParam)->hHandleReady;
+	CONST HANDLE hEvtThreadGo=((THREAD_PARAMS_HASHCALC *)pParam)->hHandleGo;
+	BYTE * CONST result=(BYTE *)((THREAD_PARAMS_HASHCALC *)pParam)->result;
+	BOOL * CONST bFileDone=((THREAD_PARAMS_HASHCALC *)pParam)->bFileDone;
+
+	sha3hashState hashState;
+	Sha3Init(&hashState, 256);
+	do {
+		SignalObjectAndWait(hEvtThreadReady,hEvtThreadGo,INFINITE,FALSE);
+		Sha3Update(&hashState, *buffer, **dwBytesRead * 8);
+	} while (!(*bFileDone));
+	Sha3Final(&hashState, result);
+	SetEvent(hEvtThreadReady);
+	return 0;
+}
+
+/*****************************************************************************
+DWORD WINAPI ThreadProc_Sha3_512Calc(VOID * pParam)
+	pParam	: (IN/OUT) THREAD_PARAMS_HASHCALC struct pointer special for this thread
+
+Return Value:
+	returns 0
+
+Notes:
+- initializes the sha3-512 hash calculation and loops through the calculation until
+  ThreadProc_Calc signalizes the end of the file
+- buffer synchronization is done through hEvtThreadReady and hEvtThreadGo
+*****************************************************************************/
+DWORD WINAPI ThreadProc_Sha3_512Calc(VOID * pParam)
+{
+	BYTE ** CONST buffer=((THREAD_PARAMS_HASHCALC *)pParam)->buffer;
+	DWORD ** CONST dwBytesRead=((THREAD_PARAMS_HASHCALC *)pParam)->dwBytesRead;
+	CONST HANDLE hEvtThreadReady=((THREAD_PARAMS_HASHCALC *)pParam)->hHandleReady;
+	CONST HANDLE hEvtThreadGo=((THREAD_PARAMS_HASHCALC *)pParam)->hHandleGo;
+	BYTE * CONST result=(BYTE *)((THREAD_PARAMS_HASHCALC *)pParam)->result;
+	BOOL * CONST bFileDone=((THREAD_PARAMS_HASHCALC *)pParam)->bFileDone;
+
+	sha3hashState hashState;
+	Sha3Init(&hashState, 512);
+	do {
+		SignalObjectAndWait(hEvtThreadReady,hEvtThreadGo,INFINITE,FALSE);
+		Sha3Update(&hashState, *buffer, **dwBytesRead * 8);
+	} while (!(*bFileDone));
+	Sha3Final(&hashState, result);
 	SetEvent(hEvtThreadReady);
 	return 0;
 }

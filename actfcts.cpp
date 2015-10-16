@@ -867,9 +867,9 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 		needRehash=true;
 	
 	if( needRehash ){
-		TCHAR *hashExt = g_hash_ext[uiMode];
+        TCHAR *hashName = g_hash_names[uiMode];
 		TCHAR msgString[MAX_PATH_EX];
-		StringCchPrintf(msgString,MAX_PATH_EX,TEXT("You have to calculate the %s checksums first. Click OK to do that now."),hashExt);
+		StringCchPrintf(msgString,MAX_PATH_EX,TEXT("You have to calculate the %s checksums first. Click OK to do that now."),hashName);
 		if( MessageBox(arrHwnd[ID_MAIN_WND],
 			msgString,
 			TEXT("Question"),MB_OKCANCEL | MB_ICONQUESTION | MB_APPLMODAL | MB_SETFOREGROUND) == IDCANCEL)

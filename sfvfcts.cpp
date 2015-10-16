@@ -227,6 +227,9 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
             case MODE_SHA1:
             case MODE_SHA256:
             case MODE_SHA512:
+            case MODE_SHA3_224:
+            case MODE_SHA3_256:
+            case MODE_SHA3_512:
                 InterpretMDSHALine(szLine, uiStringLength, uiMode, fileList);
                 break;
             case MODE_BSD:

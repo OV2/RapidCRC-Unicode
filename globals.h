@@ -84,7 +84,10 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define HASH_TYPE_SHA1 3
 #define HASH_TYPE_SHA256 4
 #define HASH_TYPE_SHA512 5
-#define NUM_HASH_TYPES 6
+#define HASH_TYPE_SHA3_224 6
+#define HASH_TYPE_SHA3_256 7
+#define HASH_TYPE_SHA3_512 8
+#define NUM_HASH_TYPES 9
 
 // RapidCRC modes; also used in the action functions
 // Have to equal hash types
@@ -94,6 +97,9 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MODE_SHA1				3
 #define MODE_SHA256				4
 #define MODE_SHA512				5
+#define MODE_SHA3_224			6
+#define MODE_SHA3_256			7
+#define MODE_SHA3_512			8
 #define MODE_BSD                21
 
 //CMDLINE Options for the shell extension
@@ -169,13 +175,17 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_STATIC_SHA1_VALUE		7
 #define ID_STATIC_SHA256_VALUE		8
 #define ID_STATIC_SHA512_VALUE		9
-#define ID_STATIC_INFO				10
-#define ID_STATIC_STATUS			11
-#define ID_STATIC_CREATE            12
+#define ID_STATIC_SHA3_224_VALUE    10
+#define ID_STATIC_SHA3_256_VALUE    11
+#define ID_STATIC_SHA3_512_VALUE    12
 
-#define ID_STATIC_PRIORITY			13
-#define ID_PROGRESS_FILE			14
-#define ID_PROGRESS_GLOBAL			15
+#define ID_STATIC_INFO				20
+#define ID_STATIC_STATUS			21
+#define ID_STATIC_CREATE            22
+
+#define ID_STATIC_PRIORITY			23
+#define ID_PROGRESS_FILE			24
+#define ID_PROGRESS_GLOBAL			25
 
 //the ids here are used to initialize the window order, which equals the tab order
 #define ID_FIRST_TAB_CONTROL		30
@@ -187,27 +197,32 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_BTN_SHA1_IN_SHA1			33
 #define ID_BTN_SHA256_IN_SHA256     34
 #define ID_BTN_SHA512_IN_SHA512     35
-#define ID_BTN_CRC_IN_FILENAME		36
-#define ID_BTN_CRC_IN_STREAM		37
-#define ID_BTN_PLAY_PAUSE			38
-#define ID_BTN_OPTIONS				39
+#define ID_BTN_SHA3_IN_SHA3         36
+#define ID_BTN_CRC_IN_FILENAME		37
+#define ID_BTN_CRC_IN_STREAM		38
+#define ID_BTN_PLAY_PAUSE			39
+#define ID_BTN_OPTIONS				40
 
-#define ID_EDIT_FILENAME			40
-#define ID_EDIT_CRC_VALUE			41
-#define ID_EDIT_MD5_VALUE			42
-#define ID_EDIT_ED2K_VALUE			43
-#define ID_EDIT_SHA1_VALUE			44
-#define ID_EDIT_SHA256_VALUE		45
-#define ID_EDIT_SHA512_VALUE		46
-#define ID_EDIT_INFO				47
-#define ID_EDIT_STATUS				48
-#define ID_BTN_ERROR_DESCR			49
+#define ID_EDIT_FILENAME			41
+#define ID_EDIT_CRC_VALUE			42
+#define ID_EDIT_MD5_VALUE			43
+#define ID_EDIT_ED2K_VALUE			44
+#define ID_EDIT_SHA1_VALUE			45
+#define ID_EDIT_SHA256_VALUE		46
+#define ID_EDIT_SHA512_VALUE		47
+#define ID_EDIT_SHA3_224_VALUE		48
+#define ID_EDIT_SHA3_256_VALUE		49
+#define ID_EDIT_SHA3_512_VALUE		50
 
-#define ID_COMBO_PRIORITY			50
-#define ID_BTN_OPENFILES_PAUSE		51
-#define ID_LAST_TAB_CONTROL			51
+#define ID_EDIT_INFO				51
+#define ID_EDIT_STATUS				52
+#define ID_BTN_ERROR_DESCR			53
 
-#define ID_NUM_WINDOWS				52
+#define ID_COMBO_PRIORITY			54
+#define ID_BTN_OPENFILES_PAUSE		55
+#define ID_LAST_TAB_CONTROL			55
+
+#define ID_NUM_WINDOWS				56
 
 #define IDM_COPY_CRC				1
 #define IDM_COPY_MD5				2
@@ -223,12 +238,17 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 
 #define IDM_CRC_FILENAME            1
 
+#define IDM_SHA3_224                1
+
 #define IDM_CRC_COLUMN              1
 #define IDM_MD5_COLUMN              2
 #define IDM_ED2K_COLUMN             3
 #define IDM_SHA1_COLUMN             4
 #define IDM_SHA256_COLUMN           5
 #define IDM_SHA512_COLUMN           6
+#define IDM_SHA3_224_COLUMN         7
+#define IDM_SHA3_256_COLUMN         8
+#define IDM_SHA3_512_COLUMN         9
 
 //****** file open dialog *******
 #define FDIALOG_OPENCHOICES 0
@@ -271,6 +291,9 @@ typedef struct _FILEINFO {
             BYTE	abEd2kResult[16];
             BYTE	abSha256Result[32];
             BYTE	abSha512Result[64];
+            BYTE	abSha3_224Result[28];
+            BYTE	abSha3_256Result[32];
+            BYTE	abSha3_512Result[64];
         } r;
         union {
             DWORD   dwCrc32Found;
@@ -278,6 +301,9 @@ typedef struct _FILEINFO {
             BYTE	abSha1Found[20];
             BYTE	abSha256Found[32];
             BYTE	abSha512Found[64];
+            BYTE	abSha3_224Found[28];
+            BYTE	abSha3_256Found[32];
+            BYTE	abSha3_512Found[64];
         } f;
         CString szResult;
         DWORD   dwFound;
@@ -405,6 +431,7 @@ extern CRITICAL_SECTION thread_fileinfo_crit;
 extern UINT g_hash_lengths[];
 extern TCHAR *g_hash_names[];
 extern TCHAR *g_hash_ext[];
+extern UINT g_hash_column_widths[];
 
 //****** function prototypes *******
 
@@ -448,6 +475,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStatus);
 void CreateListViewPopupMenu(HMENU *menu);
 void CreateHashFilenameButtonPopupMenu(HMENU *menu);
+void CreateSha3ButtonPopupMenu(HMENU *menu);
 void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU pupup,int x,int y, SHOWRESULT_PARAMS * pshowresult_params);
 void CreateListViewHeaderPopupMenu(HMENU *menu);
 BOOL ListViewHeaderPopup(HWND pHwnd,HMENU pupup,int x,int y);
@@ -527,12 +555,6 @@ INT QuickCompFunction(const void * pFileinfo1, const void * pFileinfo2);
 
 //Thread procedures (threadprocs.cpp)
 UINT __stdcall ThreadProc_Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Sha1Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Sha256Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Sha512Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam);
-DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam);
 UINT StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_params, lFILEINFO * fileList);
 void StartAcceptPipeThread(CONST HWND *arrHwnd, lFILEINFO * fileList);
 

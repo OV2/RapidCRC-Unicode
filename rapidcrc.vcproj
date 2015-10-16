@@ -786,7 +786,7 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						CommandLine="ml64.exe /c  /nologo /Fo&quot;$(IntDir)\sha512-x86_64.obj&quot; /W3 /Zi /errorReport:prompt  $(InputFileName)"
+						CommandLine="ml64.exe /c  /nologo /Fo&quot;$(IntDir)\sha512-x86_64.obj&quot; /W3 /Zi /errorReport:prompt  $(InputFileName)&#x0D;&#x0A;"
 						Outputs="$(IntDir)\sha512-x86_64.obj"
 					/>
 				</FileConfiguration>
@@ -807,6 +807,118 @@
 				RelativePath=".\winmain.cpp"
 				>
 			</File>
+			<Filter
+				Name="sha3"
+				>
+				<File
+					RelativePath=".\sha3\brg_endian.h"
+					>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakF-1600-int-set.h"
+					>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakF-1600-interface.h"
+					>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakF-1600-opt32-settings.h"
+					>
+					<FileConfiguration
+						Name="Debug|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakF-1600-opt32.c"
+					>
+					<FileConfiguration
+						Name="Debug|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|x64"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakF-1600-opt64-settings.h"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCustomBuildTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakF-1600-opt64.c"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakNISTInterface.c"
+					>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakNISTInterface.h"
+					>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakSponge.c"
+					>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakSponge.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Header Files"
