@@ -104,7 +104,7 @@ int CALLBACK SortHash(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 }
 
 /*****************************************************************************
-FILEINFO_STATUS InfoToIntValue(CONST FILEINFO * pFileinfo)
+FILEINFO_STATUS InfoToIntValue(FILEINFO * pFileinfo)
 Fileinfo	: (IN) item with the needed info
 
 Return Value:
@@ -113,7 +113,7 @@ returns a generated integer value
 Notes:
 - generated integer is used in MySortInfo to compare items
 *****************************************************************************/
-FILEINFO_STATUS InfoToIntValue(CONST FILEINFO * pFileinfo)
+FILEINFO_STATUS InfoToIntValue(FILEINFO * pFileinfo)
 {
 	// File OK < File not OK < No CRC/MD5 found < Error
 	FILEINFO_STATUS iResult;
@@ -123,7 +123,7 @@ FILEINFO_STATUS InfoToIntValue(CONST FILEINFO * pFileinfo)
 		iResult = STATUS_ERROR;
 	else {
         for(int i=0; i < NUM_HASH_TYPES; i++) {
-            if(pFileinfo->hashInfo[i].dwFound) {
+            if(pFileinfo->hashInfo.find(i) != pFileinfo->hashInfo.end() && pFileinfo->hashInfo[i].dwFound) {
                 if( (pFileinfo->parentList->bCalculated[i]) ){
                     bool bOk = false;
                     if(i == HASH_TYPE_CRC32)

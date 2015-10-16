@@ -25,6 +25,7 @@
 #include <strsafe.h>
 #pragma warning(disable:4995)
 #include <list>
+#include <map>
 #pragma warning(default:4995)
 using namespace std;
 
@@ -283,7 +284,7 @@ typedef struct _FILEINFO {
 	TCHAR  *szFilenameShort;
     _lFILEINFO * parentList;
     FILEINFO_STATUS status;
-    struct _hashInfo {
+    typedef struct _hashInfo {
         union {
             DWORD   dwCrc32Result;
             BYTE	abMd5Result[16];
@@ -308,7 +309,8 @@ typedef struct _FILEINFO {
         CString szResult;
         DWORD   dwFound;
         _hashInfo() { ZeroMemory(&r,sizeof(r)); ZeroMemory(&f,sizeof(f)); dwFound = 0; };
-    } hashInfo[NUM_HASH_TYPES];
+    } hashInfo_t;
+    map<int, hashInfo_t> hashInfo;
 } FILEINFO;
 
 typedef struct _lFILEINFO {
@@ -546,7 +548,7 @@ BOOL WriteCurrentBOM(CONST HANDLE hFile);
 int CALLBACK SortFilename(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortInfo(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 int CALLBACK SortHash(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
-FILEINFO_STATUS InfoToIntValue(CONST FILEINFO * pFileinfo);
+FILEINFO_STATUS InfoToIntValue(FILEINFO * pFileinfo);
 bool ListCompFunction(const FILEINFO& pFileinfo1, const FILEINFO& pFileinfo2);
 bool ListPointerCompFunction(const FILEINFO *pFileinfo1, const FILEINFO *pFileinfo2);
 bool ListPointerUniqFunction(const FILEINFO *pFileinfo1, const FILEINFO *pFileinfo2);
