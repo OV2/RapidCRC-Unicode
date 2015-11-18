@@ -1242,6 +1242,7 @@ VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStat
 	EnableWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], bStatus);
     EnableWindow(arrHwnd[ID_BTN_SHA256_IN_SHA256], bStatus);
     EnableWindow(arrHwnd[ID_BTN_SHA512_IN_SHA512], bStatus);
+    EnableWindow(arrHwnd[ID_BTN_SHA3_IN_SHA3], bStatus);
 	ShowWindow(arrHwnd[ID_BTN_PLAY_PAUSE],!bStatus);
 	if(!g_program_options.bEnableQueue)
 		EnableWindow(arrHwnd[ID_BTN_OPENFILES_PAUSE],bStatus);
