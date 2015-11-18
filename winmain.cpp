@@ -85,6 +85,18 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 			{
 				fileList->uiCmdOpts = CMD_SHA512;
 			}
+            else if(lstrcmpi(argv[2], TEXT("-CreateSHA3224")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_SHA3_224;
+			}
+            else if(lstrcmpi(argv[2], TEXT("-CreateSHA3256")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_SHA3_256;
+			}
+            else if(lstrcmpi(argv[2], TEXT("-CreateSHA3512")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_SHA3_512;
+			}
 			else if(lstrcmpi(argv[2], TEXT("-PutNAME")) == 0)
 			{
 				fileList->uiCmdOpts = CMD_NAME;

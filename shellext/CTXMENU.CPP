@@ -119,6 +119,9 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA1, TEXT("Create SHA1"));
         InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA256, TEXT("Create SHA256"));
         InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA512, TEXT("Create SHA512"));
+        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA3_224, TEXT("Create SHA3-224"));
+        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA3_256, TEXT("Create SHA3-256"));
+        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA3_512, TEXT("Create SHA3-512"));
 		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_NAME, TEXT("Put CRC in Filename"));
 		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_NTFS, TEXT("Put CRC in NTFS Stream"));
 
@@ -153,6 +156,9 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA1, FALSE, &mii);
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA256, FALSE, &mii);
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA512, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA3_224, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA3_256, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA3_512, FALSE, &mii);
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_NAME, FALSE, &mii);
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_NTFS, FALSE, &mii);
 		} else {
@@ -170,6 +176,9 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA1, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA256, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA512, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA3_224, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA3_256, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA3_512, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_NAME, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_NTFS, MF_BYCOMMAND, hBmp, hBmp);
 		}
@@ -180,6 +189,25 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(0));
 }
 
+#define CMD_HELP_VERB(helpStr, verbStr) \
+    switch(uFlags)\
+		{\
+			case GCS_HELPTEXTA:\
+	            hr = StringCbCopyA(pszName, uMaxNameLen, helpStr);\
+				break;\
+	        case GCS_HELPTEXTW:\
+                hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L##helpStr);\
+				break;\
+			case GCS_VERBA:\
+	            hr = StringCbCopyA(pszName, uMaxNameLen, verbStr);\
+				break;\
+			case GCS_VERBW:\
+                hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L##verbStr);\
+				break;\
+			default:\
+	            hr = S_OK;\
+				break;\
+		}
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -209,300 +237,55 @@ STDMETHODIMP CShellExt::GetCommandString(THIS_
 
     if(idCommand == IDM_RAPIDCRC)
     {
-	    switch(uFlags)
-		{
-			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
-			// that windows wants ANSI strings in certain situations
-			case GCS_HELPTEXTA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens the files with RapidCRC and calculates checksum");
-				break; 
-
-	        case GCS_HELPTEXTW: 
-				// hr = StringCbCopyNW((LPWSTR)pszName, sizeof(pszName), 
-				//                     L"Opens the files with RapidCRC and calculates checksum", uMaxNameLen);
-				// it was in this way in the MSDN Library!! And it doesn't work: sizeof(pszName) is always 4 ;-)
-				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens the files with RapidCRC and calculates checksum");
-				break;
-	
-			case GCS_VERBA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCOpen");
-				break; 
-	
-			case GCS_VERBW:
-	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCOpen");
-				break; 
-	
-			default:
-	            hr = S_OK;
-				break; 
-		}
+        CMD_HELP_VERB("Opens the files with RapidCRC and calculates checksum", "RapidCRCOpen")
 	}
 	else if(idCommand == IDM_REPARENT)
     {
-	    switch(uFlags)
-		{
-			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
-			// that windows wants ANSI strings in certain situations
-			case GCS_HELPTEXTA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens the files with RapidCRC and calculates checksum, offering reparent action for checksum files");
-				break; 
-
-	        case GCS_HELPTEXTW: 
-				// hr = StringCbCopyNW((LPWSTR)pszName, sizeof(pszName), 
-				//                     L"Opens the files with RapidCRC and calculates checksum", uMaxNameLen);
-				// it was in this way in the MSDN Library!! And it doesn't work: sizeof(pszName) is always 4 ;-)
-				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens the files with RapidCRC and calculates checksum, offering reparent action for checksum files");
-				break;
-	
-			case GCS_VERBA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCOpenReparent");
-				break; 
-	
-			case GCS_VERBW:
-	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCOpenReparent");
-				break; 
-	
-			default:
-	            hr = S_OK;
-				break; 
-		}
+        CMD_HELP_VERB("Opens the files with RapidCRC and calculates checksum, offering reparent action for checksum files", "RapidCRCOpenReparent")
 	}
     else if(idCommand == IDM_OPENHASHFILES)
     {
-	    switch(uFlags)
-		{
-			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
-			// that windows wants ANSI strings in certain situations
-			case GCS_HELPTEXTA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens all hash files in RapidCRC and calculates checksums");
-				break; 
-
-	        case GCS_HELPTEXTW: 
-				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens all hash files in RapidCRC and calculates checksums");
-				break;
-	
-			case GCS_VERBA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCOpenHashFiles");
-				break; 
-	
-			case GCS_VERBW:
-	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCOpenHashFiles");
-				break; 
-	
-			default:
-	            hr = S_OK;
-				break; 
-		}
+        CMD_HELP_VERB("Opens all hash files in RapidCRC and calculates checksums", "RapidCRCOpenHashFiles")
 	}
 	else if(idCommand == IDM_SFV)
 	{
-		switch(uFlags)
-		{
-			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
-			// that windows wants ANSI strings in certain situations
-			case GCS_HELPTEXTA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens the files with RapidCRC and creates an SFV File");
-				break; 
-
-	        case GCS_HELPTEXTW: 
-				// hr = StringCbCopyNW((LPWSTR)pszName, sizeof(pszName), 
-				//                     L"Opens the files with RapidCRC and calculates checksum", uMaxNameLen);
-				// it was in this way in the MSDN Library!! And it doesn't work: sizeof(pszName) is always 4 ;-)
-				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens the files with RapidCRC and creates an SFV File");
-				break;
-	
-			case GCS_VERBA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCCreateSFV");
-				break; 
-	
-			case GCS_VERBW:
-	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCCreateSFV");
-				break; 
-	
-			default:
-	            hr = S_OK;
-				break; 
-		}
+        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SFV File", "RapidCRCCreateSFV")
 	}
 	else if(idCommand == IDM_MD5)
 	{
-		switch(uFlags)
-		{
-			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
-			// that windows wants ANSI strings in certain situations
-			case GCS_HELPTEXTA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens the files with RapidCRC and creates an MD5 File");
-				break; 
-
-	        case GCS_HELPTEXTW: 
-				// hr = StringCbCopyNW((LPWSTR)pszName, sizeof(pszName), 
-				//                     L"Opens the files with RapidCRC and calculates checksum", uMaxNameLen);
-				// it was in this way in the MSDN Library!! And it doesn't work: sizeof(pszName) is always 4 ;-)
-				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens the files with RapidCRC and creates an MD5 File");
-				break;
-	
-			case GCS_VERBA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCCreateMD5");
-				break; 
-	
-			case GCS_VERBW:
-	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCCreateMD5");
-				break; 
-	
-			default:
-	            hr = S_OK;
-				break; 
-		}
+        CMD_HELP_VERB("Opens the files with RapidCRC and creates an MD5 File", "RapidCRCCreateMD5")
 	}
 	else if(idCommand == IDM_SHA1)
 	{
-		switch(uFlags)
-		{
-			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
-			// that windows wants ANSI strings in certain situations
-			case GCS_HELPTEXTA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens the files with RapidCRC and creates an SHA1 File");
-				break; 
-
-	        case GCS_HELPTEXTW: 
-				// hr = StringCbCopyNW((LPWSTR)pszName, sizeof(pszName), 
-				//                     L"Opens the files with RapidCRC and calculates checksum", uMaxNameLen);
-				// it was in this way in the MSDN Library!! And it doesn't work: sizeof(pszName) is always 4 ;-)
-				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens the files with RapidCRC and creates an SHA1 File");
-				break;
-	
-			case GCS_VERBA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCCreateSHA1");
-				break; 
-	
-			case GCS_VERBW:
-	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCCreateSHA1");
-				break; 
-	
-			default:
-	            hr = S_OK;
-				break; 
-		}
+        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA1 File", "RapidCRCCreateSHA1")
 	}
     else if(idCommand == IDM_SHA256)
 	{
-		switch(uFlags)
-		{
-			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
-			// that windows wants ANSI strings in certain situations
-			case GCS_HELPTEXTA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens the files with RapidCRC and creates an SHA256 File");
-				break; 
-
-	        case GCS_HELPTEXTW: 
-				// hr = StringCbCopyNW((LPWSTR)pszName, sizeof(pszName), 
-				//                     L"Opens the files with RapidCRC and calculates checksum", uMaxNameLen);
-				// it was in this way in the MSDN Library!! And it doesn't work: sizeof(pszName) is always 4 ;-)
-				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens the files with RapidCRC and creates an SHA256 File");
-				break;
-	
-			case GCS_VERBA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCCreateSHA256");
-				break; 
-	
-			case GCS_VERBW:
-	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCCreateSHA256");
-				break; 
-	
-			default:
-	            hr = S_OK;
-				break; 
-		}
+        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA256 File", "RapidCRCCreateSHA256")
 	}
     else if(idCommand == IDM_SHA512)
 	{
-		switch(uFlags)
-		{
-			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
-			// that windows wants ANSI strings in certain situations
-			case GCS_HELPTEXTA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens the files with RapidCRC and creates an SHA512 File");
-				break; 
-
-	        case GCS_HELPTEXTW: 
-				// hr = StringCbCopyNW((LPWSTR)pszName, sizeof(pszName), 
-				//                     L"Opens the files with RapidCRC and calculates checksum", uMaxNameLen);
-				// it was in this way in the MSDN Library!! And it doesn't work: sizeof(pszName) is always 4 ;-)
-				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens the files with RapidCRC and creates an SHA512 File");
-				break;
-	
-			case GCS_VERBA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCCreateSHA512");
-				break; 
-	
-			case GCS_VERBW:
-	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCCreateSHA512");
-				break; 
-	
-			default:
-	            hr = S_OK;
-				break; 
-		}
+        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA512 File", "RapidCRCCreateSHA512")
 	}
 	else if(idCommand == IDM_NAME)
 	{
-		switch(uFlags)
-		{
-			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
-			// that windows wants ANSI strings in certain situations
-			case GCS_HELPTEXTA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens the files with RapidCRC and puts the CRC into the Filename");
-				break; 
-
-	        case GCS_HELPTEXTW: 
-				// hr = StringCbCopyNW((LPWSTR)pszName, sizeof(pszName), 
-				//                     L"Opens the files with RapidCRC and calculates checksum", uMaxNameLen);
-				// it was in this way in the MSDN Library!! And it doesn't work: sizeof(pszName) is always 4 ;-)
-				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens the files with RapidCRC and puts the CRC into the Filename");
-				break;
-	
-			case GCS_VERBA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCPutName");
-				break; 
-	
-			case GCS_VERBW:
-	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCPutName");
-				break; 
-	
-			default:
-	            hr = S_OK;
-				break; 
-		}
+        CMD_HELP_VERB("Opens the files with RapidCRC and puts the CRC into the Filename", "RapidCRCPutName")
 	}
 	else if(idCommand == IDM_NTFS)
 	{
-		switch(uFlags)
-		{
-			// although this is a Unicode Build I leave the ANSI Stuff here, because I don't know if it is possible
-			// that windows wants ANSI strings in certain situations
-			case GCS_HELPTEXTA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "Opens the files with RapidCRC and puts the CRC into an NTFS Stream");
-				break; 
-
-	        case GCS_HELPTEXTW: 
-				// hr = StringCbCopyNW((LPWSTR)pszName, sizeof(pszName), 
-				//                     L"Opens the files with RapidCRC and calculates checksum", uMaxNameLen);
-				// it was in this way in the MSDN Library!! And it doesn't work: sizeof(pszName) is always 4 ;-)
-				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"Opens the files with RapidCRC and puts the CRC into an NTFS Stream");
-				break;
-	
-			case GCS_VERBA:
-	            hr = StringCbCopyA(pszName, uMaxNameLen, "RapidCRCPutNTFS");
-				break; 
-	
-			case GCS_VERBW:
-	            hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L"RapidCRCPutNTFS");
-				break; 
-	
-			default:
-	            hr = S_OK;
-				break; 
-		}
+        CMD_HELP_VERB("Opens the files with RapidCRC and puts the CRC into an NTFS Stream", "RapidCRCPutNTFS")
+	}
+    else if(idCommand == IDM_SHA3_224)
+	{
+        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA3-224 File", "RapidCRCCreateSHA3_244")
+	}
+    else if(idCommand == IDM_SHA3_256)
+	{
+        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA3-256 File", "RapidCRCCreateSHA3_256")
+	}
+    else if(idCommand == IDM_SHA3_512)
+	{
+        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA3-512 File", "RapidCRCCreateSHA3_512")
 	}
 	else
 	{
@@ -580,6 +363,18 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 		{
 			doRapidCrcOpen(TEXT(" -CreateSHA512"));
 		}
+        else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA3_244"))
+		{
+			doRapidCrcOpen(TEXT(" -CreateSHA3224"));
+		}
+        else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA3_256"))
+		{
+			doRapidCrcOpen(TEXT(" -CreateSHA3256"));
+		}
+        else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA3_512"))
+		{
+			doRapidCrcOpen(TEXT(" -CreateSHA3512"));
+		}
 		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCPutName"))
 		{
 			doRapidCrcOpen(TEXT(" -PutNAME"));
@@ -629,6 +424,18 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
 		{
 			doRapidCrcOpen(TEXT(" -CreateSHA512"));
 		}
+        else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA3_224"))
+		{
+			doRapidCrcOpen(TEXT(" -CreateSHA3224"));
+		}
+        else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA3_256"))
+		{
+			doRapidCrcOpen(TEXT(" -CreateSHA3256"));
+		}
+        else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA3_512"))
+		{
+			doRapidCrcOpen(TEXT(" -CreateSHA3512"));
+		}
 		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCPutName"))
 		{
 			doRapidCrcOpen(TEXT(" -PutNAME"));
@@ -674,6 +481,18 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     else if(LOWORD(lpcmi->lpVerb) == IDM_SHA512)
 	{
 		doRapidCrcOpen(TEXT(" -CreateSHA512"));
+	}
+    else if(LOWORD(lpcmi->lpVerb) == IDM_SHA3_224)
+	{
+		doRapidCrcOpen(TEXT(" -CreateSHA3224"));
+	}
+    else if(LOWORD(lpcmi->lpVerb) == IDM_SHA3_256)
+	{
+		doRapidCrcOpen(TEXT(" -CreateSHA3256"));
+	}
+    else if(LOWORD(lpcmi->lpVerb) == IDM_SHA3_512)
+	{
+		doRapidCrcOpen(TEXT(" -CreateSHA3512"));
 	}
 	else if(LOWORD(lpcmi->lpVerb) == IDM_NAME)
 	{

@@ -110,6 +110,9 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_SHA1			3
 #define CMD_SHA256			4
 #define CMD_SHA512			5
+#define CMD_SHA3_224		6
+#define CMD_SHA3_256		7
+#define CMD_SHA3_512		8
 #define CMD_NAME			21
 #define CMD_NTFS			22
 #define CMD_REPARENT		23
@@ -231,11 +234,14 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_COPY_SHA1				4
 #define IDM_COPY_SHA256				5
 #define IDM_COPY_SHA512				6
-#define IDM_COPY_ED2K_LINK			7
-#define IDM_REMOVE_ITEMS			8
-#define IDM_CLEAR_LIST				9
+#define IDM_COPY_SHA3_224		    7
+#define IDM_COPY_SHA3_256			8
+#define IDM_COPY_SHA3_512			9
+#define IDM_COPY_ED2K_LINK			20
+#define IDM_REMOVE_ITEMS			21
+#define IDM_CLEAR_LIST				22
 
-#define IDM_HIDE_VERIFIED           10
+#define IDM_HIDE_VERIFIED           23
 
 #define IDM_CRC_FILENAME            1
 

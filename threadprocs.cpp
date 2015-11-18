@@ -303,6 +303,9 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				case CMD_SHA1:
                 case CMD_SHA256:
                 case CMD_SHA512:
+                case CMD_SHA3_224:
+                case CMD_SHA3_256:
+                case CMD_SHA3_512:
 					CreateChecksumFiles(arrHwnd,fileList->uiCmdOpts,&finalList);
 					break;
 				case CMD_NAME:

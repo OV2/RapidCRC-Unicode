@@ -50,7 +50,10 @@
 #define IDM_SHA512 8
 #define IDM_NAME 9
 #define IDM_NTFS 10
-#define IDM_SUBMENU 11
+#define IDM_SHA3_224 11
+#define IDM_SHA3_256 12
+#define IDM_SHA3_512 13
+#define IDM_SUBMENU 14
 #define ResultFromShort(i)  ResultFromScode(MAKE_SCODE(SEVERITY_SUCCESS, 0, (USHORT)(i)))
 
 //***************************

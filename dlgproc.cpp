@@ -637,7 +637,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
 INT_PTR CALLBACK DlgProcCtxMenu(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-#define MAX_CONTEX_CHECKBOXES_ID 11
+#define MAX_CONTEX_CHECKBOXES_ID 14
 	switch (message)
 	{
     case WM_INITDIALOG :
