@@ -75,6 +75,21 @@
                     <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
                   </Extension>
                 </ProgId>
+                <ProgId Id='RCRC.sha3_224' Description='SHA3_224 File (RapidCRC)' Icon="HashFileIcon" IconIndex="0">
+                  <Extension Id='sha3_224' ContentType='application/sha3_224'>
+                    <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
+                  </Extension>
+                </ProgId>
+                <ProgId Id='RCRC.sha3_256' Description='SHA3_256 File (RapidCRC)' Icon="HashFileIcon" IconIndex="0">
+                  <Extension Id='sha3_256' ContentType='application/sha3_256'>
+                    <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
+                  </Extension>
+                </ProgId>
+                <ProgId Id='RCRC.sha3_512' Description='SHA3_512 File (RapidCRC)' Icon="HashFileIcon" IconIndex="0">
+                  <Extension Id='sha3_512' ContentType='application/sha3_512'>
+                    <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
+                  </Extension>
+                </ProgId>
             </Component>
 
           </Directory>
@@ -102,7 +117,7 @@
       <Feature Id='ShellExt' Title='Shell Extension' Description='Enables the Shell extension.' Level='1' AllowAdvertise='no'>
         <ComponentRef Id='ShellExtReg' />
       </Feature>
-      <Feature Id='FileExtAssoc' Title='File Associations' Description='Associates .sfv, .md5 and .sha1/256/51 files with RapidCRC.' Level='1' AllowAdvertise='no'>
+      <Feature Id='FileExtAssoc' Title='File Associations' Description='Associates .sfv, .md5, .sha1/256/512 and .sha3_224/256/512 files with RapidCRC.' Level='1' AllowAdvertise='no'>
         <ComponentRef Id='FileAssoc' />
       </Feature>
     </Feature>
