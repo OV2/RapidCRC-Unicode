@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by rcrcshex1.rc
+// Used by rcrcshex.rc
 //
 #define IDI_CREATE_SFV                  103
 #define IDI_OPEN_WITH                   104
