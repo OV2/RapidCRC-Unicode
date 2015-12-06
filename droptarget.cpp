@@ -27,8 +27,6 @@
 #include <commctrl.h>
 #include "CSyncQueue.h"
 
-static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject);
-
 //
 //	This is our definition of a class which implements
 //  the IDropTarget interface
@@ -54,16 +52,17 @@ public:
 private:
 
 	// internal helper function
-	// DWORD DropEffect(DWORD grfKeyState, POINTL pt, DWORD dwAllowed);
-	BOOL  QueryDataObject(IDataObject *pDataObject);
+	BOOL QueryDataObject(IDataObject *pDataObject);
+    BOOL IsQueueReady();
+    void DropData(IDataObject *pDataObject,UINT uiCmdOpts);
 
 
 	// Private member variables
 	LONG				m_lRefCount;
 	HWND				* m_arrHwnd;
-	BOOL				 m_fAllowDrop;
-	//BOOL				* m_pbThreadDone;
-	//QWORD				* m_pqwFilesizeSum;
+	BOOL				m_fAllowDrop;
+    HMENU               m_dropMenu;
+    BOOL                m_rightClickDrop;
 
 	IDataObject *m_pDataObject;
 };
@@ -74,10 +73,14 @@ private:
 CDropTarget::CDropTarget(HWND arrHwnd[ID_NUM_WINDOWS])
 {
 	m_lRefCount			= 1;
-	m_arrHwnd				= arrHwnd;
+	m_arrHwnd			= arrHwnd;
 	m_fAllowDrop		= FALSE;
-	//m_pbThreadDone		= pbThreadDone;
-	//m_pqwFilesizeSum	= pqwFilesizeSum;
+    m_rightClickDrop    = FALSE;
+    m_dropMenu = CreatePopupMenu();
+    InsertMenu(m_dropMenu, 0, MF_BYPOSITION | MF_STRING, IDM_DDROP_CHOICE_BSD, TEXT("Force open as BSD-style"));
+    InsertMenu(m_dropMenu, 0, MF_BYPOSITION | MF_STRING, IDM_DDROP_CHOICE_ALLHASHES, TEXT("Open all hash files"));
+    InsertMenu(m_dropMenu, 0, MF_BYPOSITION | MF_STRING, IDM_DDROP_CHOICE_REPARENT, TEXT("Reparent hash file"));
+    InsertMenu(m_dropMenu, 0, MF_BYPOSITION | MF_STRING, IDM_DDROP_CHOICE_OPEN, TEXT("Open files"));
 }
 
 //
@@ -85,7 +88,7 @@ CDropTarget::CDropTarget(HWND arrHwnd[ID_NUM_WINDOWS])
 //
 CDropTarget::~CDropTarget()
 {
-	
+    DestroyMenu(m_dropMenu);
 }
 
 //
@@ -140,8 +143,7 @@ BOOL CDropTarget::QueryDataObject(IDataObject *pDataObject)
 	FORMATETC fmtetc = { CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
 
 	// does the data object support CF_HDROP using a HGLOBAL?
-	// return pDataObject->QueryGetData(&fmtetc) == S_OK ? true : false;
-	return ( (pDataObject->QueryGetData(&fmtetc) == S_OK) && (SyncQueue.bThreadDone || g_program_options.bEnableQueue));
+	return pDataObject->QueryGetData(&fmtetc) == S_OK ? true : false;
 }
 
 //
@@ -153,8 +155,9 @@ HRESULT __stdcall CDropTarget::DragEnter(IDataObject * pDataObject, DWORD grfKey
 {
 	// does the dataobject contain data we want?
 	m_fAllowDrop = QueryDataObject(pDataObject);
+    m_rightClickDrop = grfKeyState & MK_RBUTTON;
 	
-	if(m_fAllowDrop && (SyncQueue.bThreadDone || g_program_options.bEnableQueue))
+	if(m_fAllowDrop && IsQueueReady())
 		*pdwEffect = DROPEFFECT_COPY;
 	else
 		*pdwEffect = DROPEFFECT_NONE;
@@ -169,7 +172,7 @@ HRESULT __stdcall CDropTarget::DragEnter(IDataObject * pDataObject, DWORD grfKey
 //
 HRESULT __stdcall CDropTarget::DragOver(DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
 {
-	if(m_fAllowDrop && (SyncQueue.bThreadDone || g_program_options.bEnableQueue))
+	if(m_fAllowDrop && IsQueueReady())
 		*pdwEffect = DROPEFFECT_COPY;
 	else
 		*pdwEffect = DROPEFFECT_NONE;
@@ -191,11 +194,37 @@ HRESULT __stdcall CDropTarget::DragLeave(void)
 //
 HRESULT __stdcall CDropTarget::Drop(IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
 {
-	if(m_fAllowDrop && (SyncQueue.bThreadDone || g_program_options.bEnableQueue))
+	if(m_fAllowDrop && IsQueueReady())
 	{
-		DropData(m_arrHwnd, pDataObject);
+        UINT uiCmdMode = CMD_NORMAL;
+        if(m_rightClickDrop || (grfKeyState & MK_CONTROL))
+        {
+            int ret = TrackPopupMenu(m_dropMenu, TPM_RETURNCMD | TPM_NONOTIFY, pt.x, pt.y, 0, m_arrHwnd[ID_LISTVIEW], NULL);
 
-		*pdwEffect = DROPEFFECT_COPY;;
+            switch(ret)
+            {
+            case IDM_DDROP_CHOICE_OPEN:
+                uiCmdMode = CMD_NORMAL;
+                break;
+            case IDM_DDROP_CHOICE_REPARENT:
+                uiCmdMode = CMD_REPARENT;
+                break;
+            case IDM_DDROP_CHOICE_ALLHASHES:
+                uiCmdMode = CMD_ALLHASHES;
+                break;
+            case IDM_DDROP_CHOICE_BSD:
+                uiCmdMode = CMD_FORCE_BSD;
+                break;
+            default:
+                uiCmdMode = 0;
+                break;
+            }
+        }
+        
+        if(uiCmdMode)
+		    DropData(pDataObject, uiCmdMode);
+
+		*pdwEffect = DROPEFFECT_COPY;
 	}
 	else
 	{
@@ -205,7 +234,13 @@ HRESULT __stdcall CDropTarget::Drop(IDataObject * pDataObject, DWORD grfKeyState
 	return S_OK;
 }
 
-static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject)
+BOOL CDropTarget::IsQueueReady()
+{
+    return SyncQueue.bThreadDone || g_program_options.bEnableQueue;
+}
+
+
+void CDropTarget::DropData(IDataObject *pDataObject, UINT uiCmdOpts)
 {
 	// construct a FORMATETC object
 	FORMATETC fmtetc = { CF_HDROP, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
@@ -232,6 +267,7 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject)
 			uiCount = DragQueryFile((HDROP)stgmed.hGlobal, 0xFFFFFFFF, NULL, 0);
 
 			pFInfoList = new lFILEINFO;
+            pFInfoList->uiCmdOpts = uiCmdOpts;
 			fileinfoTmp.parentList = pFInfoList;
 
 			for (UINT i=0; i < uiCount; i++)
@@ -248,11 +284,11 @@ static void DropData(HWND arrHwnd[ID_NUM_WINDOWS], IDataObject *pDataObject)
 			// release the data using the COM API
 			ReleaseStgMedium(&stgmed);
 
-			PostMessage(arrHwnd[ID_MAIN_WND],WM_THREAD_FILEINFO_START,(WPARAM)pFInfoList,NULL);
+			PostMessage(m_arrHwnd[ID_MAIN_WND],WM_THREAD_FILEINFO_START,(WPARAM)pFInfoList,NULL);
 		} else
-            ShowErrorMsg(arrHwnd[ID_MAIN_WND], hr);
+            ShowErrorMsg(m_arrHwnd[ID_MAIN_WND], hr);
 	} else
-        ShowErrorMsg(arrHwnd[ID_MAIN_WND], hr);
+        ShowErrorMsg(m_arrHwnd[ID_MAIN_WND], hr);
 }
 
 VOID RegisterDropWindow(HWND arrHwnd[ID_NUM_WINDOWS], IDropTarget **ppDropTarget)
@@ -279,4 +315,3 @@ VOID UnregisterDropWindow(HWND hWndListview, IDropTarget *pDropTarget)
 	// release our own reference
 	pDropTarget->Release();
 }
-

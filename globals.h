@@ -264,6 +264,11 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define FDIALOG_CHOICE_ALLHASHES 2
 #define FDIALOG_CHOICE_BSD 3
 
+//****** dragndrop menu *******
+#define IDM_DDROP_CHOICE_OPEN 1
+#define IDM_DDROP_CHOICE_REPARENT 2
+#define IDM_DDROP_CHOICE_ALLHASHES 3
+#define IDM_DDROP_CHOICE_BSD 4
 
 //****** custom datatypes *******
 
