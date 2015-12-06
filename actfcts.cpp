@@ -263,7 +263,7 @@ BOOL OpenFilesVistaUp(HWND hwnd, lFILEINFO *pFInfoList)
 				{
 					hr = pfdc->AddControlItem(FDIALOG_OPENCHOICES, 
 											  FDIALOG_CHOICE_REPARENT, 
-											  L"&Reparent SFV/MD5");
+											  L"&Reparent hash file");
                     hr = pfdc->AddControlItem(FDIALOG_OPENCHOICES, 
 											  FDIALOG_CHOICE_ALLHASHES, 
 											  L"&Open all hash files");
@@ -536,6 +536,10 @@ static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *
 
             StringCchPrintf(szFileOut,MAX_PATH_EX,TEXT("%s.%s"), pFileinfo->szFilename, g_hash_ext[uiMode]);
 
+            if(g_program_options.bNoHashFileOverride && FileExists(szFileOut)) {
+                continue;
+            }
+
             hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
             if(hFile == INVALID_HANDLE_VALUE)
                 return GetLastError();
@@ -596,15 +600,20 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 	HANDLE hFile = NULL;
 
 
-	//for(UINT uiIndex = 0; uiIndex < uiNumElements; uiIndex++){
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 		if( (*it)->dwError == NO_ERROR ){
 			StringCchCopy(szCurrentDir, MAX_PATH_EX, (*it)->szFilename);
 			ReduceToPath(szCurrentDir);
 			if(lstrcmpi(szPreviousDir, szCurrentDir) != 0){
-				CloseHandle(hFile);
+                if(hFile) {
+				    CloseHandle(hFile);
+                    hFile = NULL;
+                }
 				StringCchCopy(szPreviousDir, MAX_PATH_EX, szCurrentDir);
 				StringCchPrintf(szCurChecksumFilename, MAX_PATH_EX, TEXT("%s%s"), szCurrentDir, szChkSumFilename);
+                if(g_program_options.bNoHashFileOverride && FileExists(szCurChecksumFilename)) {
+                    continue;
+                }
 				hFile = CreateFile(szCurChecksumFilename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 				if(hFile == INVALID_HANDLE_VALUE){
 					return GetLastError();
@@ -638,13 +647,15 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
                 }
 			}
 
-            dwResult = WriteHashLine(hFile, GetFilenameWithoutPathPointer((*it)->szFilenameShort),
-                (*it)->hashInfo[uiMode].szResult, uiMode == MODE_SFV);
+            if(hFile) {
+                dwResult = WriteHashLine(hFile, GetFilenameWithoutPathPointer((*it)->szFilenameShort),
+                    (*it)->hashInfo[uiMode].szResult, uiMode == MODE_SFV);
 
-			if(dwResult != NOERROR){
-				CloseHandle(hFile);
-				return dwResult;
-			}
+			    if(dwResult != NOERROR){
+				    CloseHandle(hFile);
+				    return dwResult;
+			    }
+            }
 		}
 	}
 	CloseHandle(hFile);

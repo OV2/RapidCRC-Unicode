@@ -421,6 +421,7 @@ typedef struct{
     TCHAR			szFilename[10][MAX_PATH];
     BOOL            bHashtypeFromFilename;
     BOOL            bHideVerified;
+    BOOL            bNoHashFileOverride;
 }PROGRAM_OPTIONS;
 
 typedef struct{

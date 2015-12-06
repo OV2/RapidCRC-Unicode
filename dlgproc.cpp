@@ -555,6 +555,12 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 			break;
+        case IDC_CHECK_DO_NOT_OVERRIDE:
+			if(HIWORD(wParam) == BN_CLICKED){
+                program_options_temp.bNoHashFileOverride = (IsDlgButtonChecked(hDlg, IDC_CHECK_DO_NOT_OVERRIDE) == BST_CHECKED);
+				return TRUE;
+			}
+			break;
         case IDC_CHECK_INCLUDE_COMMENTS:
             if(HIWORD(wParam) == BN_CLICKED){
 				program_options_temp.bIncludeFileComments = (IsDlgButtonChecked(hDlg, IDC_CHECK_INCLUDE_COMMENTS) == BST_CHECKED);

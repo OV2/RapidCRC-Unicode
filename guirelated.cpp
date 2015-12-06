@@ -1189,6 +1189,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 	CheckDlgButton(hDlg, IDC_CHECK_SORT_LIST, pprogram_options->bSortList ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_AUTO_SCROLL, pprogram_options->bAutoScrollListView ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_WINSFV_COMP, pprogram_options->bWinsfvComp ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg, IDC_CHECK_DO_NOT_OVERRIDE, pprogram_options->bNoHashFileOverride ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_CREATE_UNIX_STYLE, pprogram_options->bCreateUnixStyle ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_CHECK_CREATE_UNICODE_FILES, pprogram_options->bCreateUnicodeFiles ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hDlg, IDC_ENABLE_QUEUE, pprogram_options->bEnableQueue ? BST_CHECKED : BST_UNCHECKED);

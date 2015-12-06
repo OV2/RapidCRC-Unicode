@@ -614,6 +614,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
     }
     pprogram_options->bHashtypeFromFilename = true;
     pprogram_options->bHideVerified = false;
+    pprogram_options->bNoHashFileOverride = true;
 	return;
 }
 
