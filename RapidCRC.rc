@@ -34,7 +34,7 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,327,208,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,386,208,50,14
     GROUPBOX        "Algorithms",IDC_STATIC,3,2,216,47
-    LTEXT           "When not checking SFV/MD5 files calculate:",IDC_STATIC,9,12,140,8
+    LTEXT           "When not checking hash files calculate:",IDC_STATIC,9,12,126,8
     CONTROL         "CRC32",IDC_CHECK_CRC_DEFAULT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,10,24,38,10
     CONTROL         "MD5",IDC_CHECK_MD5_DEFAULT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,48,24,26,10
     CONTROL         "ED2K",IDC_CHECK_ED2K_DEFAULT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,75,24,28,10
@@ -63,12 +63,12 @@ BEGIN
     GROUPBOX        "Exclude the following extensions",IDC_STATIC,223,2,216,39
     LTEXT           "Separate extension with "";""",IDC_STATIC,227,12,89,8
     EDITTEXT        IDC_EDIT_EXCLUDE_LIST,227,23,203,14,ES_AUTOHSCROLL
-    GROUPBOX        "Allow the following characters as CRC in filename delimiters",IDC_STATIC,222,44,216,51
+    GROUPBOX        "Allow the following characters as hash in filename delimiters",IDC_STATIC,222,44,216,51
     LTEXT           "Do not separate the characters",IDC_STATIC,226,54,102,8
     EDITTEXT        IDC_CRC_DELIM_LIST,226,65,203,14,ES_AUTOHSCROLL
-    CONTROL         "Allow CRC without delimiters",IDC_ALLOW_CRC_ANYWHERE,
-                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,227,81,107,10
-    GROUPBOX        "How to put the CRC into the filename",IDC_STATIC,222,97,216,67
+    CONTROL         "Allow hash without delimiters (more false positives)",IDC_ALLOW_CRC_ANYWHERE,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,227,81,179,10
+    GROUPBOX        "How to put the hash into the filename",IDC_STATIC,222,97,216,67
     LTEXT           "Available variables: %FILENAME, %FILEEXT, %CRC",IDC_STATIC,227,108,169,8
     EDITTEXT        IDC_EDIT_FILENAME_PATTERN,227,120,203,14,ES_AUTOHSCROLL
     LTEXT           "Example:",IDC_STATIC,229,139,30,8
