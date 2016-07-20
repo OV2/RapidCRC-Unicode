@@ -288,7 +288,7 @@ void InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
 
         ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
 
-        fileinfoTmp.szFilename.Format(TEXT("%s%s"),fileList->g_szBasePath, szLine);
+        ConstructCompleteFilename(fileinfoTmp.szFilename, fileList->g_szBasePath, szLine);
 
 		fileList->fInfos.push_back(fileinfoTmp);
 	}
@@ -333,7 +333,7 @@ void InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEIN
 
         ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
 
-        fileinfoTmp.szFilename.Format(TEXT("%s%s"),fileList->g_szBasePath, szLine + uiIndex);
+        ConstructCompleteFilename(fileinfoTmp.szFilename, fileList->g_szBasePath, szLine + uiIndex);
 
 	    fileList->fInfos.push_back(fileinfoTmp);
     }
@@ -366,8 +366,12 @@ void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
 
     *szLastBrace = TEXT('\0');
     szLastBrace++;
-    fileinfoTmp.szFilename.Format(TEXT("%s%s"), fileList->g_szBasePath, szFirstBrace + 1);
-    fileinfoTmp.szFilename.Replace(TEXT("/"), TEXT("\\"));
+
+    ReplaceChar(szFirstBrace + 1, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
+    ConstructCompleteFilename(fileinfoTmp.szFilename, fileList->g_szBasePath, szFirstBrace + 1);
+
+    /*fileinfoTmp.szFilename.Format(TEXT("%s%s"), fileList->g_szBasePath, szFirstBrace + 1);
+    fileinfoTmp.szFilename.Replace(TEXT("/"), TEXT("\\"));*/
 
     while(!IsLegalHexSymbol(*szLastBrace) && *szLastBrace != TEXT('\0') )
         szLastBrace++;

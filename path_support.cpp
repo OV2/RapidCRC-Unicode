@@ -640,7 +640,10 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 	fileList->qwFilesizeSum = 0;
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
-        (*it).szFilenameShort = (*it).szFilename.GetBuffer() + stString;
+        if(PathIsRelative((*it).szFilename))
+            (*it).szFilenameShort = (*it).szFilename.GetBuffer() + stString;
+        else
+            (*it).szFilenameShort = (*it).szFilename.GetBuffer() + 4;
 		if(!IsApplDefError((*it).dwError)){
 			SetFileinfoAttributes(&(*it));
 			if ((*it).dwError == NO_ERROR){
@@ -838,4 +841,13 @@ UINT DetermineHashType(const CString &filename)
         return MODE_BSD;
 
     return MODE_NORMAL;
+}
+
+void ConstructCompleteFilename(CString &filename, TCHAR *base_path, TCHAR *rel_filename)
+{
+    if(PathIsRelative(rel_filename)) {
+        filename.Format(TEXT("%s%s"), base_path, rel_filename);
+    } else {
+        filename.Format(TEXT("\\\\?\\%s"), rel_filename);
+    }
 }
