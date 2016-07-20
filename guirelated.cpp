@@ -325,7 +325,8 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 
 	if(finalList->size() == 0) return;
 
-    UINT hash_string_lengths[] = { 9, 33, 33, 41, 65, 129 };
+    UINT hash_type = menuid - IDM_COPY_CRC;
+    UINT hash_string_length = g_hash_lengths[hash_type] * 2 + 1;
 
 	if(!OpenClipboard(hListView)) return;
     if(!EmptyClipboard()) {
@@ -368,8 +369,7 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 		clip[ed2kStrSize-2]=TEXT('\0');
 		free(ed2k_links);
 	} else {
-        UINT hash_type = menuid - IDM_COPY_CRC;
-        gAlloc = GlobalAlloc(GMEM_MOVEABLE,((hash_string_lengths[hash_type] + 1) * finalList->size() + 1) * sizeof(TCHAR));
+        gAlloc = GlobalAlloc(GMEM_MOVEABLE,((hash_string_length + 1) * finalList->size() + 1) * sizeof(TCHAR));
 		if(gAlloc == NULL) {
 			CloseClipboard();
 			return;
@@ -382,10 +382,10 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 	
 		curpos = clip;
 		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
-            memcpy(curpos,(*it)->hashInfo[hash_type].szResult,hash_string_lengths[hash_type] * sizeof(TCHAR));
-            curpos[hash_string_lengths[hash_type]-1] = TEXT('\r');
-			curpos[hash_string_lengths[hash_type]] = TEXT('\n');
-            curpos += hash_string_lengths[hash_type]+1;
+            memcpy(curpos,(*it)->hashInfo[hash_type].szResult, hash_string_length * sizeof(TCHAR));
+            curpos[hash_string_length - 1] = TEXT('\r');
+			curpos[hash_string_length] = TEXT('\n');
+            curpos += hash_string_length + 1;
 		}
 		*(curpos - 2) = TEXT('\0');
 	}
@@ -544,6 +544,9 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 		case IDM_COPY_SHA1:
         case IDM_COPY_SHA256:
         case IDM_COPY_SHA512:
+        case IDM_COPY_SHA3_224:
+        case IDM_COPY_SHA3_256:
+        case IDM_COPY_SHA3_512:
 		case IDM_COPY_ED2K:			
 		case IDM_COPY_ED2K_LINK:	HandleClipboard(arrHwnd[ID_LISTVIEW],ret,&finalList);
 									break;
