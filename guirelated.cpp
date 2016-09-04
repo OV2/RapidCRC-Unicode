@@ -1202,6 +1202,10 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
     CheckDlgButton(hDlg, IDC_CHECK_INCLUDE_COMMENTS, pprogram_options->bIncludeFileComments ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(hDlg, IDC_CHECK_HIDE_VERIFIED, pprogram_options->bHideVerified ? BST_CHECKED : BST_UNCHECKED);
 
+    CheckDlgButton(hDlg, IDC_RADIO_HEX_DEFAULT, pprogram_options->iHexFormat == DEFAULT ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg, IDC_RADIO_HEX_UPPERCASE, pprogram_options->iHexFormat == UPPERCASE ? BST_CHECKED : BST_UNCHECKED);
+    CheckDlgButton(hDlg, IDC_RADIO_HEX_LOWERCASE, pprogram_options->iHexFormat == LOWERCASE ? BST_CHECKED : BST_UNCHECKED);
+
     dlgItem = GetDlgItem(hDlg,IDC_UNICODE_TYPE);
     for(int i=0;i<ComboBox_GetCount(dlgItem);i++) {
         if(ComboBox_GetItemData(dlgItem,i)==pprogram_options->iUnicodeSaveType)

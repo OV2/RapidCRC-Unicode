@@ -579,6 +579,14 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 			break;
+        case IDC_RADIO_HEX_DEFAULT:
+        case IDC_RADIO_HEX_UPPERCASE:
+        case IDC_RADIO_HEX_LOWERCASE:
+			if(HIWORD(wParam) == BN_CLICKED){
+                program_options_temp.iHexFormat = (HEX_FORMAT)(LOWORD (wParam) - IDC_RADIO_HEX_DEFAULT);
+				return TRUE;
+			}
+			break;
 		case IDC_CHECK_CRC_DEFAULT:
         case IDC_CHECK_MD5_DEFAULT:
         case IDC_CHECK_ED2K_DEFAULT:

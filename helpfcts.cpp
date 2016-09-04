@@ -615,6 +615,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
     pprogram_options->bHashtypeFromFilename = true;
     pprogram_options->bHideVerified = false;
     pprogram_options->bNoHashFileOverride = true;
+    pprogram_options->iHexFormat = DEFAULT;
 	return;
 }
 
@@ -702,8 +703,16 @@ returns nothing
 *****************************************************************************/
 VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
 {
+    TCHAR *szCrcHex = TEXT("%08LX");
+    TCHAR *szHashHex = TEXT("%02lx");
+    if(g_program_options.iHexFormat == UPPERCASE) {
+        szHashHex = TEXT("%02LX");
+    } else if(g_program_options.iHexFormat == LOWERCASE) {
+        szCrcHex = TEXT("%08lx");
+    }
+
     if(fileList->bCalculated[HASH_TYPE_CRC32] && pFileinfo->dwError == NOERROR)
-        CRCI(pFileinfo).szResult.Format(TEXT("%08LX"), CRCI(pFileinfo).r.dwCrc32Result);
+        CRCI(pFileinfo).szResult.Format(szCrcHex, CRCI(pFileinfo).r.dwCrc32Result);
 	else
         CRCI(pFileinfo).szResult = TEXT("");
 
@@ -712,7 +721,7 @@ VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
         rPrint = TEXT("");
         if(fileList->bCalculated[i] && pFileinfo->dwError == NOERROR) {
             for(UINT j=0;j<g_hash_lengths[i];j++) {
-                rPrint.AppendFormat(TEXT("%02lx"),*((BYTE *)&pFileinfo->hashInfo[i].r + j));
+                rPrint.AppendFormat(szHashHex,*((BYTE *)&pFileinfo->hashInfo[i].r + j));
             }
         }
     }

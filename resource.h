@@ -62,6 +62,9 @@
 #define IDC_CHECK_CONTEXT11             1064
 #define IDC_CHECK_CONTEXT12             1065
 #define IDC_CHECK_CONTEXT13             1066
+#define IDC_RADIO_HEX_DEFAULT           1066
+#define IDC_RADIO_HEX_UPPERCASE         1067
+#define IDC_RADIO_HEX_LOWERCASE         1068
 #define IDC_CHECK_CONTEXT14             1067
 #define IDC_STATIC_CTX                  1068
 #define IDC_CHECK_DISPLAY_CRC_IN_LIST   4000
@@ -89,7 +92,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        134
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1066
+#define _APS_NEXT_CONTROL_VALUE         1067
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -274,6 +274,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 
 enum FILEINFO_STATUS {STATUS_OK = 0, STATUS_NOT_OK, STATUS_NO_CRC, STATUS_ERROR, STATUS_HASH_FILENAME, STATUS_HASH_STREAM};
 enum UNICODE_TYPE {NO_BOM = -1, UTF_16LE, UTF_8, UTF_8_BOM};
+enum HEX_FORMAT { DEFAULT = 0, UPPERCASE = 1, LOWERCASE = 2 };
 typedef unsigned __int64 QWORD, *LPQWORD;
 
 //****** some macros *******
@@ -422,6 +423,7 @@ typedef struct{
     BOOL            bHashtypeFromFilename;
     BOOL            bHideVerified;
     BOOL            bNoHashFileOverride;
+    HEX_FORMAT      iHexFormat;
 }PROGRAM_OPTIONS;
 
 typedef struct{
