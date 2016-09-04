@@ -544,7 +544,7 @@ list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::i
 VOID ProcessFileProperties(lFILEINFO *fileList);
 VOID MakePathsAbsolute(lFILEINFO *fileList);
 UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList);
-void ConstructCompleteFilename(CString &filename, TCHAR *base_path, TCHAR *rel_filename);
+void ConstructCompleteFilename(CString &filename, lFILEINFO *fileList, TCHAR *rel_filename);
 
 //pipe communication (pipecomm.cpp)
 BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList);
