@@ -21,7 +21,7 @@
 #include "globals.h"
 #include <shlobj.h>
 
-void InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList);
+void InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList, UINT uiHashMode);
 void InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEINFO *fileList);
 void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList);
 
@@ -221,7 +221,8 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 
         switch(uiMode) {
             case MODE_SFV:
-                InterpretSFVLine(szLine, uiStringLength, fileList);
+            case MODE_CRC32C:
+                InterpretSFVLine(szLine, uiStringLength, fileList, uiMode);
                 break;
             case MODE_MD5:
             case MODE_SHA1:
@@ -249,7 +250,7 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 	return TRUE;
 }
 
-void InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
+void InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList, UINT uiHashMode)
 {
     BOOL	bCrcOK;
 
@@ -271,8 +272,8 @@ void InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
 			if(! IsLegalHexSymbol(szLine[uiStringLength-i]))
 				bCrcOK = FALSE;
 		if(bCrcOK){
-            fileinfoTmp.hashInfo[HASH_TYPE_CRC32].dwFound = HASH_FOUND_FILE;
-            fileinfoTmp.hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found = HexToDword(szLine + uiStringLength - 8, 8);
+            fileinfoTmp.hashInfo[uiHashMode].dwFound = HASH_FOUND_FILE;
+            fileinfoTmp.hashInfo[uiHashMode].f.dwCrc32Found = HexToDword(szLine + uiStringLength - 8, 8);
 			fileinfoTmp.dwError = NOERROR;
 		}
 		else

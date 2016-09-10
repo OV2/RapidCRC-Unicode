@@ -72,10 +72,6 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MAX_RESULT_LINE 200
 #define RESULT_AS_STRING_MAX_LENGTH 129
 
-#define CRC_AS_STRING_LENGHT 9
-#define MD5_AS_STRING_LENGHT 33
-#define SHA1_AS_STRING_LENGHT 41
-#define ED2K_AS_STRING_LENGHT 33
 #define INFOTEXT_STRING_LENGTH 30
 
 // hash types
@@ -88,7 +84,8 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define HASH_TYPE_SHA3_224 6
 #define HASH_TYPE_SHA3_256 7
 #define HASH_TYPE_SHA3_512 8
-#define NUM_HASH_TYPES 9
+#define HASH_TYPE_CRC32C 9
+#define NUM_HASH_TYPES 10
 
 // RapidCRC modes; also used in the action functions
 // Have to equal hash types
@@ -101,6 +98,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MODE_SHA3_224			6
 #define MODE_SHA3_256			7
 #define MODE_SHA3_512			8
+#define MODE_CRC32C             9
 #define MODE_BSD                21
 
 //CMDLINE Options for the shell extension
@@ -113,6 +111,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_SHA3_224		6
 #define CMD_SHA3_256		7
 #define CMD_SHA3_512		8
+#define CMD_CRC32C          9
 #define CMD_NAME			21
 #define CMD_NTFS			22
 #define CMD_REPARENT		23
@@ -121,6 +120,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 
 
 #define CRCI(x) (x)->hashInfo[HASH_TYPE_CRC32]
+#define CRCCI(x) (x)->hashInfo[HASH_TYPE_CRC32C]
 #define MD5I(x) (x)->hashInfo[HASH_TYPE_MD5]
 #define SHA1I(x) (x)->hashInfo[HASH_TYPE_SHA1]
 #define ED2KI(x) (x)->hashInfo[HASH_TYPE_ED2K]
@@ -182,6 +182,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_STATIC_SHA3_224_VALUE    10
 #define ID_STATIC_SHA3_256_VALUE    11
 #define ID_STATIC_SHA3_512_VALUE    12
+#define ID_STATIC_CRCC_VALUE        13
 
 #define ID_STATIC_INFO				20
 #define ID_STATIC_STATUS			21
@@ -217,16 +218,17 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_EDIT_SHA3_224_VALUE		48
 #define ID_EDIT_SHA3_256_VALUE		49
 #define ID_EDIT_SHA3_512_VALUE		50
+#define ID_EDIT_CRCC_VALUE          51
 
-#define ID_EDIT_INFO				51
-#define ID_EDIT_STATUS				52
-#define ID_BTN_ERROR_DESCR			53
+#define ID_EDIT_INFO				52
+#define ID_EDIT_STATUS				53
+#define ID_BTN_ERROR_DESCR			54
 
-#define ID_COMBO_PRIORITY			54
-#define ID_BTN_OPENFILES_PAUSE		55
-#define ID_LAST_TAB_CONTROL			55
+#define ID_COMBO_PRIORITY			55
+#define ID_BTN_OPENFILES_PAUSE		56
+#define ID_LAST_TAB_CONTROL			56
 
-#define ID_NUM_WINDOWS				56
+#define ID_NUM_WINDOWS				57
 
 #define IDM_COPY_CRC				1
 #define IDM_COPY_MD5				2
@@ -237,6 +239,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_COPY_SHA3_224		    7
 #define IDM_COPY_SHA3_256			8
 #define IDM_COPY_SHA3_512			9
+#define IDM_COPY_CRCC               10
 #define IDM_COPY_ED2K_LINK			20
 #define IDM_REMOVE_ITEMS			21
 #define IDM_CLEAR_LIST				22
@@ -245,6 +248,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 
 #define IDM_CRC_FILENAME            1
 
+#define IDM_CRC_SFV                 1
 #define IDM_SHA3_224                1
 
 #define IDM_CRC_COLUMN              1
@@ -256,6 +260,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_SHA3_224_COLUMN         7
 #define IDM_SHA3_256_COLUMN         8
 #define IDM_SHA3_512_COLUMN         9
+#define IDM_CRCC_COLUMN             10
 
 //****** file open dialog *******
 #define FDIALOG_OPENCHOICES 0
@@ -307,6 +312,7 @@ typedef struct _FILEINFO {
             BYTE	abSha3_224Result[28];
             BYTE	abSha3_256Result[32];
             BYTE	abSha3_512Result[64];
+            DWORD   dwCrc32cResult;
         } r;
         union {
             DWORD   dwCrc32Found;
@@ -317,6 +323,7 @@ typedef struct _FILEINFO {
             BYTE	abSha3_224Found[28];
             BYTE	abSha3_256Found[32];
             BYTE	abSha3_512Found[64];
+            DWORD   dwCrc32cFound;
         } f;
         CString szResult;
         DWORD   dwFound;
@@ -492,6 +499,7 @@ VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStat
 void CreateListViewPopupMenu(HMENU *menu);
 void CreateHashFilenameButtonPopupMenu(HMENU *menu);
 void CreateSha3ButtonPopupMenu(HMENU *menu);
+void CreateCrcButtonPopupMenu(HMENU *menu);
 void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU pupup,int x,int y, SHOWRESULT_PARAMS * pshowresult_params);
 void CreateListViewHeaderPopupMenu(HMENU *menu);
 BOOL ListViewHeaderPopup(HWND pHwnd,HMENU pupup,int x,int y);

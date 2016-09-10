@@ -91,6 +91,11 @@
                     <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
                   </Extension>
                 </ProgId>
+                <ProgId Id='RCRC.crc32c' Description='CRC32C File (RapidCRC)' Icon="HashFileIcon" IconIndex="0">
+                  <Extension Id='crc32c' ContentType='application/crc32c'>
+                    <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
+                  </Extension>
+                </ProgId>
             </Component>
 
           </Directory>
@@ -120,7 +125,7 @@
       <Feature Id='ShellExt' Title='Shell Extension' Description='Enables the Shell extension.' Level='1' AllowAdvertise='no'>
         <ComponentRef Id='ShellExtReg64' />
       </Feature>
-      <Feature Id='FileExtAssoc' Title='File Associations' Description='Associates .sfv, .md5, .sha1/256/512 and .sha3_224/256/512 files with RapidCRC.' Level='1' AllowAdvertise='no'>
+      <Feature Id='FileExtAssoc' Title='File Associations' Description='Associates .sfv, .md5, .sha1/256/512, .sha3_224/256/512 and .crc32c files with RapidCRC.' Level='1' AllowAdvertise='no'>
         <ComponentRef Id='FileAssoc' />
       </Feature>
     </Feature>

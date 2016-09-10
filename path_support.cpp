@@ -789,7 +789,19 @@ Notes:
 *****************************************************************************/
 UINT DetermineHashType(const CString &filename)
 {
-    if(HasFileExtension(filename, TEXT(".sfv"))) {
+    TCHAR *szExtension;
+	
+	szExtension = PathFindExtension(filename) + 1;
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+        if(lstrcmpi(g_hash_ext[i], szExtension)==0)
+			return MODE_SFV + i;
+    }
+
+    if(HasFileExtension(filename, TEXT(".bsdhash"))) {
+		return MODE_BSD;
+    }
+
+    /*if(HasFileExtension(filename, TEXT(".sfv"))) {
 		return MODE_SFV;
     } else if(HasFileExtension(filename, TEXT(".md5"))) {
 		return MODE_MD5;
@@ -807,7 +819,7 @@ UINT DetermineHashType(const CString &filename)
 		return MODE_SHA3_256;
     } else if(HasFileExtension(filename, TEXT(".sha3_512"))) {
 		return MODE_SHA3_512;
-    }
+    }*/
 
     if(!g_program_options.bHashtypeFromFilename)
         return MODE_NORMAL;

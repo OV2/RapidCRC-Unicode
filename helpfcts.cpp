@@ -711,18 +711,18 @@ VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
         szCrcHex = TEXT("%08lx");
     }
 
-    if(fileList->bCalculated[HASH_TYPE_CRC32] && pFileinfo->dwError == NOERROR)
-        CRCI(pFileinfo).szResult.Format(szCrcHex, CRCI(pFileinfo).r.dwCrc32Result);
-	else
-        CRCI(pFileinfo).szResult = TEXT("");
-
-    for(int i=1;i<NUM_HASH_TYPES;i++) {
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
         CString &rPrint = pFileinfo->hashInfo[i].szResult;
         rPrint = TEXT("");
         if(fileList->bCalculated[i] && pFileinfo->dwError == NOERROR) {
-            for(UINT j=0;j<g_hash_lengths[i];j++) {
-                rPrint.AppendFormat(szHashHex,*((BYTE *)&pFileinfo->hashInfo[i].r + j));
-            }
+            if(i == HASH_TYPE_CRC32)
+                CRCI(pFileinfo).szResult.Format(szCrcHex, CRCI(pFileinfo).r.dwCrc32Result);
+            else if(i == HASH_TYPE_CRC32C)
+                CRCCI(pFileinfo).szResult.Format(szCrcHex, CRCCI(pFileinfo).r.dwCrc32cResult);
+            else
+                for(UINT j=0;j<g_hash_lengths[i];j++) {
+                    rPrint.AppendFormat(szHashHex,*((BYTE *)&pFileinfo->hashInfo[i].r + j));
+                }
         }
     }
 

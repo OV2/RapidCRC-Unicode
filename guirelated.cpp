@@ -183,6 +183,8 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	arrHwnd[ID_EDIT_SHA3_256_VALUE]		= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_SHA3_256_VALUE, g_hInstance, NULL);
     arrHwnd[ID_STATIC_SHA3_512_VALUE]	= CreateWindow(TEXT("STATIC"), TEXT("SHA3-512:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_SHA3_512_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_SHA3_512_VALUE]		= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_SHA3_512_VALUE, g_hInstance, NULL);
+    arrHwnd[ID_STATIC_CRCC_VALUE]	    = CreateWindow(TEXT("STATIC"), TEXT("CRC32C:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_CRCC_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_CRCC_VALUE]		    = CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_CRCC_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_STATIC_INFO]				= CreateWindow(TEXT("STATIC"), TEXT("Info:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_INFO, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_INFO]				= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_INFO, g_hInstance, NULL);
 	arrHwnd[ID_BTN_ERROR_DESCR]			= CreateWindow(TEXT("BUTTON"), TEXT("Descr."), BS_PUSHBUTTON | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_ERROR_DESCR, g_hInstance, NULL);
@@ -279,6 +281,17 @@ void CreateSha3ButtonPopupMenu(HMENU *menu) {
     for(int i = 0; i < 3; i++) {
         InsertMenu(*menu,i, MF_BYPOSITION | MF_STRING, IDM_SHA3_224 + i, g_hash_names[HASH_TYPE_SHA3_224 + i]);
     }
+}
+
+/*****************************************************************************
+void CreateCrcButtonPopupMenu(HMENU *menu)
+
+*****************************************************************************/
+void CreateCrcButtonPopupMenu(HMENU *menu) {
+	*menu = CreatePopupMenu();
+
+    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING, IDM_CRC_SFV + HASH_TYPE_CRC32, g_hash_names[HASH_TYPE_CRC32]);
+    InsertMenu(*menu,1, MF_BYPOSITION | MF_STRING, IDM_CRC_SFV + HASH_TYPE_CRC32C, g_hash_names[HASH_TYPE_CRC32C]);
 }
 
 /*****************************************************************************
@@ -539,7 +552,8 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 
     ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,arrHwnd[ID_LISTVIEW],NULL);
 	switch(ret) {
-		case IDM_COPY_CRC:			
+		case IDM_COPY_CRC:
+        case IDM_COPY_CRCC:
 		case IDM_COPY_MD5:
 		case IDM_COPY_SHA1:
         case IDM_COPY_SHA256:
@@ -547,7 +561,7 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
         case IDM_COPY_SHA3_224:
         case IDM_COPY_SHA3_256:
         case IDM_COPY_SHA3_512:
-		case IDM_COPY_ED2K:			
+		case IDM_COPY_ED2K:
 		case IDM_COPY_ED2K_LINK:	HandleClipboard(arrHwnd[ID_LISTVIEW],ret,&finalList);
 									break;
 		case IDM_CLEAR_LIST:		ClearAllItems(arrHwnd,pshowresult_params);
@@ -999,13 +1013,13 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 				StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
 			SetWindowText(arrHwnd[ID_EDIT_ED2K_VALUE], szTemp1);
 
-            for(int i = 0; i < 5; i++) {
-                if(pFileinfo->parentList->bCalculated[HASH_TYPE_SHA256 + i]){
-                    StringCchCopy(szTemp1, MAX_RESULT_LINE, pFileinfo->hashInfo[HASH_TYPE_SHA256 + i].szResult);
+            for(int i = HASH_TYPE_SHA256; i < NUM_HASH_TYPES; i++) {
+                if(pFileinfo->parentList->bCalculated[i]){
+                    StringCchCopy(szTemp1, MAX_RESULT_LINE, pFileinfo->hashInfo[i].szResult);
 			    }
 			    else
 				    StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT(""));
-			    SetWindowText(arrHwnd[ID_EDIT_SHA256_VALUE + i], szTemp1);
+			    SetWindowText(arrHwnd[ID_EDIT_SHA256_VALUE + i - HASH_TYPE_SHA256], szTemp1);
             }
 
 			if(pFileinfo->parentList->bCalculated[HASH_TYPE_SHA1]){
@@ -1099,7 +1113,7 @@ VOID DisplayStatusOverview(CONST HWND hEditStatus)
 		StringCchCat(szLine, MAX_LINE_LENGTH, szLineTmp);
 	}
 	if(SyncQueue.dwCountNoCrcFound > 0){
-		StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux no CRC found,"), SyncQueue.dwCountNoCrcFound);
+		StringCchPrintf(szLineTmp, MAX_LINE_LENGTH, TEXT(" %ux no hash found,"), SyncQueue.dwCountNoCrcFound);
 		StringCchCat(szLine, MAX_LINE_LENGTH, szLineTmp);
 	}
 	if(SyncQueue.dwCountNotFound > 0){

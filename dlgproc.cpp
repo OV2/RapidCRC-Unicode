@@ -60,7 +60,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static UINT uiThreadID;
 	static DWORD dwSortStatus;
 	static SHOWRESULT_PARAMS showresult_params = {NULL, FALSE, FALSE};
-	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, sha3Popup;
+	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, sha3Popup, crcPopup;
     static std::list<UINT> fileThreadIds;
 	lFILEINFO *fileList;
 
@@ -75,6 +75,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         CreateListViewHeaderPopupMenu(&headerPopupMenu);
         CreateHashFilenameButtonPopupMenu(&hashInNamePopup);
         CreateSha3ButtonPopupMenu(&sha3Popup);
+        CreateCrcButtonPopupMenu(&crcPopup);
 		RegisterDropWindow(arrHwnd, & pDropTarget);
 
 		return 0;
@@ -108,6 +109,18 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             int ret = TrackPopupMenu(hashInNamePopup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_CRC_IN_FILENAME], NULL);
             if(ret)
                 ActionHashIntoFilename(arrHwnd, ret - IDM_CRC_FILENAME);
+            return 0;
+        } else if((HWND)wParam == arrHwnd[ID_BTN_CRC_IN_SFV]) {
+            int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+            if(x == -1 && y == -1) {
+                POINT pt = {0, 0};
+                ClientToScreen(arrHwnd[ID_BTN_CRC_IN_SFV], &pt);
+                x = pt.x;
+                y = pt.y;
+            }
+            int ret = TrackPopupMenu(crcPopup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_CRC_IN_SFV], NULL);
+            if(ret)
+                CreateChecksumFiles(arrHwnd, ret - IDM_CRC_SFV);
             return 0;
         }
         break;
@@ -596,6 +609,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         case IDC_CHECK_SHA3_224_DEFAULT:
         case IDC_CHECK_SHA3_256_DEFAULT:
         case IDC_CHECK_SHA3_512_DEFAULT:
+        case IDC_CHECK_CRCC_DEFAULT:
 			if(HIWORD(wParam) == BN_CLICKED){
                 unsigned int offset = LOWORD(wParam) - IDC_CHECK_CRC_DEFAULT;
 				program_options_temp.bCalcPerDefault[offset] = (IsDlgButtonChecked(hDlg, LOWORD(wParam)) == BST_CHECKED);
@@ -611,6 +625,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         case IDC_CHECK_DISPLAY_SHA3_224_IN_LIST:
         case IDC_CHECK_DISPLAY_SHA3_256_IN_LIST:
         case IDC_CHECK_DISPLAY_SHA3_512_IN_LIST:
+        case IDC_CHECK_DISPLAY_CRCC_IN_LIST:
 			if(HIWORD(wParam) == BN_CLICKED){
                 unsigned int offset = LOWORD(wParam) - IDC_CHECK_DISPLAY_CRC_IN_LIST;
                 program_options_temp.bDisplayInListView[offset] = (IsDlgButtonChecked(hDlg, LOWORD(wParam)) == BST_CHECKED);
@@ -1162,7 +1177,9 @@ __declspec(deprecated) __inline BOOL ProcessKeyPressedInList(CONST HWND arrHwnd[
 		lvitem.iSubItem = 0;
 		ListView_GetItem(arrHwnd[ID_LISTVIEW], & lvitem);
 		ShowResult(arrHwnd, (FILEINFO *)lvitem.lParam, pshowresult_params);
-	}
+    } else if(pnkd->wVKey == VK_DELETE) {
+
+    }
 
 	return TRUE;
 }

@@ -33,6 +33,7 @@
 extern "C" {
 #include "sha3\KeccakNISTInterface.h"
 }
+#include "crc32c.h"
 #include "CSyncQueue.h"
 
 DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
@@ -44,6 +45,7 @@ DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam);
 DWORD WINAPI ThreadProc_Sha3_224Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Sha3_256Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Sha3_512Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Crc32cCalc(VOID * pParam);
 
 // used in UINT __stdcall ThreadProc_Calc(VOID * pParam)
 #define SWAPBUFFERS() \
@@ -66,6 +68,7 @@ threadfunc hash_function[] = {
     ThreadProc_Sha3_224Calc,
     ThreadProc_Sha3_256Calc,
     ThreadProc_Sha3_512Calc,
+    ThreadProc_Crc32cCalc
 };
 
 /*****************************************************************************
@@ -854,6 +857,28 @@ DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam)
 
 	} while (!(*bFileDone));
 	*result = ~dwCrc32;
+	SetEvent(hEvtThreadReady);
+	return 0;
+}
+
+DWORD WINAPI ThreadProc_Crc32cCalc(VOID * pParam)
+{
+	BYTE ** CONST buffer=((THREAD_PARAMS_HASHCALC *)pParam)->buffer;
+	DWORD ** CONST dwBytesRead=((THREAD_PARAMS_HASHCALC *)pParam)->dwBytesRead;
+	CONST HANDLE hEvtThreadReady=((THREAD_PARAMS_HASHCALC *)pParam)->hHandleReady;
+	CONST HANDLE hEvtThreadGo=((THREAD_PARAMS_HASHCALC *)pParam)->hHandleGo;
+	DWORD * CONST result=(DWORD *)((THREAD_PARAMS_HASHCALC *)pParam)->result;
+	BOOL * CONST bFileDone=((THREAD_PARAMS_HASHCALC *)pParam)->bFileDone;
+
+    __crc32_init();
+
+    DWORD dwCrc32c = 0;
+
+	do {
+		SignalObjectAndWait(hEvtThreadReady,hEvtThreadGo,INFINITE,FALSE);
+		dwCrc32c = crc32c_append(dwCrc32c, *buffer, **dwBytesRead);
+	} while (!(*bFileDone));
+	*result = dwCrc32c;
 	SetEvent(hEvtThreadReady);
 	return 0;
 }

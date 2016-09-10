@@ -779,8 +779,9 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	    }
     }
 
+    BOOL bIsSfv = (uiMode == MODE_SFV || uiMode == MODE_CRC32C);
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
-        dwResult = WriteHashLine(hFile, (*it)->szFilename.GetString() + uiSameCharCount, (*it)->hashInfo[uiMode].szResult, uiMode == MODE_SFV);
+        dwResult = WriteHashLine(hFile, (*it)->szFilename.GetString() + uiSameCharCount, (*it)->hashInfo[uiMode].szResult, bIsSfv);
 		
 		if(dwResult != NOERROR){
 			CloseHandle(hFile);
