@@ -1317,6 +1317,16 @@ LRESULT CALLBACK WndProcGroupBox(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         HDC     hDC = (HDC)wParam;
         HWND ghWnd = GetParent(hWnd);
 
+        // exclude statics
+        for(int i=ID_STATIC_FILENAME; i < ID_MAX_STATIC + 1; i++) {
+            HWND hSibling = GetDlgItem(ghWnd, i);
+            if(IsWindowVisible(hSibling)) {
+                GetWindowRect(hSibling, &rect);
+                MapWindowPoints(HWND_DESKTOP, hWnd, (LPPOINT)&rect, 2);
+                ExcludeClipRect(hDC, rect.left, rect.top, rect.right, rect.bottom);
+            }
+        }
+
         // Erase the group box's background.
         GetClientRect(hWnd, &rect);
         FillRect(hDC,&rect,(HBRUSH)GetClassLongPtr(ghWnd, GCLP_HBRBACKGROUND));
