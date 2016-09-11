@@ -611,6 +611,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
     for(int i=0;i<NUM_HASH_TYPES;i++) {
         pprogram_options->uiCreateFileMode[i] = CREATE_ONE_FILE;
         StringCchPrintf(pprogram_options->szFilename[i],MAX_PATH,TEXT("checksum.%s"),g_hash_ext[i]);
+        pprogram_options->bSaveAbsolutePaths[i] = 0;
     }
     pprogram_options->bHashtypeFromFilename = true;
     pprogram_options->bHideVerified = false;

@@ -743,14 +743,15 @@ BOOL InsertGroupIntoListView(CONST HWND hListView, lFILEINFO *fileList)
 {
 	static int currGroupId=1;
 	LVGROUP lvGroup={0};
+    TCHAR szFilenameTemp[MAX_PATH_EX];
 	TCHAR szGroupHeader[MAX_PATH_EX + 9];
 
 	fileList->iGroupId=currGroupId++;//SendMessage(hListView,LVM_GETGROUPCOUNT,0,0) + 1;
 	lvGroup.mask = LVGF_HEADER|LVGF_GROUPID;
 	lvGroup.cbSize = sizeof(LVGROUP);
 	lvGroup.iGroupId=fileList->iGroupId;
-	StringCchPrintf(szGroupHeader,MAX_PATH_EX + 6,TEXT("Job %02d - %s"),fileList->iGroupId,
-        (*fileList->g_szBasePath == TEXT('\0') ? fileList->g_szBasePath : fileList->g_szBasePath + 4) );
+    RegularFromLongFilename(szFilenameTemp, fileList->g_szBasePath);
+	StringCchPrintf(szGroupHeader, MAX_PATH_EX + 6, TEXT("Job %02d - %s"), fileList->iGroupId, szFilenameTemp );
 	lvGroup.pszHeader=(LPWSTR)szGroupHeader;//fileList->g_szBasePath;
 	if(ListView_InsertGroup(hListView,-1,&lvGroup)==-1)
 		return FALSE;

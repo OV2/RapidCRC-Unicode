@@ -21,9 +21,9 @@
 #include "globals.h"
 #include <shlobj.h>
 
-void InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList, UINT uiHashMode);
-void InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEINFO *fileList);
-void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList);
+BOOL InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList, UINT uiHashMode);
+BOOL InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEINFO *fileList);
+BOOL InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList);
 
 /*****************************************************************************
 DWORD WriteSfvHeader(CONST HANDLE hFile)
@@ -84,9 +84,10 @@ DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CON
 	size_t stStringLength;
 	VOID *szOutLine=szLine;
 
-	StringCchCopy(szFilenameTemp, MAX_PATH_EX, szFilename);
-	if(g_program_options.bCreateUnixStyle)
-		ReplaceChar(szFilenameTemp, MAX_PATH_EX, TEXT('\\'), TEXT('/'));
+    if(!RegularFromLongFilename(szFilenameTemp, szFilename)) {
+	    if(g_program_options.bCreateUnixStyle)
+		    ReplaceChar(szFilenameTemp, MAX_PATH_EX, TEXT('\\'), TEXT('/'));
+    }
 
     if(bIsSfv)
         StringCchPrintf(szLine, MAX_LINE_LENGTH, TEXT("%s %s%s"), szFilenameTemp,
@@ -143,7 +144,7 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 	UINT	uiStringLength;
 	BOOL	bErrorOccured, bEndOfFile;
 
-	BOOL	fileIsUTF16;
+	BOOL	fileIsUTF16, bWasAnyAbsolute = FALSE;
     UINT    codePage;
 	UNICODE_TYPE detectedBOM;
 
@@ -219,10 +220,11 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 		}
 #endif
 
+        BOOL bWasAbsolute = FALSE;
         switch(uiMode) {
             case MODE_SFV:
             case MODE_CRC32C:
-                InterpretSFVLine(szLine, uiStringLength, fileList, uiMode);
+                bWasAbsolute = InterpretSFVLine(szLine, uiStringLength, fileList, uiMode);
                 break;
             case MODE_MD5:
             case MODE_SHA1:
@@ -231,12 +233,15 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
             case MODE_SHA3_224:
             case MODE_SHA3_256:
             case MODE_SHA3_512:
-                InterpretMDSHALine(szLine, uiStringLength, uiMode, fileList);
+                bWasAbsolute = InterpretMDSHALine(szLine, uiStringLength, uiMode, fileList);
                 break;
             case MODE_BSD:
-                InterpretBSDLine(szLine, uiStringLength, fileList);
+                bWasAbsolute = InterpretBSDLine(szLine, uiStringLength, fileList);
                 break;
         }
+
+        if(bWasAbsolute)
+            bWasAnyAbsolute = TRUE;
 
 		GetNextLine(hFile, szLine, MAX_LINE_LENGTH, & uiStringLength, &bErrorOccured, &bEndOfFile, fileIsUTF16);
 		if(bErrorOccured){
@@ -247,18 +252,21 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 	}
 	CloseHandle(hFile);
 
+    if(bWasAnyAbsolute)
+        fileList->g_szBasePath[0] = TEXT('\0');
+
 	return TRUE;
 }
 
-void InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList, UINT uiHashMode)
+BOOL InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList, UINT uiHashMode)
 {
-    BOOL	bCrcOK;
+    BOOL	bCrcOK, bWasAbsolute = FALSE;
 
     FILEINFO fileinfoTmp = {0};
     fileinfoTmp.parentList=fileList;
 
     if(uiStringLength < 9)
-        return;
+        return FALSE;
 
     //delete trailing spaces
 	while( (szLine[uiStringLength - 1] == TEXT(' ')) && (uiStringLength > 8) ){
@@ -289,23 +297,25 @@ void InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList, U
 
         ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
 
-        ConstructCompleteFilename(fileinfoTmp.szFilename, fileList, szLine);
+        bWasAbsolute = !ConstructCompleteFilename(fileinfoTmp.szFilename, fileList->g_szBasePath, szLine);
 
 		fileList->fInfos.push_back(fileinfoTmp);
 	}
+
+    return bWasAbsolute;
 }
 
-void InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEINFO *fileList)
+BOOL InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEINFO *fileList)
 {
     UINT    uiHashLengthChars = g_hash_lengths[uiMode] * 2;
     UINT	uiIndex;
-    BOOL	bHashOK;
+    BOOL	bHashOK, bWasAbsolute = FALSE;
 
     FILEINFO fileinfoTmp = {0};
     fileinfoTmp.parentList=fileList;
 
     if(uiStringLength < uiHashLengthChars)
-        return;
+        return FALSE;
 
     if( IsLegalHexSymbol(szLine[0]) ){
 	    bHashOK = TRUE;
@@ -334,22 +344,24 @@ void InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEIN
 
         ReplaceChar(szLine, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
 
-        ConstructCompleteFilename(fileinfoTmp.szFilename, fileList, szLine + uiIndex);
+        bWasAbsolute = !ConstructCompleteFilename(fileinfoTmp.szFilename, fileList->g_szBasePath, szLine + uiIndex);
 
 	    fileList->fInfos.push_back(fileinfoTmp);
     }
+
+    return bWasAbsolute;
 }
 
-void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
+BOOL InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
 {
-    BOOL	bHashOK;
+    BOOL	bHashOK, bWasAbsolute = FALSE;
     int     iHashIndex = -1;
 
     FILEINFO fileinfoTmp = {0};
     fileinfoTmp.parentList=fileList;
 
     if(uiStringLength < 5)
-        return;
+        return FALSE;
 
     for(int i=0; i < NUM_HASH_TYPES; i++) {
         if(!_tcsncmp(szLine, g_hash_names[i], lstrlen(g_hash_names[i]))) {
@@ -358,18 +370,18 @@ void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
         }
     }
     if(iHashIndex<0)
-        return;
+        return FALSE;
 
     TCHAR *szFirstBrace = _tcschr(szLine, TEXT('('));
     TCHAR *szLastBrace = _tcsrchr(szLine, TEXT(')'));
     if(!szFirstBrace || !szLastBrace || szFirstBrace > szLastBrace)
-        return;
+        return FALSE;
 
     *szLastBrace = TEXT('\0');
     szLastBrace++;
 
     ReplaceChar(szFirstBrace + 1, MAX_PATH_EX, TEXT('/'), TEXT('\\'));
-    ConstructCompleteFilename(fileinfoTmp.szFilename, fileList, szFirstBrace + 1);
+    bWasAbsolute = !ConstructCompleteFilename(fileinfoTmp.szFilename, fileList->g_szBasePath, szFirstBrace + 1);
 
     while(!IsLegalHexSymbol(*szLastBrace) && *szLastBrace != TEXT('\0') )
         szLastBrace++;
@@ -377,7 +389,7 @@ void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
     UINT    uiHashLengthChars = g_hash_lengths[iHashIndex] * 2;
 
     if(lstrlen(szLastBrace) < (int)uiHashLengthChars)
-        return;
+        return FALSE;
 
     FILEINFO *fileInfo = &fileinfoTmp;
     bool alreadyInList = false;
@@ -410,6 +422,8 @@ void InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
 	        fileList->fInfos.push_back(fileinfoTmp);
         fileList->bDoCalculate[iHashIndex] = true;
     }
+
+    return bWasAbsolute;
 }
 
 /*****************************************************************************

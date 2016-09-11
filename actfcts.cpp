@@ -487,10 +487,13 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
     fco.uiCreateFileMode = g_program_options.uiCreateFileMode[uiMode];
 	StringCchCopy(fco.szFilename, MAX_PATH_EX, g_program_options.szFilename[uiMode]);
 
+    fco.bSaveAbsolute = g_program_options.bSaveAbsolutePaths[uiMode];
+
 	if(DialogBoxParam(g_hInstance, MAKEINTRESOURCE(IDD_DLG_FILE_CREATION), arrHwnd[ID_MAIN_WND],
 														DlgProcFileCreation, (LPARAM) & fco) != IDOK)
 		return NOERROR;
 
+    g_program_options.bSaveAbsolutePaths[uiMode] = fco.bSaveAbsolute;
     g_program_options.uiCreateFileMode[uiMode] = fco.uiCreateFileMode;
 	StringCchCopy(g_program_options.szFilename[uiMode], MAX_PATH_EX, fco.szFilename);
 
@@ -565,8 +568,11 @@ static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *
                     return dwResult;
                 }
             }
-
-            dwResult = WriteHashLine(hFile, GetFilenameWithoutPathPointer(pFileinfo->szFilename), pFileinfo->hashInfo[uiMode].szResult, uiMode == MODE_SFV);
+            
+            const TCHAR *szFilename = pFileinfo->szFilename;
+                if(!g_program_options.bSaveAbsolutePaths[uiMode])
+                    szFilename = GetFilenameWithoutPathPointer(pFileinfo->szFilename);
+            dwResult = WriteHashLine(hFile, szFilename, pFileinfo->hashInfo[uiMode].szResult, uiMode == MODE_SFV);
 
             CloseHandle(hFile);
 
@@ -648,8 +654,11 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 			}
 
             if(hFile) {
-                dwResult = WriteHashLine(hFile, GetFilenameWithoutPathPointer((*it)->szFilenameShort),
-                    (*it)->hashInfo[uiMode].szResult, uiMode == MODE_SFV);
+                const TCHAR *szFilename = (*it)->szFilenameShort;
+                if(!g_program_options.bSaveAbsolutePaths[uiMode])
+                    szFilename = GetFilenameWithoutPathPointer((*it)->szFilenameShort);
+
+                dwResult = WriteHashLine(hFile, szFilename, (*it)->hashInfo[uiMode].szResult, uiMode == MODE_SFV);
 
 			    if(dwResult != NOERROR){
 				    CloseHandle(hFile);
@@ -670,25 +679,17 @@ static BOOL GenerateFilename_OneFile(CONST HWND owner, CONST TCHAR *szDefault, U
     size_t strLen;
 
     StringCchLength(szDefault, MAX_PATH_EX, &strLen);
-    if(strLen > 4) { // if < 4 no extended path - something went wrong
-        // get rid of \\?\(UNC)
-        if(strLen > 6 && !_tcsncmp(szDefault + 4, TEXT("UNC"), 3)) {
-            szCurrentPath[0] = TEXT('\\');
-            StringCchCopy(szCurrentPath + 1, MAX_PATH_EX, szDefault + 7);
-            strLen -= 6;
-        } else {
-	        StringCchCopy(szCurrentPath, MAX_PATH_EX, szDefault + 4);
-            strLen -= 4;
-        }
 
+    if(strLen <= 4 || strLen == 8 || !RegularFromLongFilename(szCurrentPath, szDefault)) {
+        StringCchCopy(szCurrentPath, MAX_PATH_EX, TEXT("C:\\"));
+        StringCchCopy(szFileOut, MAX_PATH_EX, TEXT("C:\\default"));
+    } else {
+        StringCchLength(szCurrentPath, MAX_PATH_EX, &strLen);
         StringCchCopy(szFileOut, MAX_PATH_EX, szCurrentPath);
         szCurrentPath[strLen - 1] = TEXT('\0'); // get rid of last backslash for GetFilenameWithoutPathPointer
         StringCchCat(szFileOut, MAX_PATH_EX, GetFilenameWithoutPathPointer(szCurrentPath));
         if(szCurrentPath[strLen - 2] == TEXT(':'))
             szFileOut[4] = TEXT('\0');
-    } else {
-        StringCchCopy(szCurrentPath, MAX_PATH_EX, TEXT("C:\\"));
-        StringCchCopy(szFileOut, MAX_PATH_EX, TEXT("C:\\default"));
     }
 
     TCHAR *hashExt = g_hash_ext[uiMode];
@@ -749,6 +750,10 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
     if(!GenerateFilename_OneFile(arrHwnd[ID_MAIN_WND], szDefaultDir, uiMode, szFileOut, askForFilename))
         return NOERROR;
 
+    if(g_program_options.bSaveAbsolutePaths[uiMode] || uiSameCharCount == 4 || uiSameCharCount == 8) {
+        uiSameCharCount = 0;
+    }
+
 	hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 
 	if(hFile == INVALID_HANDLE_VALUE)
@@ -781,6 +786,7 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 
     BOOL bIsSfv = (uiMode == MODE_SFV || uiMode == MODE_CRC32C);
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
+        
         dwResult = WriteHashLine(hFile, (*it)->szFilename.GetString() + uiSameCharCount, (*it)->hashInfo[uiMode].szResult, bIsSfv);
 		
 		if(dwResult != NOERROR){

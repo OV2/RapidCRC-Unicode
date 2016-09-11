@@ -826,6 +826,9 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 			break;
 		}
 
+        if(pfco->bSaveAbsolute)
+            SendDlgItemMessage(hDlg, IDC_CHECK_ABSOLUTE_PATHS, BM_CLICK, 0, 0);
+
 		return TRUE;
 	case WM_COMMAND :
 		switch (LOWORD (wParam))
@@ -883,6 +886,8 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 				}
 				else
 					pfco->uiCreateFileMode = CREATE_ONE_FILE;
+
+                pfco->bSaveAbsolute = (IsDlgButtonChecked(hDlg, IDC_CHECK_ABSOLUTE_PATHS) == BST_CHECKED);
 
 				EndDialog (hDlg, IDOK) ;
 				return TRUE;

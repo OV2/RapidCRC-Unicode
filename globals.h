@@ -183,6 +183,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_STATIC_SHA3_256_VALUE    11
 #define ID_STATIC_SHA3_512_VALUE    12
 #define ID_STATIC_CRCC_VALUE        13
+#define ID_MAX_STATIC               13
 
 #define ID_STATIC_INFO				20
 #define ID_STATIC_STATUS			21
@@ -431,6 +432,7 @@ typedef struct{
     BOOL            bHideVerified;
     BOOL            bNoHashFileOverride;
     HEX_FORMAT      iHexFormat;
+    BOOL            bSaveAbsolutePaths[10];
 }PROGRAM_OPTIONS;
 
 typedef struct{
@@ -442,7 +444,8 @@ typedef struct{
 	UINT			uiMode;						// In		: should the dialog display options for sfv/md5/sha1?
 	UINT			uiNumSelected;				// In		: did the user select some files => "all" / "selected"
 	UINT			uiCreateFileMode;			// In/Out	: in: last user choice; out: new user choice
-	TCHAR			szFilename[MAX_PATH_EX];		// In/Out	: in: last choice for checksum filename; out: new choice
+	TCHAR			szFilename[MAX_PATH_EX];	// In/Out	: in: last choice for checksum filename; out: new choice
+    BOOL            bSaveAbsolute;              // In/Out   : in: last user choice; out: new user choice
 }FILECREATION_OPTIONS;
 
 //****** global variables *******
@@ -552,7 +555,8 @@ list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::i
 VOID ProcessFileProperties(lFILEINFO *fileList);
 VOID MakePathsAbsolute(lFILEINFO *fileList);
 UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList);
-void ConstructCompleteFilename(CString &filename, lFILEINFO *fileList, TCHAR *rel_filename);
+BOOL ConstructCompleteFilename(CString &filename, const TCHAR *szBasePath, const TCHAR *szRelFilename);
+BOOL RegularFromLongFilename(TCHAR szRegularFilename[MAX_PATH], const TCHAR *szLongFilename);
 
 //pipe communication (pipecomm.cpp)
 BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList);

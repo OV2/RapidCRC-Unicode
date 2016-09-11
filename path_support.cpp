@@ -801,26 +801,6 @@ UINT DetermineHashType(const CString &filename)
 		return MODE_BSD;
     }
 
-    /*if(HasFileExtension(filename, TEXT(".sfv"))) {
-		return MODE_SFV;
-    } else if(HasFileExtension(filename, TEXT(".md5"))) {
-		return MODE_MD5;
-    } else if(HasFileExtension(filename, TEXT(".sha1"))) {
-		return MODE_SHA1;
-    } else if(HasFileExtension(filename, TEXT(".sha256"))) {
-		return MODE_SHA256;
-    } else if(HasFileExtension(filename, TEXT(".sha512"))) {
-		return MODE_SHA512;
-    } else if(HasFileExtension(filename, TEXT(".bsdhash"))) {
-		return MODE_BSD;
-    } else if(HasFileExtension(filename, TEXT(".sha3_224"))) {
-        return MODE_SHA3_224;
-    } else if(HasFileExtension(filename, TEXT(".sha3_256"))) {
-		return MODE_SHA3_256;
-    } else if(HasFileExtension(filename, TEXT(".sha3_512"))) {
-		return MODE_SHA3_512;
-    }*/
-
     if(!g_program_options.bHashtypeFromFilename)
         return MODE_NORMAL;
 
@@ -855,12 +835,41 @@ UINT DetermineHashType(const CString &filename)
     return MODE_NORMAL;
 }
 
-void ConstructCompleteFilename(CString &filename, lFILEINFO *fileList, TCHAR *rel_filename)
+/*****************************************************************************
+BOOL ConstructCompleteFilename(CString &filename, TCHAR *szBasePath, const TCHAR *szRelFilename)
+	filename	  : (OUT) complete filename
+    szBasePath    : (IN) base path used to construct complete filenames
+    szRelFilename : (IN) (possibly) relative filename
+
+
+Return Value:
+FALSE if path was already absolute
+*****************************************************************************/
+BOOL ConstructCompleteFilename(CString &filename, const TCHAR *szBasePath, const TCHAR *szRelFilename)
 {
-    if(PathIsRelative(rel_filename)) {
-        filename.Format(TEXT("%s%s"), fileList->g_szBasePath, rel_filename);
+    if(PathIsRelative(szRelFilename)) {
+        filename.Format(TEXT("%s%s"), szBasePath, szRelFilename);
+        return TRUE;
+    } else if(!_tcsncmp(szRelFilename, TEXT("\\\\"), 2)) {
+        filename.Format(TEXT("\\\\?\\UNC\\%s"), szRelFilename + 2);
+        return FALSE;
     } else {
-        filename.Format(TEXT("\\\\?\\%s"), rel_filename);
-        fileList->g_szBasePath[0] = TEXT('\0');
+        filename.Format(TEXT("\\\\?\\%s"), szRelFilename);
+        return FALSE;
+    }
+}
+
+BOOL RegularFromLongFilename(TCHAR szRegularFilename[MAX_PATH], const TCHAR *szLongFilename)
+{
+    if(!_tcsncmp(szLongFilename, TEXT("\\\\?\\UNC\\"), 8)) {
+        szRegularFilename[0] = TEXT('\\');
+        StringCchCopy(szRegularFilename + 1, MAX_PATH_EX - 1, szLongFilename + 7);
+        return TRUE;
+    } else if(!_tcsncmp(szLongFilename, TEXT("\\\\?\\"), 4)) {
+        StringCchCopy(szRegularFilename, MAX_PATH_EX, szLongFilename + 4);
+        return TRUE;
+    } else {
+        StringCchCopy(szRegularFilename, MAX_PATH_EX, szLongFilename);
+        return FALSE;
     }
 }
