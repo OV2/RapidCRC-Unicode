@@ -206,30 +206,32 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_BTN_SHA3_IN_SHA3         36
 #define ID_BTN_CRC_IN_FILENAME		37
 #define ID_BTN_CRC_IN_STREAM		38
-#define ID_BTN_PLAY_PAUSE			39
-#define ID_BTN_OPTIONS				40
+#define ID_BTN_OPTIONS				39
 
-#define ID_EDIT_FILENAME			41
-#define ID_EDIT_CRC_VALUE			42
-#define ID_EDIT_MD5_VALUE			43
-#define ID_EDIT_ED2K_VALUE			44
-#define ID_EDIT_SHA1_VALUE			45
-#define ID_EDIT_SHA256_VALUE		46
-#define ID_EDIT_SHA512_VALUE		47
-#define ID_EDIT_SHA3_224_VALUE		48
-#define ID_EDIT_SHA3_256_VALUE		49
-#define ID_EDIT_SHA3_512_VALUE		50
-#define ID_EDIT_CRCC_VALUE          51
+#define ID_EDIT_FILENAME			40
+#define ID_EDIT_CRC_VALUE			41
+#define ID_EDIT_MD5_VALUE			42
+#define ID_EDIT_ED2K_VALUE			43
+#define ID_EDIT_SHA1_VALUE			44
+#define ID_EDIT_SHA256_VALUE		45
+#define ID_EDIT_SHA512_VALUE		46
+#define ID_EDIT_SHA3_224_VALUE		47
+#define ID_EDIT_SHA3_256_VALUE		48
+#define ID_EDIT_SHA3_512_VALUE		49
+#define ID_EDIT_CRCC_VALUE          50
 
-#define ID_EDIT_INFO				52
-#define ID_EDIT_STATUS				53
-#define ID_BTN_ERROR_DESCR			54
+#define ID_EDIT_INFO				51
+#define ID_EDIT_STATUS				52
+#define ID_BTN_ERROR_DESCR			53
 
-#define ID_COMBO_PRIORITY			55
-#define ID_BTN_OPENFILES_PAUSE		56
-#define ID_LAST_TAB_CONTROL			56
+#define ID_BTN_PLAY_PAUSE			54
+#define ID_BTN_STOP     			55
 
-#define ID_NUM_WINDOWS				57
+#define ID_COMBO_PRIORITY			56
+#define ID_BTN_OPENFILES_PAUSE		57
+#define ID_LAST_TAB_CONTROL			57
+
+#define ID_NUM_WINDOWS				58
 
 #define IDM_COPY_CRC				1
 #define IDM_COPY_MD5				2
@@ -372,6 +374,7 @@ typedef struct{
 	QWORD				qwBytesReadCurFile;				// out
 	QWORD				qwBytesReadAllFiles;			// out
 	BOOL				signalExit;
+    BOOL				signalStop;
 	SHOWRESULT_PARAMS	* pshowresult_params;			// in / out
 	HWND				* arrHwnd;						// in
 	FILEINFO			* pFileinfo_cur;				// out

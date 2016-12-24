@@ -242,7 +242,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 					    else
 						    bAsync = FALSE;
 
-					    if(*dwBytesReadCb<MAX_BUFFER_SIZE_CALC || pthread_params_calc->signalExit)
+					    if(*dwBytesReadCb < MAX_BUFFER_SIZE_CALC)
 						    bFileDone=TRUE;
 
                         for(int i=0;i<NUM_HASH_TYPES;i++) {
@@ -250,7 +250,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 						        SetEvent(hEvtThreadGo[i]);
                         }
 
-				    } while(!bFileDone);
+				    } while(!bFileDone && !pthread_params_calc->signalStop);
 
 				    WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
 
@@ -262,27 +262,40 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 					        CloseHandle(hThread[i]);
                     }
 
-				    if(pthread_params_calc->signalExit)
-					    break;
-
 				    QueryPerformanceCounter((LARGE_INTEGER*) &qwStop);
 				    curFileInfo.fSeconds = (float)((qwStop - qwStart) / (float)wqFreq);
                 }
 			}
 
             curFileInfo.status = InfoToIntValue(&curFileInfo);
-			SetFileInfoStrings(&curFileInfo,fileList);
 
-            if(!g_program_options.bHideVerified || curFileInfo.status != STATUS_OK) {
-			    InsertItemIntoList(arrHwnd[ID_LISTVIEW], &curFileInfo,fileList);
+			// only add finished files to the listview
+            if(bFileDone) {
+			    SetFileInfoStrings(&curFileInfo,fileList);
+
+                if(!g_program_options.bHideVerified || curFileInfo.status != STATUS_OK) {
+			        InsertItemIntoList(arrHwnd[ID_LISTVIEW], &curFileInfo,fileList);
+                }
+
+                SyncQueue.getDoneList();
+                SyncQueue.adjustErrorCounters(&curFileInfo,1);
+                SyncQueue.releaseDoneList();
+
+			    ShowResult(arrHwnd, &curFileInfo, pshowresult_params);
             }
 
-            SyncQueue.getDoneList();
-            SyncQueue.adjustErrorCounters(&curFileInfo,1);
-            SyncQueue.releaseDoneList();
-
-            if(!pthread_params_calc->signalExit)
-			    ShowResult(arrHwnd, &curFileInfo, pshowresult_params);
+			// we are stopping, need to remove unfinished file entries from the list and adjust count
+            if(pthread_params_calc->signalStop) {
+				// if current file is done keep it
+                if(bFileDone)
+                    it++;
+                size_t size_before = fileList->fInfos.size();
+                fileList->fInfos.erase(it, fileList->fInfos.end());
+                SyncQueue.getDoneList();
+                SyncQueue.dwCountTotal -= (size_before - fileList->fInfos.size());
+                SyncQueue.releaseDoneList();
+			    break;
+            }
 		}
 
         for(int i=0;i<NUM_HASH_TYPES;i++) {
@@ -292,8 +305,11 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
             }
         }
 
-		if(pthread_params_calc->signalExit)
+		// if we are stopping remove any open lists from the queue
+        if(pthread_params_calc->signalStop) {
+            SyncQueue.clearQueue();
 			break;
+        }
 
 		if(fileList->uiCmdOpts!=CMD_NORMAL) {
 			for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
@@ -323,7 +339,11 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			finalList.clear();
 		}
 
-		SyncQueue.addToList(fileList);
+		// if stopped before finishing any file we can delete the list
+        if(fileList->fInfos.size())
+		    SyncQueue.addToList(fileList);
+        else
+            delete fileList;
 
 	}
 

@@ -20,6 +20,7 @@
 #define IDI_ICON_MODERN_OK2             128
 #define IDD_DIALOG_CONTEXT_MENU         131
 #define IDB_BITMAP_CONTEXT              133
+#define IDI_ICON_STOP                   134
 #define IDC_EDIT_FILENAME_PATTERN       1018
 #define IDC_BTN_DEFAULT                 1019
 #define IDC_STATIC_FILENAME_EXAMPLE     1020
@@ -93,7 +94,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        134
+#define _APS_NEXT_RESOURCE_VALUE        135
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1068
 #define _APS_NEXT_SYMED_VALUE           101

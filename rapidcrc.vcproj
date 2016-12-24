@@ -1051,6 +1051,10 @@
 				RelativePath=".\icons\Result Icons OK.ico"
 				>
 			</File>
+			<File
+				RelativePath=".\icons\stop.ico"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

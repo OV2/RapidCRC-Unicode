@@ -204,12 +204,14 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
                 break;
             }
         }
+        DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 		// go on with the CRC Calculation
 	case WM_START_THREAD_CALC:
 		//only start thread if not currently running
 		if(!SyncQueue.bThreadDone) return 0;
 		thread_params_calc.arrHwnd = arrHwnd;
 		thread_params_calc.signalExit = FALSE;
+        thread_params_calc.signalStop = FALSE;
 		thread_params_calc.pshowresult_params = & showresult_params;
 		thread_params_calc.qwBytesReadAllFiles = 0;
 		thread_params_calc.qwBytesReadCurFile = 0;
@@ -375,6 +377,15 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 					    SyncQueue.bThreadSuspended = TRUE;
 				    }
 			    break;
+            case ID_BTN_STOP:
+                if(!SyncQueue.bThreadDone) {
+                    thread_params_calc.signalStop = TRUE;
+					// if paused resume, thread will stop
+                    if(SyncQueue.bThreadSuspended){
+                        PostMessage(hWnd, WM_COMMAND, MAKEWPARAM(ID_BTN_PLAY_PAUSE, 0), 0);
+                    }
+                }
+			    break;
 		    case ID_BTN_OPTIONS:
 			    if(HIWORD(wParam) == BN_CLICKED){
 				    BOOL prevQueue=g_program_options.bEnableQueue;
@@ -407,6 +418,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		//signal the calculation thread that we want to exit
 		//this causes the theads to end in a controlled manner
 		if(!SyncQueue.bThreadDone){
+            thread_params_calc.signalStop = TRUE;
 			thread_params_calc.signalExit = TRUE;
 			if(SyncQueue.bThreadSuspended)
 				ResumeThread(hThread);
@@ -1278,12 +1290,13 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 80 + 8) + 96, wHeight - lACH * actButtonY, lACW * 25, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, FALSE);
 	
-	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 37 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 37 + 36 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_BTN_STOP], wWidth - (lACW * 37 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_COMBO_PRIORITY], wWidth - lACW * 37, wHeight - lACH * 45/10.0, lACW * 19/*12*/, lACH * 5, FALSE);
 	
 
 	MoveWindow(arrHwnd[ID_STATIC_STATUS], lACW * leftMargin, wHeight - lACH * 42/10.0, lACW * 7, lACH, FALSE);
-	MoveWindow(arrHwnd[ID_EDIT_STATUS], lACW * 85/10.0, wHeight - lACH * 42/10.0, wWidth - lACW * 533/10.0, lACH, FALSE);
+	MoveWindow(arrHwnd[ID_EDIT_STATUS], lACW * (leftMargin + 7), wHeight - lACH * 42/10.0, wWidth - lACW * (leftMargin + 7 + 37) - 36 - 36, lACH, FALSE);
 
 	MoveWindow(arrHwnd[ID_PROGRESS_FILE], lACW * leftMargin, wHeight - lACH * 24/10.0, wWidth - lACW * 193/10.0, lACH * 95/100.0, FALSE);
 	MoveWindow(arrHwnd[ID_PROGRESS_GLOBAL], lACW * leftMargin, wHeight - lACH * 14/10.0, wWidth - lACW * 193/10.0, lACH * 95/100.0, FALSE);
