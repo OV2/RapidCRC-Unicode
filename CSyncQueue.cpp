@@ -3,8 +3,7 @@
 
 CSyncQueue::CSyncQueue()
 {
-	InitializeCriticalSection(&this->wQueue);
-	InitializeCriticalSection(&this->dList);
+	InitializeCriticalSection(&this->cSection);
 	qwQueueFilesizeSum = 0;
 	qwNewFileAcc = 0;
 	bThreadDone = true;
@@ -16,22 +15,21 @@ CSyncQueue::~CSyncQueue()
 {
 	clearQueue();
 	clearList();
-	DeleteCriticalSection(&this->wQueue);
-	DeleteCriticalSection(&this->dList);
+	DeleteCriticalSection(&this->cSection);
 }
 
 void CSyncQueue::addToList(lFILEINFO *fInfoGroup)
 {
-	EnterCriticalSection(&this->dList);
+	EnterCriticalSection(&this->cSection);
 	doneList.push_back(fInfoGroup);
-	LeaveCriticalSection(&this->dList);
+	LeaveCriticalSection(&this->cSection);
 }
 
 void CSyncQueue::deleteFromListById(int i)
 {
 	list<lFILEINFO*>::iterator it;
 	int id;
-	EnterCriticalSection(&this->dList);
+	EnterCriticalSection(&this->cSection);
 	for(id=0,it = doneList.begin();it!=doneList.end();id++,it++)
 		if(id==i) {
             list<FILEINFO>::iterator itr;
@@ -42,41 +40,41 @@ void CSyncQueue::deleteFromListById(int i)
             doneList.erase(it);
 			break;
 		}
-	LeaveCriticalSection(&this->dList);
+	LeaveCriticalSection(&this->cSection);
 }
 
 void CSyncQueue::deleteFromList(lFILEINFO *rList)
 {
-	EnterCriticalSection(&this->dList);
+	EnterCriticalSection(&this->cSection);
 	doneList.remove(rList);
     list<FILEINFO>::iterator it;
     for(it = rList->fInfos.begin();it!=rList->fInfos.end();it++) {
         adjustErrorCounters(&(*it),-1);
     }
     dwCountTotal -= (DWORD)rList->fInfos.size();
-	LeaveCriticalSection(&this->dList);
+	LeaveCriticalSection(&this->cSection);
 }
 
 void CSyncQueue::pushQueue(lFILEINFO *fInfoGroup)
 {
-	EnterCriticalSection(&this->wQueue);
+	EnterCriticalSection(&this->cSection);
 	workQueue.push(fInfoGroup);
 	qwQueueFilesizeSum += fInfoGroup->qwFilesizeSum;
 	qwNewFileAcc += fInfoGroup->qwFilesizeSum;
     dwCountTotal += (DWORD)fInfoGroup->fInfos.size();
-	LeaveCriticalSection(&this->wQueue);
+	LeaveCriticalSection(&this->cSection);
 }
 
 lFILEINFO *CSyncQueue::popQueue()
 {
 	lFILEINFO *ret=NULL;
-	EnterCriticalSection(&this->wQueue);
+	EnterCriticalSection(&this->cSection);
 	if(!workQueue.empty()) {
 		ret = workQueue.front();
 		workQueue.pop();
 		qwQueueFilesizeSum -= ret->qwFilesizeSum;
 	}
-	LeaveCriticalSection(&this->wQueue);
+	LeaveCriticalSection(&this->cSection);
 	return ret;
 }
 
@@ -87,40 +85,41 @@ bool CSyncQueue::isQueueEmpty()
 
 void CSyncQueue::clearList()
 {
-	EnterCriticalSection(&this->dList);
+	EnterCriticalSection(&this->cSection);
 	for(list<lFILEINFO*>::iterator it=doneList.begin();it!=doneList.end();it++)
 		delete (*it);
 	doneList.clear();
     dwCountOK = dwCountNotOK = dwCountNoCrcFound = dwCountNotFound = dwCountErrors = dwCountTotal = dwCountDone = 0;
-	LeaveCriticalSection(&this->dList);
+	LeaveCriticalSection(&this->cSection);
 }
 
 void CSyncQueue::clearQueue()
 {
-	EnterCriticalSection(&this->wQueue);
+	EnterCriticalSection(&this->cSection);
 	while(!workQueue.empty()) {
+        dwCountTotal -= workQueue.front()->fInfos.size();
 		delete workQueue.front();
 		workQueue.pop();
 	}
-	LeaveCriticalSection(&this->wQueue);
+	LeaveCriticalSection(&this->cSection);
 }
 
 list<lFILEINFO*> *CSyncQueue::getDoneList()
 {
-	EnterCriticalSection(&this->dList);
+	EnterCriticalSection(&this->cSection);
 	return &doneList;
 }
 
 void CSyncQueue::releaseDoneList()
 {
-	LeaveCriticalSection(&this->dList);
+	LeaveCriticalSection(&this->cSection);
 }
 
 void CSyncQueue::setFileAccForCalc()
 {
-	EnterCriticalSection(&this->wQueue);
+	EnterCriticalSection(&this->cSection);
 	qwNewFileAcc = qwQueueFilesizeSum;
-	LeaveCriticalSection(&this->wQueue);
+	LeaveCriticalSection(&this->cSection);
 }
 
 void CSyncQueue::adjustErrorCounters(FILEINFO *pFileinfo, DWORD amount)

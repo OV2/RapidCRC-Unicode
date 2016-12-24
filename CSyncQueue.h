@@ -17,8 +17,7 @@ class CSyncQueue {
 private:
 	queue<lFILEINFO*> workQueue;				//queue of jobs that need calculation
 	list<lFILEINFO*> doneList;					//list of done jobs
-	CRITICAL_SECTION wQueue;					//access token for the workQueue
-	CRITICAL_SECTION dList;						//access token for the doneList
+	CRITICAL_SECTION cSection;					//access token
 
 public:
 	bool bThreadDone;							//is the calculation thread running?
