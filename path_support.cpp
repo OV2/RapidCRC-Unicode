@@ -133,6 +133,12 @@ BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH_EX], CONST TCHAR szFilenam
 		else if(IsStringPrefix(TEXT("%FILEEXT"), szFilenamePattern + stIndex)){
 			StringCchCat(szFilenameNew, MAX_PATH_EX, szFileext);
 			stIndex += 8;
+            // if empty extension and previous pos is dot remove it (invalid file name)
+            if(*szFileext == _T('\0')) {
+                int lastpos = lstrlen(szFilenameNew) - 1;
+                if(szFilenameNew[lastpos] == _T('.'))
+                    szFilenameNew[lastpos] = _T('\0');
+            }
 		}
 		else if(IsStringPrefix(TEXT("%CRC"), szFilenamePattern + stIndex)){
 			StringCchCat(szFilenameNew, MAX_PATH_EX, szHash);
