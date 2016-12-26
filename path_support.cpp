@@ -488,7 +488,7 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
     if(fileList->uiRapidCrcMode != MODE_BSD) {
         for(int i=0;i<NUM_HASH_TYPES;i++) {
             if(fileList->uiRapidCrcMode == MODE_NORMAL)
-                fileList->bDoCalculate[i] = g_program_options.bCalcPerDefault[i];
+                fileList->bDoCalculate[i] = g_program_options.bCalcPerDefault[i] ? true : false;
             else
                 fileList->bDoCalculate[i] |= (fileList->uiRapidCrcMode == i);
         }

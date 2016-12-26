@@ -97,7 +97,7 @@ void CSyncQueue::clearQueue()
 {
 	EnterCriticalSection(&this->cSection);
 	while(!workQueue.empty()) {
-        dwCountTotal -= workQueue.front()->fInfos.size();
+        dwCountTotal -= (DWORD)workQueue.front()->fInfos.size();
 		delete workQueue.front();
 		workQueue.pop();
 	}
