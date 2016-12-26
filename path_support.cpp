@@ -479,6 +479,10 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
         }
     }
 
+    if(SyncQueue.bThreadDone) {
+		SetWindowText(arrHwnd[ID_EDIT_STATUS], TEXT("Getting File Sizes..."));
+	}
+
 	ProcessFileProperties(fileList);
 
     if(fileList->uiRapidCrcMode != MODE_BSD) {
