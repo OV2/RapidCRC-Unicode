@@ -40,7 +40,6 @@ Notes:
 lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 	INT iNumFiles;
 	HWND prevInst;
-	TCHAR prevInstTitle[MAX_PATH_EX];
 
 	lFILEINFO *fileList;
 	FILEINFO fileinfoTmp = {0};
@@ -118,9 +117,8 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 				fileList->uiCmdOpts = CMD_FORCE_BSD;
 			}
 		}
-		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH_EX)) {
-			prevInst = NULL;
-			prevInst = FindWindowEx(NULL,prevInst,TEXT("RapidCrcMainWindow"),prevInstTitle);
+		if(g_program_options.bEnableQueue) {
+			prevInst = FindSameVersionMainWindow();
 			if(prevInst) {
 				PostMessage(prevInst,WM_ACCEPT_PIPE,(WPARAM)fileList->uiCmdOpts,NULL);
 				delete fileList;
@@ -137,9 +135,8 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 		// get number of files
 		iNumFiles = argc - 1; // -1 because 1st element is the path to the executable itself
 
-		if(g_program_options.bEnableQueue && GetVersionString(prevInstTitle,MAX_PATH_EX)) {
-			prevInst = NULL;
-			prevInst = FindWindowEx(NULL,prevInst,TEXT("RapidCrcMainWindow"),prevInstTitle);
+		if(g_program_options.bEnableQueue) {
+			prevInst = FindSameVersionMainWindow();
 			if(prevInst) {
 				TCHAR *cmdLine = GetCommandLine();
 				COPYDATASTRUCT cdata;

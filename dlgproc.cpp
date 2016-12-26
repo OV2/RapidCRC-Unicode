@@ -62,6 +62,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static SHOWRESULT_PARAMS showresult_params = {NULL, FALSE, FALSE};
 	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, sha3Popup, crcPopup;
     static std::list<UINT> fileThreadIds;
+    static int iTimerCount; 
 	lFILEINFO *fileList;
 
 	switch (message)
@@ -219,6 +220,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		//reset filesize count for current thread run
 		SyncQueue.setFileAccForCalc();
 		SyncQueue.bThreadDone = false;
+        iTimerCount = 0;
 		hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc_Calc, &thread_params_calc, 0, &uiThreadID);
 
 		SendMessage(arrHwnd[ID_PROGRESS_FILE], PBM_SETPOS , (WPARAM) 0, 0);
@@ -243,6 +245,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			PostMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL,NULL);
 			return 0;
 		}
+
+        SetMainWindowTitle(hWnd, 0, 0.);
 
 		DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 
@@ -272,6 +276,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		    return TRUE;
         }
 	case WM_TIMER:
+        if(!SyncQueue.bThreadSuspended)
+            iTimerCount++;
 		if(!SyncQueue.bThreadDone && thread_params_calc.pFileinfo_cur != NULL){
 			if(thread_params_calc.pFileinfo_cur->qwFilesize != 0){
 				INT iNewPos = (INT)((thread_params_calc.qwBytesReadCurFile * 100 ) /
@@ -283,6 +289,10 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			if(SyncQueue.qwNewFileAcc != 0){
 				INT iNewPos = (INT)((thread_params_calc.qwBytesReadAllFiles * 100 ) / SyncQueue.qwNewFileAcc);
 				SendMessage(arrHwnd[ID_PROGRESS_GLOBAL], PBM_SETPOS , (WPARAM) (INT) iNewPos, 0);
+
+                double bytes_per_second = thread_params_calc.qwBytesReadAllFiles / ( iTimerCount * 0.5 );
+                int seconds = (int)((SyncQueue.qwNewFileAcc - thread_params_calc.qwBytesReadAllFiles) / bytes_per_second);
+                SetMainWindowTitle(hWnd, seconds, bytes_per_second);
 			}
 		}
 		return 0;

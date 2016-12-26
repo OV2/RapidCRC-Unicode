@@ -1300,3 +1300,53 @@ VOID ClearAllItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshow
 	ShowResult(arrHwnd,NULL,pshowresult_params);
 	DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 }
+
+/*****************************************************************************
+VOID SetMainWindowTitle(CONST HWND hWnd, int seconds, double bytes_per_second)
+	hWnd    		  : (OUT) handle to window whose title should be set
+	seconds     	  : (IN) time remaining to be appended
+	bytes_per_second  : (IN) read speed to be appended
+
+Return Value:
+returns nothing
+
+Notes:
+- appends the remaining time and read speed to the main window title
+- speed of 0 sets the regular title
+*****************************************************************************/
+VOID SetMainWindowTitle(CONST HWND hWnd, int seconds, double bytes_per_second)
+{
+    TCHAR szTitleBuf[MAX_LINE_LENGTH];
+    GetVersionString(szTitleBuf, MAX_LINE_LENGTH);
+    if(seconds) {
+        StringCchCat(szTitleBuf, MAX_LINE_LENGTH, TEXT(" - "));
+        FormatRemaingTime(szTitleBuf, seconds, MAX_LINE_LENGTH);
+        StringCchCat(szTitleBuf, MAX_LINE_LENGTH, TEXT(" remaining"));
+        size_t len;
+        StringCchLength(szTitleBuf, MAX_LINE_LENGTH, &len);
+        StringCchPrintf(szTitleBuf + len, MAX_LINE_LENGTH, TEXT(" (%.2f MB/s)"), (bytes_per_second / 1024 / 1024));
+    }
+    SetWindowText(hWnd, szTitleBuf);
+}
+
+/*****************************************************************************
+HWND FindSameVersionMainWindow()
+
+Return Value:
+HWND of the first existing main window with the same version number
+*****************************************************************************/
+HWND FindSameVersionMainWindow()
+{
+    TCHAR prevInstTitle[MAX_PATH_EX];
+    TCHAR otherWindowTitle[MAX_PATH_EX];
+    HWND prevInst = NULL;
+    if(GetVersionString(prevInstTitle,MAX_PATH_EX)) {
+	    prevInst = NULL;
+        while(prevInst = FindWindowEx(NULL, prevInst, TEXT("RapidCrcMainWindow"),NULL)) {
+            GetWindowText(prevInst, otherWindowTitle, MAX_PATH_EX);
+            if(_tcsstr(otherWindowTitle, prevInstTitle))
+                break;
+        }
+    }
+    return prevInst;
+}

@@ -183,9 +183,9 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_STATIC_SHA3_256_VALUE    11
 #define ID_STATIC_SHA3_512_VALUE    12
 #define ID_STATIC_CRCC_VALUE        13
-#define ID_MAX_STATIC               13
+#define ID_STATIC_INFO				14
+#define ID_MAX_STATIC               14
 
-#define ID_STATIC_INFO				20
 #define ID_STATIC_STATUS			21
 #define ID_STATIC_CREATE            22
 
@@ -512,6 +512,8 @@ BOOL ListViewHeaderPopup(HWND pHwnd,HMENU pupup,int x,int y);
 VOID ClearAllItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params);
 void HideVerifiedItems(CONST HWND hListView);
 void RestoreVerifiedItems(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
+VOID SetMainWindowTitle(CONST HWND hWnd, int seconds, double bytes_per_second);
+HWND FindSameVersionMainWindow();
 
 //helper functions (helpfcts.cpp)
 BOOL IsLegalHexSymbol(CONST TCHAR tcChar);
@@ -541,6 +543,7 @@ VOID ReplaceChar(TCHAR * szString, CONST size_t stBufferLength, CONST TCHAR tcIn
 	VOID StartTimeMeasure(CONST BOOL bStart);
 #endif
 int CALLBACK BrowseFolderSetSelProc (HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
+void FormatRemaingTime(TCHAR *szBuffer, int seconds, int max_length);
 
 //path support functions (path_support.cpp)
 BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH_EX]);

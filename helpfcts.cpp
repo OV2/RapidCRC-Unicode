@@ -108,31 +108,34 @@ Return Value:
 *****************************************************************************/
 BOOL GetVersionString(TCHAR *buffer,CONST int buflen)
 {
-	void *verInfo;
-	void *verString;
+	static void *verInfo = NULL;
+	static void *verString = NULL;
 	DWORD infoSize;
 	UINT verLen;
 
-	if(!GetModuleFileName(0,buffer,buflen))
-		return FALSE;
+    if(verString == NULL) {
+	    if(!GetModuleFileName(0,buffer,buflen))
+		    return FALSE;
 
-	if(!(infoSize = GetFileVersionInfoSize(buffer,&infoSize)))
-		return FALSE;
+	    if(!(infoSize = GetFileVersionInfoSize(buffer,&infoSize)))
+		    return FALSE;
 
-	if(!(verInfo = malloc(infoSize)))
-		return FALSE;
+	    if(!(verInfo = malloc(infoSize)))
+		    return FALSE;
 
-	if(!GetFileVersionInfo(buffer,0,infoSize,verInfo)) {
-		free(verInfo);
-		return FALSE;
-	}
+	    if(!GetFileVersionInfo(buffer,0,infoSize,verInfo)) {
+		    free(verInfo);
+		    return FALSE;
+	    }
 
-	if(!VerQueryValue(verInfo,TEXT("\\StringFileInfo\\040704b0\\FileVersion"),&verString,&verLen)) {
-		free(verInfo);
-		return FALSE;
-	}
+	    if(!VerQueryValue(verInfo,TEXT("\\StringFileInfo\\040704b0\\FileVersion"),&verString,&verLen)) {
+		    free(verInfo);
+		    return FALSE;
+	    }
+    }
 	StringCchPrintf(buffer,buflen,TEXT("RapidCRC Unicode %s"),(TCHAR *)verString);
-	free(verInfo);
+	// keep the buffer, next call can directly access the string
+	//free(verInfo);
 	return TRUE;
 }
 
@@ -935,4 +938,35 @@ int CALLBACK BrowseFolderSetSelProc (HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM
       SendMessage(hWnd, BFFM_SETSELECTION, TRUE, lpData );
    }
    return 0;
+}
+
+/*****************************************************************************
+VOID FormatRemaingTime(TCHAR *szBuffer, int seconds, int max_length)
+	szBuffer		: (OUT) time formatted as Xh Ym Zs
+	seconds     	: (IN) time to format
+	max_length  	: (IN) max size of buffer
+
+Return Value:
+returns nothing
+*****************************************************************************/
+VOID FormatRemaingTime(TCHAR *szBuffer, int seconds, int max_length)
+{
+    TCHAR szTmp[10];
+    int hours = seconds / (60 * 60);
+    seconds %= (60 * 60);
+    int mins = seconds / 60;
+    seconds %= 60;
+
+    if(hours) {
+        StringCchPrintf(szTmp, 10, TEXT("%dh "), hours);
+        StringCchCat(szBuffer, max_length, szTmp);
+    }
+    if(mins) {
+        StringCchPrintf(szTmp, 10, TEXT("%dm "), mins);
+        StringCchCat(szBuffer, max_length, szTmp);
+    }
+    if(seconds) {
+        StringCchPrintf(szTmp, 10, TEXT("%ds"), seconds);
+        StringCchCat(szBuffer, max_length, szTmp);
+    }
 }
