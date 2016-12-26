@@ -285,17 +285,19 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
             }
 
 			// we are stopping, need to remove unfinished file entries from the list and adjust count
-            if(pthread_params_calc->signalStop) {
+            if(pthread_params_calc->signalStop && !pthread_params_calc->signalExit) {
 				// if current file is done keep it
                 if(bFileDone)
                     it++;
                 size_t size_before = fileList->fInfos.size();
                 fileList->fInfos.erase(it, fileList->fInfos.end());
                 SyncQueue.getDoneList();
-                SyncQueue.dwCountTotal -= (size_before - fileList->fInfos.size());
+                SyncQueue.dwCountTotal -= (DWORD)(size_before - fileList->fInfos.size());
                 SyncQueue.releaseDoneList();
-			    break;
             }
+
+            if(pthread_params_calc->signalStop)
+                break;
 		}
 
         for(int i=0;i<NUM_HASH_TYPES;i++) {

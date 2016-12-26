@@ -424,7 +424,6 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	case WM_CLOSE:
 		WriteOptions(hWnd, lAveCharWidth, lAveCharHeight);
 		UnregisterDropWindow(arrHwnd[ID_LISTVIEW], pDropTarget);
-		OleUninitialize();
 		//signal the calculation thread that we want to exit
 		//this causes the theads to end in a controlled manner
 		if(!SyncQueue.bThreadDone){
@@ -432,13 +431,17 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			thread_params_calc.signalExit = TRUE;
 			if(SyncQueue.bThreadSuspended)
 				ResumeThread(hThread);
-			WaitForSingleObject(hThread,4000);
+            while(MsgWaitForMultipleObjects(1, &hThread, FALSE, 4000, QS_SENDMESSAGE) == WAIT_OBJECT_0 + 1) {
+                MSG msg;
+                PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE);
+            }
 		}
         // if file info threads are still running simply kill them to avoid access violations
         for(std::list<UINT>::iterator it = fileThreadIds.begin(); it != fileThreadIds.end(); it++) {
             if(HANDLE thread = OpenThread(THREAD_TERMINATE, FALSE, (*it)))
                 TerminateThread(thread, 1);
         }
+        OleUninitialize();
 		break;
 	case WM_DESTROY:
 		PostQuitMessage(0);
