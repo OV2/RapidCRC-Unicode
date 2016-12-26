@@ -22,6 +22,7 @@
 #include <process.h>
 #include <commctrl.h>
 #include <windowsx.h>
+#include <Shobjidl.h>
 #include "CSyncQueue.h"
 
 /*****************************************************************************
@@ -64,6 +65,13 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
     static std::list<UINT> fileThreadIds;
     static int iTimerCount; 
 	lFILEINFO *fileList;
+    static ITaskbarList3* pTaskbarList = NULL;
+    static UINT uiTaskbarButtonCreatedMessage = 0;
+
+    if(uiTaskbarButtonCreatedMessage && message == uiTaskbarButtonCreatedMessage) {
+        if(!SUCCEEDED(CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&pTaskbarList))))
+            pTaskbarList = NULL;
+    }
 
 	switch (message)
 	{
@@ -78,6 +86,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         CreateSha3ButtonPopupMenu(&sha3Popup);
         CreateCrcButtonPopupMenu(&crcPopup);
 		RegisterDropWindow(arrHwnd, & pDropTarget);
+        uiTaskbarButtonCreatedMessage = RegisterWindowMessage(L"TaskbarButtonCreated");
 
 		return 0;
     case WM_CONTEXTMENU:
@@ -225,6 +234,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 
 		SendMessage(arrHwnd[ID_PROGRESS_FILE], PBM_SETPOS , (WPARAM) 0, 0);
 		SendMessage(arrHwnd[ID_PROGRESS_GLOBAL], PBM_SETPOS , (WPARAM) 0, 0);
+        if(pTaskbarList)
+            pTaskbarList->SetProgressValue(hWnd, 0, 100);
 		SetTimer(hWnd, WM_TIMER_PROGRESS_500, 500, NULL);
 
 		return 0;
@@ -238,6 +249,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		// not set to 100% via WM_TIMER
 		SendMessage(arrHwnd[ID_PROGRESS_FILE], PBM_SETPOS , (WPARAM) 100, 0);
 		SendMessage(arrHwnd[ID_PROGRESS_GLOBAL], PBM_SETPOS , (WPARAM) 100, 0);
+        if(pTaskbarList)
+            pTaskbarList->SetProgressState(hWnd, TBPF_NOPROGRESS);
 
 		//if queue is empty start another thread
 		//message is ignored if another WM_START_THREAD_CALC is already in the message queue
@@ -284,6 +297,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 					thread_params_calc.pFileinfo_cur->qwFilesize);
 				// default range is 0 - 100. If below or beyond these limits: iNewPos is set to 0 or 100
 				SendMessage(arrHwnd[ID_PROGRESS_FILE], PBM_SETPOS , (WPARAM) (INT) iNewPos, 0);
+                if(pTaskbarList)
+                    pTaskbarList->SetProgressValue(hWnd, iNewPos, 100);
 			}
 
 			if(SyncQueue.qwNewFileAcc != 0){
@@ -380,11 +395,15 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 					    ResumeThread(hThread);
 					    SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PAUSE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 					    SyncQueue.bThreadSuspended = FALSE;
+                        if(pTaskbarList)
+                            pTaskbarList->SetProgressState(hWnd, TBPF_NORMAL);
 				    }
 				    else{
 					    SuspendThread(hThread);
 					    SendMessage(arrHwnd[ID_BTN_PLAY_PAUSE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_PLAY),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 					    SyncQueue.bThreadSuspended = TRUE;
+                        if(pTaskbarList)
+                            pTaskbarList->SetProgressState(hWnd, TBPF_PAUSED);
 				    }
 			    break;
             case ID_BTN_STOP:
