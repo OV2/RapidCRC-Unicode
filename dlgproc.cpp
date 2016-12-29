@@ -297,13 +297,13 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 					thread_params_calc.pFileinfo_cur->qwFilesize);
 				// default range is 0 - 100. If below or beyond these limits: iNewPos is set to 0 or 100
 				SendMessage(arrHwnd[ID_PROGRESS_FILE], PBM_SETPOS , (WPARAM) (INT) iNewPos, 0);
-                if(pTaskbarList)
-                    pTaskbarList->SetProgressValue(hWnd, iNewPos, 100);
 			}
 
 			if(SyncQueue.qwNewFileAcc != 0){
 				INT iNewPos = (INT)((thread_params_calc.qwBytesReadAllFiles * 100 ) / SyncQueue.qwNewFileAcc);
 				SendMessage(arrHwnd[ID_PROGRESS_GLOBAL], PBM_SETPOS , (WPARAM) (INT) iNewPos, 0);
+                if(pTaskbarList)
+                    pTaskbarList->SetProgressValue(hWnd, iNewPos, 100);
 
                 double bytes_per_second = thread_params_calc.qwBytesReadAllFiles / ( iTimerCount * 0.5 );
                 int seconds = (int)((SyncQueue.qwNewFileAcc - thread_params_calc.qwBytesReadAllFiles) / bytes_per_second);
