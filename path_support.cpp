@@ -854,19 +854,31 @@ BOOL ConstructCompleteFilename(CString &filename, TCHAR *szBasePath, const TCHAR
 
 Return Value:
 FALSE if path was already absolute
+
+Notes:
+- constructs an absolute extended-length filename out of szBasePath and szRelFilename, removing
+  relative path elements
 *****************************************************************************/
 BOOL ConstructCompleteFilename(CString &filename, const TCHAR *szBasePath, const TCHAR *szRelFilename)
 {
+    BOOL bMadeAbsolute = FALSE;
+    TCHAR szCanonicalizedName[MAX_PATH_EX];
     if(PathIsRelative(szRelFilename)) {
         filename.Format(TEXT("%s%s"), szBasePath, szRelFilename);
-        return TRUE;
+        bMadeAbsolute = TRUE;
     } else if(!_tcsncmp(szRelFilename, TEXT("\\\\"), 2)) {
         filename.Format(TEXT("\\\\?\\UNC\\%s"), szRelFilename + 2);
-        return FALSE;
     } else {
         filename.Format(TEXT("\\\\?\\%s"), szRelFilename);
-        return FALSE;
     }
+
+    // use GetFullPathName to do the canonicalization, PathCchCanonicalizeEx is only available on win8+
+    // the current directory problems of GetFullPathName do not apply here since we already have a full
+    // path and do not mess with the current directory at all
+    GetFullPathName(filename, MAX_PATH_EX, szCanonicalizedName, NULL);
+    filename = szCanonicalizedName;
+
+    return bMadeAbsolute;
 }
 
 BOOL RegularFromLongFilename(TCHAR szRegularFilename[MAX_PATH], const TCHAR *szLongFilename)
