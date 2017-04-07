@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='windows-1252'?>
-<?define rcrcv = "0.3.22" ?>
+<?define rcrcv = "0.3.23" ?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
-  <Product Name='RapidCRC (x64) $(var.rcrcv)' Id='4E96280C-17D8-444b-8C2C-C36897777FF8' UpgradeCode='82B033AA-A311-40dc-BBF6-1544C2AE5480'
+  <Product Name='RapidCRC (x64) $(var.rcrcv)' Id='A8ACBAF5-0D3D-4183-9DA6-C18E2D73A9D8' UpgradeCode='82B033AA-A311-40dc-BBF6-1544C2AE5480'
     Language='1033' Codepage='1252' Version='$(var.rcrcv)' Manufacturer='RapidCRC'>
 
     <Package Id='*' Keywords='Installer'
