@@ -45,21 +45,19 @@ Sha3HashReturn Sha3Update(sha3hashState *state, const BitSequence *data, DataLen
     if ((databitlen % 8) == 0)
         return Absorb((spongeState*)state, data, databitlen);
     else {
-        Sha3HashReturn ret = Absorb((spongeState*)state, data, databitlen - (databitlen % 8));
-        if (ret == SUCCESS) {
-            unsigned char lastByte; 
-            // Align the last partial byte to the least significant bits
-            lastByte = data[databitlen/8] >> (8 - (databitlen % 8));
-            return Absorb((spongeState*)state, &lastByte, databitlen % 8);
-        }
-        else
-            return ret;
+        return FAIL;
     }
 }
 
 Sha3HashReturn Sha3Final(sha3hashState *state, BitSequence *hashval)
 {
-    return Squeeze(state, hashval, state->fixedOutputLength);
+    // add delimiter suffix (0x6 for sha3, this adds 0, 1)
+    unsigned char suffix = 0x6;
+    Sha3HashReturn ret = Absorb(state, &suffix, 2);
+    if (ret == SUCCESS) {
+        ret = Squeeze(state, hashval, state->fixedOutputLength);
+    }
+    return ret;
 }
 
 Sha3HashReturn Sha3Hash(int hashbitlen, const BitSequence *data, DataLength databitlen, BitSequence *hashval)
