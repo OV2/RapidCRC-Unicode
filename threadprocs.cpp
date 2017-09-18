@@ -393,7 +393,14 @@ UINT __stdcall ThreadProc_FileInfo(VOID * pParam)
 		ClearAllItems(arrHwnd,pshowresult_params);
 	}
 
-    if(fileList->uiCmdOpts==CMD_ALLHASHES)
+    // if no forced mode and first file is a hash file enter all hashes mode
+    if(fileList->uiCmdOpts == CMD_NORMAL &&
+       fileList->fInfos.size() && DetermineHashType(fileList->fInfos.front().szFilename) != MODE_NORMAL)
+    {
+        fileList->uiCmdOpts = CMD_ALLHASHES;
+    }
+
+    if(fileList->uiCmdOpts == CMD_ALLHASHES)
     {
         MakePathsAbsolute(fileList);
         ProcessDirectories(fileList, arrHwnd[ID_EDIT_STATUS], TRUE);

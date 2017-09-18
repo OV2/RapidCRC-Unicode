@@ -23,7 +23,6 @@
 
 static DWORD GetTypeOfPath(CONST TCHAR szPath[MAX_PATH_EX]);
 static VOID SetBasePath(lFILEINFO *fileList);
-static UINT DetermineHashType(const CString &filename);
 
 /*****************************************************************************
 BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH_EX])

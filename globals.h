@@ -561,6 +561,7 @@ list<FILEINFO>::iterator ExpandDirectory(list<FILEINFO> *fList,list<FILEINFO>::i
 VOID ProcessFileProperties(lFILEINFO *fileList);
 VOID MakePathsAbsolute(lFILEINFO *fileList);
 UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList);
+UINT DetermineHashType(const CString &filename);
 BOOL ConstructCompleteFilename(CString &filename, const TCHAR *szBasePath, const TCHAR *szRelFilename);
 BOOL RegularFromLongFilename(TCHAR szRegularFilename[MAX_PATH], const TCHAR *szLongFilename);
 
