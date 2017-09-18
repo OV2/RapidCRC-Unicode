@@ -1032,7 +1032,7 @@ __inline VOID ProcessTextQuery(NMLVDISPINFO * pnmlvdispinfo)
 		if(md5Num) md5Num+=crcNum;*/
 
 		if(pnmlvdispinfo->item.iSubItem==0) {
-            pnmlvdispinfo->item.pszText = pFileinfo->szFilenameShort;
+            pnmlvdispinfo->item.pszText = (LPTSTR)pFileinfo->szFilenameShort;
         } else {
             pnmlvdispinfo->item.pszText = pFileinfo->szInfo;
             int itemNum = pnmlvdispinfo->item.iSubItem - 1;

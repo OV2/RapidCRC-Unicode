@@ -301,7 +301,7 @@ typedef struct _FILEINFO {
     DWORD	dwError;
     TCHAR	szInfo[INFOTEXT_STRING_LENGTH];
 	CString szFilename;
-	TCHAR  *szFilenameShort;
+	const TCHAR  *szFilenameShort;
     _lFILEINFO * parentList;
     FILEINFO_STATUS status;
     typedef struct _hashInfo {

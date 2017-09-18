@@ -650,10 +650,14 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 	fileList->qwFilesizeSum = 0;
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
-        if(stString)
-            (*it).szFilenameShort = (*it).szFilename.GetBuffer() + stString;
-        else
-            (*it).szFilenameShort = (*it).szFilename.GetBuffer() + 4;
+        LPCTSTR szFn = (*it).szFilename;
+        if(stString) {
+            if(!StrCmpN(szFn, fileList->g_szBasePath, stString))
+                (*it).szFilenameShort = szFn + stString;
+            else
+                (*it).szFilenameShort = GetFilenameWithoutPathPointer(szFn);
+        } else
+            (*it).szFilenameShort = szFn + 4;
 		if(!IsApplDefError((*it).dwError)){
 			SetFileinfoAttributes(&(*it));
 			if ((*it).dwError == NO_ERROR){
@@ -755,30 +759,34 @@ Notes:
 *****************************************************************************/
 UINT FindCommonPrefix(list<FILEINFO *> *fileInfoList)
 {
-	list<FILEINFO*>::iterator itFirst;
-	size_t countSameChars=MAXUINT;;
+	size_t countSameChars=MAXUINT;
+    FILEINFO* firstFileInfoPointer;
 	TCHAR *firstBasePathPointer;
 	bool sameBaseDir = true;
 
 	if(fileInfoList->empty())
 		return 0;
 
-	firstBasePathPointer = fileInfoList->front()->parentList->g_szBasePath;
+    firstFileInfoPointer = fileInfoList->front();
+	firstBasePathPointer = firstFileInfoPointer->parentList->g_szBasePath;
 
-	for(list<FILEINFO*>::iterator it=fileInfoList->begin(),itFirst=it++;it!=fileInfoList->end();it++) {
+	for(list<FILEINFO*>::iterator it=fileInfoList->begin();it!=fileInfoList->end();it++) {
 		UINT i=0;
 		if(sameBaseDir && lstrcmp(firstBasePathPointer,(*it)->parentList->g_szBasePath))
 			sameBaseDir = false;
-		while(i<countSameChars && (*it)->szFilename[i]!=TEXT('\0') && (*itFirst)->szFilename[i]!=TEXT('\0')) {
-			if((*it)->szFilename[i]!=(*itFirst)->szFilename[i])
+		while(i<countSameChars && (*it)->szFilename[i]!=TEXT('\0') && firstFileInfoPointer->szFilename[i]!=TEXT('\0')) {
+			if((*it)->szFilename[i]!=firstFileInfoPointer->szFilename[i])
 				countSameChars = i;
 			i++;
 		}
 		if(countSameChars<3) return 0;
 	}
 
-	if(sameBaseDir && lstrlen(firstBasePathPointer) > 4) {
-		StringCchLength(firstBasePathPointer,MAX_PATH_EX,&countSameChars);
+    if(sameBaseDir) {
+        if(lstrlen(firstBasePathPointer) > 4)
+		    StringCchLength(firstBasePathPointer,MAX_PATH_EX,&countSameChars);
+        else
+            countSameChars = 0;
 	}
 
 	while( (countSameChars > 0) && (fileInfoList->front()->szFilename[(int)countSameChars - 1] != TEXT('\\')) )
@@ -863,12 +871,18 @@ BOOL ConstructCompleteFilename(CString &filename, const TCHAR *szBasePath, const
 {
     BOOL bMadeAbsolute = FALSE;
     TCHAR szCanonicalizedName[MAX_PATH_EX];
-    if(PathIsRelative(szRelFilename)) {
+    if(!_tcsncmp(szRelFilename, TEXT("\\\\?"), 3)) {
+        // already extended-length
+        filename = szRelFilename;
+    } else if(PathIsRelative(szRelFilename)) {
+        // relative, make absolute with base path
         filename.Format(TEXT("%s%s"), szBasePath, szRelFilename);
         bMadeAbsolute = TRUE;
     } else if(!_tcsncmp(szRelFilename, TEXT("\\\\"), 2)) {
+        // absolute unc, make extended-length with UNC
         filename.Format(TEXT("\\\\?\\UNC\\%s"), szRelFilename + 2);
     } else {
+        // absolute regular, make extended-length
         filename.Format(TEXT("\\\\?\\%s"), szRelFilename);
     }
 
