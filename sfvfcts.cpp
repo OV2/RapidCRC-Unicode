@@ -252,8 +252,9 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 	}
 	CloseHandle(hFile);
 
-    if(bWasAnyAbsolute)
-        fileList->g_szBasePath[0] = TEXT('\0');
+    // should no longer be necessary to empty the base path if encountering absolute paths
+    /*if(bWasAnyAbsolute)
+        fileList->g_szBasePath[0] = TEXT('\0');*/
 
 	return TRUE;
 }

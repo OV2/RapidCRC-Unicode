@@ -650,11 +650,8 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 
 	for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++) {
         LPCTSTR szFn = (*it).szFilename;
-        if(stString) {
-            if(!StrCmpN(szFn, fileList->g_szBasePath, stString))
-                (*it).szFilenameShort = szFn + stString;
-            else
-                (*it).szFilenameShort = GetFilenameWithoutPathPointer(szFn);
+        if(stString && !StrCmpN(szFn, fileList->g_szBasePath, stString)) {
+            (*it).szFilenameShort = szFn + stString;
         } else
             (*it).szFilenameShort = szFn + 4;
 		if(!IsApplDefError((*it).dwError)){
