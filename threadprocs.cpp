@@ -184,6 +184,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			
 			FILEINFO& curFileInfo = (*it);
 
+            bFileDone = TRUE; // assume done until we successfully opened the file
+
 			if ( (curFileInfo.dwError == NO_ERROR) && cEvtReadyHandles > 0)
 			{
 
@@ -192,7 +194,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				QueryPerformanceCounter((LARGE_INTEGER*) &qwStart);
 				hFile = CreateFile(curFileInfo.szFilename,
 						GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN , 0);
-				if(hFile == INVALID_HANDLE_VALUE){
+				if(hFile == INVALID_HANDLE_VALUE) {
 					curFileInfo.dwError = GetLastError();
                 } else {
 
