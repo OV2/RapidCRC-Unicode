@@ -755,7 +755,7 @@ VOID SetInfoColumnText(FILEINFO *pFileinfo, lFILEINFO *fileList)
 	if(pFileinfo->dwError != NO_ERROR) {
 		if(pFileinfo->dwError == APPL_ERROR_ILLEGAL_CRC)
 			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("CRC/MD5 Invalid"));
-		else if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND)
+		else if(pFileinfo->dwError == ERROR_FILE_NOT_FOUND || pFileinfo->dwError == ERROR_PATH_NOT_FOUND)
 			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("File not found"));
 		else
 			StringCchCopy(pFileinfo->szInfo, INFOTEXT_STRING_LENGTH, TEXT("Error"));
