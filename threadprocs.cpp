@@ -97,8 +97,9 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 	QWORD qwStart, qwStop, wqFreq;
 	HANDLE hFile;
-	BYTE *readBuffer = (BYTE *)malloc(MAX_BUFFER_SIZE_CALC);
-	BYTE *calcBuffer = (BYTE *)malloc(MAX_BUFFER_SIZE_CALC);
+    UINT uiBufferSize = g_program_options.uiReadBufferSizeKb * 1024;
+	BYTE *readBuffer = (BYTE *)malloc(uiBufferSize);
+	BYTE *calcBuffer = (BYTE *)malloc(uiBufferSize);
 	BYTE *tempBuffer;
 	DWORD readWords[2];
 	DWORD *dwBytesReadRb = &readWords[0];
@@ -217,7 +218,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				    olp.hEvent = hEvtReadDone;
 				    olp.Offset = 0;
 				    olp.OffsetHigh = 0;
-				    bSuccess = ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, dwBytesReadRb, &olp);
+				    bSuccess = ReadFile(hFile, readBuffer, uiBufferSize, dwBytesReadRb, &olp);
 				    if(!bSuccess && (GetLastError()==ERROR_IO_PENDING))
 					    bAsync = TRUE;
 				    else
@@ -238,13 +239,13 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
     					
 					    WaitForMultipleObjects(cEvtReadyHandles,hEvtReadyHandles,TRUE,INFINITE);
 					    SWAPBUFFERS();
-					    bSuccess = ReadFile(hFile, readBuffer, MAX_BUFFER_SIZE_CALC, dwBytesReadRb, &olp);
+					    bSuccess = ReadFile(hFile, readBuffer, uiBufferSize, dwBytesReadRb, &olp);
 					    if(!bSuccess && (GetLastError()==ERROR_IO_PENDING))
 						    bAsync = TRUE;
 					    else
 						    bAsync = FALSE;
 
-					    if(*dwBytesReadCb < MAX_BUFFER_SIZE_CALC)
+					    if(*dwBytesReadCb < uiBufferSize)
 						    bFileDone=TRUE;
 
                         for(int i=0;i<NUM_HASH_TYPES;i++) {

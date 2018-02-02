@@ -1199,7 +1199,7 @@ Notes:
 *****************************************************************************/
 VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST PROGRAM_OPTIONS * pprogram_options)
 {
-    TCHAR szGenFilename[MAX_PATH_EX];
+    TCHAR szTemp[MAX_PATH_EX];
     HWND dlgItem;
 
     for(int i=0;i<NUM_HASH_TYPES;i++) {
@@ -1235,13 +1235,15 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
             ComboBox_SetCurSel(dlgItem,i);
     }
 	
-	GenerateNewFilename(szGenFilename, TEXT("C:\\MyFile.txt"), TEXT("0xAB01FB5D"), pprogram_options->szFilenamePattern);
-	SetWindowText(GetDlgItem(hDlg, IDC_STATIC_FILENAME_EXAMPLE), szGenFilename);
+	GenerateNewFilename(szTemp, TEXT("C:\\MyFile.txt"), TEXT("0xAB01FB5D"), pprogram_options->szFilenamePattern);
+	SetWindowText(GetDlgItem(hDlg, IDC_STATIC_FILENAME_EXAMPLE), szTemp);
 
 	if(bUpdateAll) {
 		SetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_PATTERN), pprogram_options->szFilenamePattern);
 		SetWindowText(GetDlgItem(hDlg, IDC_EDIT_EXCLUDE_LIST), pprogram_options->szExcludeString);
 		SetWindowText(GetDlgItem(hDlg, IDC_CRC_DELIM_LIST), pprogram_options->szCRCStringDelims);
+        StringCchPrintf(szTemp, MAX_PATH_EX, TEXT("%d"), pprogram_options->uiReadBufferSizeKb);
+        SetWindowText(GetDlgItem(hDlg, IDC_EDIT_READ_BUFFER_SIZE), szTemp);
 	}
 
 	return;

@@ -33,6 +33,7 @@
 #define IDC_CHECK_AUTO_SCROLL           1026
 #define IDC_ENABLE_QUEUE                1027
 #define IDC_CHECK_DO_NOT_OVERRIDE       1028
+#define IDC_EDIT_READ_BUFFER_SIZE       1029
 #define IDC_RADIO_ONE_PER_FILE          1040
 #define IDC_CHECK_HIDE_VERIFIED         1040
 #define IDC_RADIO_ONE_PER_DIR           1041

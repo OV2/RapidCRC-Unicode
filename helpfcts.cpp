@@ -470,6 +470,9 @@ VOID ReadOptions()
 	   !IsLegalFilename(g_program_options.szFilenameSfv))
 		SetDefaultOptions(& g_program_options);
 
+    if(g_program_options.uiReadBufferSizeKb < 1 || g_program_options.uiReadBufferSizeKb > 20 * 1024) // limit between 1kb and 20mb
+        g_program_options.uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
+
 	return;
 }
 
@@ -620,6 +623,7 @@ VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
     pprogram_options->bHideVerified = false;
     pprogram_options->bNoHashFileOverride = true;
     pprogram_options->iHexFormat = DEFAULT;
+    pprogram_options->uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
 	return;
 }
 

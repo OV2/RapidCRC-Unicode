@@ -485,7 +485,7 @@ Notes:
 INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	static PROGRAM_OPTIONS program_options_temp;
-	TCHAR szFilenamePattern[MAX_PATH_EX];
+	TCHAR szTemp[MAX_PATH_EX];
 	size_t szLen;
     HWND dlgItem;
 
@@ -532,9 +532,9 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			break;
 		case IDC_EDIT_FILENAME_PATTERN:
 			if(HIWORD(wParam) == EN_CHANGE){
-				GetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_PATTERN), szFilenamePattern, MAX_PATH_EX);
-				if(IsLegalFilename(szFilenamePattern)){
-					StringCchCopy(program_options_temp.szFilenamePattern, MAX_PATH_EX, szFilenamePattern);
+				GetWindowText(GetDlgItem(hDlg, IDC_EDIT_FILENAME_PATTERN), szTemp, MAX_PATH_EX);
+				if(IsLegalFilename(szTemp)){
+					StringCchCopy(program_options_temp.szFilenamePattern, MAX_PATH_EX, szTemp);
 
 					UpdateOptionsDialogControls(hDlg, FALSE, & program_options_temp);
 				}
@@ -546,20 +546,29 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			break;
 		case IDC_EDIT_EXCLUDE_LIST:
 			if(HIWORD(wParam) == EN_CHANGE){
-				GetWindowText(GetDlgItem(hDlg, IDC_EDIT_EXCLUDE_LIST), szFilenamePattern, MAX_PATH_EX);
-				StringCchLength(szFilenamePattern,MAX_PATH_EX,&szLen);
-				if(szLen!=0 && *(szFilenamePattern + szLen - 1) != TEXT(';')) {
-					StringCchCat(szFilenamePattern,MAX_PATH_EX,TEXT(";"));
+				GetWindowText(GetDlgItem(hDlg, IDC_EDIT_EXCLUDE_LIST), szTemp, MAX_PATH_EX);
+				StringCchLength(szTemp,MAX_PATH_EX,&szLen);
+				if(szLen!=0 && *(szTemp + szLen - 1) != TEXT(';')) {
+					StringCchCat(szTemp,MAX_PATH_EX,TEXT(";"));
 				}
 					
-				StringCchCopy(program_options_temp.szExcludeString, MAX_PATH_EX, szFilenamePattern);
+				StringCchCopy(program_options_temp.szExcludeString, MAX_PATH_EX, szTemp);
 				return TRUE;
 			}
 			break;
 		case IDC_CRC_DELIM_LIST:
 			if(HIWORD(wParam) == EN_CHANGE){
-				GetWindowText(GetDlgItem(hDlg, IDC_CRC_DELIM_LIST), szFilenamePattern, MAX_PATH_EX);
-				StringCchCopy(program_options_temp.szCRCStringDelims, MAX_PATH_EX, szFilenamePattern);
+				GetWindowText(GetDlgItem(hDlg, IDC_CRC_DELIM_LIST), szTemp, MAX_PATH_EX);
+				StringCchCopy(program_options_temp.szCRCStringDelims, MAX_PATH_EX, szTemp);
+				return TRUE;
+			}
+			break;
+        case IDC_EDIT_READ_BUFFER_SIZE:
+			if(HIWORD(wParam) == EN_CHANGE){
+				GetWindowText(GetDlgItem(hDlg, IDC_EDIT_READ_BUFFER_SIZE), szTemp, MAX_PATH_EX);
+                program_options_temp.uiReadBufferSizeKb =_ttoi(szTemp);
+                if(program_options_temp.uiReadBufferSizeKb < 1 || program_options_temp.uiReadBufferSizeKb > 20 * 1024)
+                    program_options_temp.uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
 				return TRUE;
 			}
 			break;

@@ -64,7 +64,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define WM_THREAD_FILEINFO_START	(WM_USER + 9)
 
 // some sizes for variables
-#define MAX_BUFFER_SIZE_CALC	0x10000
+#define DEFAULT_BUFFER_SIZE_CALC	(8 * 1024)
 #define MAX_BUFFER_SIZE_OFN 0xFFFFF // Win9x has a problem with values where just the first bit is set like 0x20000 for OFN buffer:
 #define MAX_PATH_EX 32767
 #define MAX_LINE_LENGTH MAX_PATH_EX + 100
@@ -436,6 +436,7 @@ typedef struct{
     BOOL            bNoHashFileOverride;
     HEX_FORMAT      iHexFormat;
     BOOL            bSaveAbsolutePaths[10];
+    UINT            uiReadBufferSizeKb;
 }PROGRAM_OPTIONS;
 
 typedef struct{
