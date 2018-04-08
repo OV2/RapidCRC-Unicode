@@ -176,7 +176,9 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				InsertGroupIntoListView(arrHwnd[ID_LISTVIEW],fileList);
 			else
 				RemoveGroupItems(arrHwnd[ID_LISTVIEW],fileList->iGroupId);
-		}
+        } else {
+		    ClearAllItems(arrHwnd, pshowresult_params);
+        }
 
 		for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++)
 		{
