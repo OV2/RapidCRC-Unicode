@@ -23,10 +23,12 @@
 #include "resource.h"
 #include "CSyncQueue.h"
 #include "COpenFileListener.h"
+#include <set>
 
 static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *finalList);
 static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode, CONST TCHAR szChkSumFilename[MAX_PATH_EX], list<FILEINFO*> *finalList);
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename);
+static DWORD CreateChecksumFiles_OnePerJob(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename);
 static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult);
 static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode);
 void UpdateFileInfoStatus(FILEINFO *pFileInfo, const HWND hwndListView);
@@ -448,10 +450,6 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 		return NOERROR;
 
 	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]));
-	if(finalList.size()>1) {
-		finalList.sort(ListPointerCompFunction);
-		finalList.unique(ListPointerUniqFunction);
-	}
 
 	if((checkReturn = CreateChecksumFiles(arrHwnd,uiMode,&finalList)) != NOERROR) {
 		StringCchPrintf(szErrorMessage, MAX_PATH_EX,
@@ -493,6 +491,12 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
 														DlgProcFileCreation, (LPARAM) & fco) != IDOK)
 		return NOERROR;
 
+    // one per job wants the list sorted by job, which it is by default
+    if(finalList->size() > 1 && fco.uiCreateFileMode < CREATE_ONE_PER_JOB) {
+		finalList->sort(ListPointerCompFunction);
+		finalList->unique(ListPointerUniqFunction);
+	}
+
     g_program_options.bSaveAbsolutePaths[uiMode] = fco.bSaveAbsolute;
     g_program_options.uiCreateFileMode[uiMode] = fco.uiCreateFileMode;
 	StringCchCopy(g_program_options.szFilename[uiMode], MAX_PATH_EX, fco.szFilename);
@@ -510,6 +514,12 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,
         case CREATE_ONE_FILE_DIR_NAME:
 			dwResult = CreateChecksumFiles_OneFile(arrHwnd, uiMode, finalList, FALSE);
 			break;
+        case CREATE_ONE_PER_JOB:
+            dwResult = CreateChecksumFiles_OnePerJob(arrHwnd, uiMode, finalList, TRUE);
+            break;
+        case CREATE_ONE_PER_JOB_DIR_NAME:
+            dwResult = CreateChecksumFiles_OnePerJob(arrHwnd, uiMode, finalList, FALSE);
+            break;
 	}
 	
 	return dwResult;
@@ -672,7 +682,7 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
 	return NOERROR;
 }
 
-static BOOL GenerateFilename_OneFile(CONST HWND owner, CONST TCHAR *szDefault, UINT uiMode, TCHAR szFileOut[MAX_PATH_EX], BOOL askForFilename)
+static BOOL GenerateFilename_OneFile(CONST HWND owner, CONST TCHAR *szDefault, UINT uiMode, TCHAR szFileOut[MAX_PATH_EX], BOOL askForFilename, CONST TCHAR *szRoot)
 {
     TCHAR szCurrentPath[MAX_PATH_EX] = TEXT("");
 	OPENFILENAME ofn;
@@ -704,7 +714,7 @@ static BOOL GenerateFilename_OneFile(CONST HWND owner, CONST TCHAR *szDefault, U
 	    TCHAR filterString[MAX_PATH_EX];
 
 	    StringCchPrintf(filterString,MAX_PATH_EX,TEXT(".%s files%c*.%s%cAll files%c*.*%c"),hashExt,TEXT('\0'),hashExt,TEXT('\0'),TEXT('\0'),TEXT('\0'));
-	    StringCchPrintf(msgString,MAX_PATH_EX,TEXT("Please choose a filename for the .%s file"),hashExt);
+        StringCchPrintf(msgString,MAX_PATH_EX,TEXT("Please choose a filename for the .%s file (job-root: %s)"),hashExt, szRoot);
 
 	    ZeroMemory(& ofn, sizeof (OPENFILENAME));
 	    ofn.lStructSize       = sizeof (OPENFILENAME);
@@ -741,13 +751,15 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	HANDLE hFile;
     TCHAR szFileOut[MAX_PATH_EX];
     TCHAR szDefaultDir[MAX_PATH_EX];
+    TCHAR szJobRoot[MAX_PATH_EX];
     UINT uiSameCharCount;
 	DWORD dwResult;
 
     uiSameCharCount = FindCommonPrefix(finalList);
     StringCchCopyN(szDefaultDir, MAX_PATH_EX, finalList->front()->szFilename, uiSameCharCount);
+    RegularFromLongFilename(szJobRoot, finalList->front()->parentList->g_szBasePath);
 
-    if(!GenerateFilename_OneFile(arrHwnd[ID_MAIN_WND], szDefaultDir, uiMode, szFileOut, askForFilename))
+    if(!GenerateFilename_OneFile(arrHwnd[ID_MAIN_WND], szDefaultDir, uiMode, szFileOut, askForFilename, szJobRoot))
         return NOERROR;
 
     if(g_program_options.bSaveAbsolutePaths[uiMode] || uiSameCharCount == 4 || uiSameCharCount == 8) {
@@ -798,6 +810,42 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	CloseHandle(hFile);
 
 	return NOERROR;
+}
+
+/*****************************************************************************
+static DWORD CreateChecksumFiles_OnePerJob(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename)
+	arrHwnd			: (IN) array with window handles
+	uiMode			: (IN) create MD5 or SFV files
+	finalList		: (IN) pointer to list of fileinfo pointers on which the action is to be performed
+    askForFilename  : (IN) determines if the user is prompted for a filename for each job
+
+Return Value:
+returns NOERROR or GetLastError()
+
+Notes:
+- handles the situation if the user want one sfv/md5 file for each job
+*****************************************************************************/
+static DWORD CreateChecksumFiles_OnePerJob(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename)
+{
+    DWORD error = NOERROR;
+    list<FILEINFO*> tempList;
+    for(list<FILEINFO*>::iterator it = finalList->begin(); it != finalList->end();) {
+        lFILEINFO *currentParent = (*it)->parentList;
+        tempList.push_back(*it);
+
+        it++;
+        // job changed, or we reached the end of list -> create one file and start anew
+        if(it == finalList->end() || (*it)->parentList != currentParent) {
+            if(tempList.size() > 1) {
+		        tempList.sort(ListPointerCompFunction);
+		        tempList.unique(ListPointerUniqFunction);
+	        }
+            if(error = CreateChecksumFiles_OneFile(arrHwnd, uiMode, &tempList, askForFilename) != NOERROR)
+                break;
+            tempList.clear();
+        }
+    }
+    return error;
 }
 
 /*****************************************************************************
