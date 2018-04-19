@@ -177,7 +177,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 			else
 				RemoveGroupItems(arrHwnd[ID_LISTVIEW],fileList->iGroupId);
         } else {
-		    ClearAllItems(arrHwnd, pshowresult_params);
+            ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
         }
 
 		for(list<FILEINFO>::iterator it=fileList->fInfos.begin();it!=fileList->fInfos.end();it++)
