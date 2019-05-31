@@ -8,6 +8,7 @@
       Description="RapidCRC installer"
       Manufacturer='RapidCRC'
       Platform='x64'
+      InstallScope="perMachine"
       InstallerVersion='200' Languages='1033' Compressed='yes' SummaryCodepage='1252' />
 
     <Upgrade Id="82B033AA-A311-40dc-BBF6-1544C2AE5480">
@@ -105,7 +106,7 @@
         <Directory Id="ProgramMenuDir" Name="RapidCRC (x64)">
           <Component Id="ProgramMenuDir" Guid="91C2AF74-86EF-4748-8A9C-888E94538511">
             <RemoveFolder Id='ProgramMenuDir' On='uninstall' />
-            <RegistryValue Root='HKCU' Key='Software\[Manufacturer]\[ProductName]' Type='string' Value='' KeyPath='yes' />
+            <RegistryValue Root='HKLM' Key='Software\[Manufacturer]\[ProductName]' Type='string' Value='' KeyPath='yes' />
           </Component>
         </Directory>
       </Directory>
