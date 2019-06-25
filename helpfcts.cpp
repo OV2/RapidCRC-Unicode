@@ -407,8 +407,6 @@ VOID ReadOptions()
 	TCHAR szOptionsFilename[MAX_PATH_EX];
 	DWORD dwBytesRead;
 
-    SetDefaultOptions(& g_program_options);
-
 	// Generate filename of the options file
     GetModuleFileName(g_hInstance, szOptionsFilename, MAX_PATH_EX);
     ReduceToPath(szOptionsFilename);
@@ -422,56 +420,61 @@ VOID ReadOptions()
 	hFile = CreateFile(szOptionsFilename, GENERIC_READ, FILE_SHARE_READ, NULL,
 					OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, 0);
 
+    PROGRAM_OPTIONS_FILE program_options_file;
+    program_options_file.SetDefaults();
+
 	if(hFile != INVALID_HANDLE_VALUE){
-		ReadFile(hFile, & g_program_options, sizeof(PROGRAM_OPTIONS), &dwBytesRead, NULL);
+		ReadFile(hFile, & program_options_file, sizeof(PROGRAM_OPTIONS_FILE), &dwBytesRead, NULL);
 		CloseHandle(hFile);
 	}
 
 	if(!g_pstatus.bHaveComCtrlv6)
-		g_program_options.bEnableQueue = FALSE;
+		program_options_file.bEnableQueue = FALSE;
 
     // import old program options
-    if(g_program_options.bCalcCrcPerDefault!=-1) {
-        g_program_options.bCalcPerDefault[HASH_TYPE_CRC32] = g_program_options.bCalcCrcPerDefault;
-        g_program_options.bCalcCrcPerDefault=-1;
+    if(program_options_file.bCalcCrcPerDefault!=-1) {
+        program_options_file.bCalcPerDefault[HASH_TYPE_CRC32] = program_options_file.bCalcCrcPerDefault;
+        program_options_file.bCalcCrcPerDefault=-1;
     }
-    if(g_program_options.bCalcMd5PerDefault!=-1) {
-        g_program_options.bCalcPerDefault[HASH_TYPE_MD5] = g_program_options.bCalcMd5PerDefault;
-        g_program_options.bCalcMd5PerDefault=-1;
+    if(program_options_file.bCalcMd5PerDefault!=-1) {
+        program_options_file.bCalcPerDefault[HASH_TYPE_MD5] = program_options_file.bCalcMd5PerDefault;
+        program_options_file.bCalcMd5PerDefault=-1;
     }
-    if(g_program_options.bCalcEd2kPerDefault!=-1) {
-        g_program_options.bCalcPerDefault[HASH_TYPE_ED2K] = g_program_options.bCalcEd2kPerDefault;
-        g_program_options.bCalcEd2kPerDefault=-1;
+    if(program_options_file.bCalcEd2kPerDefault!=-1) {
+        program_options_file.bCalcPerDefault[HASH_TYPE_ED2K] = program_options_file.bCalcEd2kPerDefault;
+        program_options_file.bCalcEd2kPerDefault=-1;
     }
-    if(g_program_options.bCalcSha1PerDefault!=-1) {
-        g_program_options.bCalcPerDefault[HASH_TYPE_SHA1] = g_program_options.bCalcSha1PerDefault;
-        g_program_options.bCalcSha1PerDefault=-1;
-    }
-
-    if(g_program_options.bDisplayCrcInListView!=-1) {
-        g_program_options.bDisplayInListView[HASH_TYPE_CRC32] = g_program_options.bDisplayCrcInListView;
-        g_program_options.bDisplayCrcInListView=-1;
-    }
-    if(g_program_options.bDisplayMd5InListView!=-1) {
-        g_program_options.bDisplayInListView[HASH_TYPE_MD5] = g_program_options.bDisplayMd5InListView;
-        g_program_options.bDisplayMd5InListView=-1;
-    }
-    if(g_program_options.bDisplayEd2kInListView!=-1) {
-        g_program_options.bDisplayInListView[HASH_TYPE_ED2K] = g_program_options.bDisplayEd2kInListView;
-        g_program_options.bDisplayEd2kInListView=-1;
-    }
-    if(g_program_options.bDisplaySha1InListView!=-1) {
-        g_program_options.bDisplayInListView[HASH_TYPE_SHA1] = g_program_options.bDisplaySha1InListView;
-        g_program_options.bDisplaySha1InListView=-1;
+    if(program_options_file.bCalcSha1PerDefault!=-1) {
+        program_options_file.bCalcPerDefault[HASH_TYPE_SHA1] = program_options_file.bCalcSha1PerDefault;
+        program_options_file.bCalcSha1PerDefault=-1;
     }
 
-	if(!IsLegalFilename(g_program_options.szFilenamePattern) ||
-	   !IsLegalFilename(g_program_options.szFilenameMd5) ||
-	   !IsLegalFilename(g_program_options.szFilenameSfv))
-		SetDefaultOptions(& g_program_options);
+    if(program_options_file.bDisplayCrcInListView!=-1) {
+        program_options_file.bDisplayInListView[HASH_TYPE_CRC32] = program_options_file.bDisplayCrcInListView;
+        program_options_file.bDisplayCrcInListView=-1;
+    }
+    if(program_options_file.bDisplayMd5InListView!=-1) {
+        program_options_file.bDisplayInListView[HASH_TYPE_MD5] = program_options_file.bDisplayMd5InListView;
+        program_options_file.bDisplayMd5InListView=-1;
+    }
+    if(program_options_file.bDisplayEd2kInListView!=-1) {
+        program_options_file.bDisplayInListView[HASH_TYPE_ED2K] = program_options_file.bDisplayEd2kInListView;
+        program_options_file.bDisplayEd2kInListView=-1;
+    }
+    if(program_options_file.bDisplaySha1InListView!=-1) {
+        program_options_file.bDisplayInListView[HASH_TYPE_SHA1] = program_options_file.bDisplaySha1InListView;
+        program_options_file.bDisplaySha1InListView=-1;
+    }
 
-    if(g_program_options.uiReadBufferSizeKb < 1 || g_program_options.uiReadBufferSizeKb > 20 * 1024) // limit between 1kb and 20mb
-        g_program_options.uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
+	if(!IsLegalFilename(program_options_file.szFilenamePattern) ||
+	   !IsLegalFilename(program_options_file.szFilenameMd5) ||
+	   !IsLegalFilename(program_options_file.szFilenameSfv))
+            program_options_file.SetDefaults();
+
+    if(program_options_file.uiReadBufferSizeKb < 1 || program_options_file.uiReadBufferSizeKb > 20 * 1024) // limit between 1kb and 20mb
+        program_options_file.uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
+
+    g_program_options = program_options_file;
 
 	return;
 }
@@ -521,8 +524,12 @@ VOID WriteOptions(CONST HWND hMainWnd, CONST LONG lACW, CONST LONG lACH)
     }
 
 	hFile = CreateFile(szOptionsFilename, GENERIC_WRITE, FILE_SHARE_READ, NULL, CREATE_ALWAYS, 0, 0);
-	if(hFile != INVALID_HANDLE_VALUE){
-		WriteFile(hFile, & g_program_options, sizeof(PROGRAM_OPTIONS), &dwBytesWritten, NULL);
+	if(hFile != INVALID_HANDLE_VALUE) {
+        // convert current program options into save structure
+        PROGRAM_OPTIONS_FILE program_options_file;
+        program_options_file = g_program_options;
+
+		WriteFile(hFile, & program_options_file, sizeof(PROGRAM_OPTIONS_FILE), &dwBytesWritten, NULL);
 		CloseHandle(hFile);
 	}
 
@@ -577,53 +584,9 @@ Notes:
 *****************************************************************************/
 VOID SetDefaultOptions(PROGRAM_OPTIONS * pprogram_options)
 {
-	pprogram_options->dwVersion = 1;
-	StringCchCopy(pprogram_options->szFilenamePattern, MAX_PATH_EX, TEXT("%FILENAME [%CRC].%FILEEXT") );
-	*pprogram_options->szExcludeString = TEXT('\0');
-	pprogram_options->bDisplayCrcInListView = -1;
-	pprogram_options->bDisplayEd2kInListView = -1;
-	pprogram_options->bOwnChecksumFile = FALSE;
-	pprogram_options->bSortList = FALSE;
-	pprogram_options->bAutoScrollListView = FALSE;
-	pprogram_options->bWinsfvComp = TRUE;
-	pprogram_options->uiPriority = PRIORITY_NORMAL;
-	pprogram_options->bDisplayMd5InListView = -1;
-	pprogram_options->uiWndWidth = 119;
-	pprogram_options->uiWndHeight = 35;
-	pprogram_options->iWndCmdShow = SW_NORMAL;
-	pprogram_options->bCalcCrcPerDefault = -1;
-	pprogram_options->bCalcMd5PerDefault = -1;
-	pprogram_options->bCalcEd2kPerDefault = -1;
-	pprogram_options->uiCreateFileModeMd5 = CREATE_ONE_PER_FILE;
-	pprogram_options->uiCreateFileModeSfv = CREATE_ONE_FILE;
-	StringCchCopy(pprogram_options->szFilenameMd5, MAX_PATH, TEXT("checksum.md5"));
-	StringCchCopy(pprogram_options->szFilenameSfv, MAX_PATH, TEXT("checksum.sfv"));
-	pprogram_options->bCreateUnixStyle = FALSE;
-	pprogram_options->bCreateUnicodeFiles = TRUE;
-	pprogram_options->iUnicodeSaveType = UTF_8;
-	pprogram_options->uiWndLeft = 10;
-	pprogram_options->uiWndTop = 10;
-	pprogram_options->bEnableQueue = FALSE;
-	pprogram_options->bUseDefaultCP = FALSE;
-	pprogram_options->bCalcSha1PerDefault= -1;
-	pprogram_options->bDisplaySha1InListView = -1;
-	StringCchCopy(pprogram_options->szCRCStringDelims, MAX_PATH_EX, TEXT("{[(_)]}") );
-	pprogram_options->bAllowCrcAnywhere = false;
-    pprogram_options->bIncludeFileComments = false;
-    pprogram_options->uiDefaultCP = CP_UTF8;
-    ZeroMemory(pprogram_options->bDisplayInListView,10 * sizeof(BOOL));
-    ZeroMemory(pprogram_options->bCalcPerDefault,10 * sizeof(BOOL));
-    pprogram_options->bCalcPerDefault[HASH_TYPE_CRC32] = TRUE;
-    for(int i=0;i<NUM_HASH_TYPES;i++) {
-        pprogram_options->uiCreateFileMode[i] = CREATE_ONE_FILE;
-        StringCchPrintf(pprogram_options->szFilename[i],MAX_PATH,TEXT("checksum.%s"),g_hash_ext[i]);
-        pprogram_options->bSaveAbsolutePaths[i] = 0;
-    }
-    pprogram_options->bHashtypeFromFilename = true;
-    pprogram_options->bHideVerified = false;
-    pprogram_options->bNoHashFileOverride = true;
-    pprogram_options->iHexFormat = DEFAULT;
-    pprogram_options->uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
+	PROGRAM_OPTIONS_FILE program_options_file;
+    program_options_file.SetDefaults();
+    *pprogram_options = program_options_file;
 	return;
 }
 
@@ -973,4 +936,191 @@ VOID FormatRemaingTime(TCHAR *szBuffer, int seconds, int max_length)
         StringCchPrintf(szTmp, 10, TEXT("%ds"), seconds);
         StringCchCat(szBuffer, max_length, szTmp);
     }
+}
+
+/*****************************************************************************
+VOID PROGRAM_OPTIONS_FILE::SetDefaults()
+
+Return Value:
+returns itself
+
+Notes:
+- Set default settings for the save structure
+*****************************************************************************/
+void PROGRAM_OPTIONS_FILE::SetDefaults()
+{
+    dwVersion = 1;
+	StringCchCopy(szFilenamePattern, MAX_PATH_EX, TEXT("%FILENAME [%CRC].%FILEEXT") );
+	*szExcludeString = TEXT('\0');
+	bDisplayCrcInListView = -1;
+	bDisplayEd2kInListView = -1;
+	bOwnChecksumFile = FALSE;
+	bSortList = FALSE;
+	bAutoScrollListView = FALSE;
+	bWinsfvComp = TRUE;
+	uiPriority = PRIORITY_NORMAL;
+	bDisplayMd5InListView = -1;
+	uiWndWidth = 119;
+	uiWndHeight = 35;
+	iWndCmdShow = SW_NORMAL;
+	bCalcCrcPerDefault = -1;
+	bCalcMd5PerDefault = -1;
+	bCalcEd2kPerDefault = -1;
+	uiCreateFileModeMd5 = CREATE_ONE_PER_FILE;
+	uiCreateFileModeSfv = CREATE_ONE_FILE;
+    StringCchPrintf(szFilenameMd5,MAX_PATH,TEXT("checksum.%s"),g_hash_ext[HASH_TYPE_MD5]);
+    StringCchPrintf(szFilenameSfv,MAX_PATH,TEXT("checksum.%s"),g_hash_ext[HASH_TYPE_CRC32]);
+    StringCchPrintf(szFilenameBlake2sp,MAX_PATH,TEXT("checksum.%s"),g_hash_ext[HASH_TYPE_SHA1]);
+	bCreateUnixStyle = FALSE;
+	bCreateUnicodeFiles = TRUE;
+	iUnicodeSaveType = UTF_8;
+	uiWndLeft = 10;
+	uiWndTop = 10;
+	bEnableQueue = FALSE;
+	bUseDefaultCP = FALSE;
+	bCalcSha1PerDefault= -1;
+	bDisplaySha1InListView = -1;
+	StringCchCopy(szCRCStringDelims, MAX_PATH_EX, TEXT("{[(_)]}") );
+	bAllowCrcAnywhere = false;
+    bIncludeFileComments = false;
+    uiDefaultCP = CP_UTF8;
+    ZeroMemory(bDisplayInListView,10 * sizeof(BOOL));
+    ZeroMemory(bCalcPerDefault,10 * sizeof(BOOL));
+    bCalcPerDefault[HASH_TYPE_CRC32] = TRUE;
+    for(int i=0;i<10;i++) {
+        uiCreateFileMode[i] = CREATE_ONE_FILE;
+        StringCchPrintf(szFilename[i],MAX_PATH,TEXT("checksum.%s"),g_hash_ext[i]);
+        bSaveAbsolutePaths[i] = 0;
+    }
+    bHashtypeFromFilename = true;
+    bHideVerified = false;
+    bNoHashFileOverride = true;
+    iHexFormat = DEFAULT;
+    uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
+    uiCreateFileModeBlake2sp = CREATE_ONE_FILE;
+    StringCchPrintf(szFilenameBlake2sp,MAX_PATH,TEXT("checksum.%s"),g_hash_ext[HASH_TYPE_BLAKE2SP]);
+    bSaveAbsolutePathsBlake2sp = 0;
+    bCalcBlake2spPerDefault = FALSE;
+    bDisplayBlake2spInListView = FALSE;
+}
+
+/*****************************************************************************
+PROGRAM_OPTIONS_FILE& PROGRAM_OPTIONS_FILE::operator=(const PROGRAM_OPTIONS& other)
+	other     	: (IN) the regular program options to change into save program options
+
+Return Value:
+returns itself
+
+Notes:
+- This converts the regular program options to the program options structure
+  saved to the settings file
+*****************************************************************************/
+PROGRAM_OPTIONS_FILE& PROGRAM_OPTIONS_FILE::operator=(const PROGRAM_OPTIONS& other)
+{
+    SetDefaults();
+    StringCchCopy(szFilenamePattern, MAX_PATH, other.szFilenamePattern);
+    
+    bSortList = other.bSortList;
+    bWinsfvComp = other.bWinsfvComp;
+	
+    uiPriority = other.uiPriority;
+    
+    uiWndWidth = other.uiWndWidth;		//saved in lACW units
+    uiWndHeight = other.uiWndHeight;	//saved in lACH units
+    iWndCmdShow = other.iWndCmdShow;
+    
+	bCreateUnixStyle = other.bCreateUnixStyle;
+    bCreateUnicodeFiles = other.bCreateUnicodeFiles;
+    bAutoScrollListView = other.bAutoScrollListView;
+	StringCchCopy(szExcludeString, MAX_PATH, other.szExcludeString);
+    iUnicodeSaveType = other.iUnicodeSaveType;
+    uiWndLeft = other.uiWndLeft;
+    uiWndTop = other.uiWndTop;
+    bEnableQueue = other.bEnableQueue;
+    bUseDefaultCP = other.bUseDefaultCP;
+	
+	StringCchCopy(szCRCStringDelims, MAX_PATH, other.szCRCStringDelims);
+    bAllowCrcAnywhere = other.bAllowCrcAnywhere;
+	
+    bIncludeFileComments = other.bIncludeFileComments;
+    uiDefaultCP = other.uiDefaultCP;
+    for(int i = 0; i < 10; i++)
+    {
+        bDisplayInListView[i] = other.bDisplayInListView[i];
+        bCalcPerDefault[i] = other.bCalcPerDefault[i];
+        uiCreateFileMode[i] = other.uiCreateFileMode[i];
+        StringCchCopy(szFilename[i], MAX_PATH, other.szFilename[i]);
+        bSaveAbsolutePaths[i] = other.bSaveAbsolutePaths[i];
+    }
+    bHashtypeFromFilename = other.bHashtypeFromFilename;
+    bHideVerified = other.bHideVerified;
+    bNoHashFileOverride = other.bNoHashFileOverride;
+    iHexFormat = other.iHexFormat;
+    uiReadBufferSizeKb = other.uiReadBufferSizeKb;
+
+    bDisplayBlake2spInListView = other.bDisplayInListView[HASH_TYPE_BLAKE2SP];
+    bCalcBlake2spPerDefault = other.bCalcPerDefault[HASH_TYPE_BLAKE2SP];
+    uiCreateFileModeBlake2sp = other.uiCreateFileMode[HASH_TYPE_BLAKE2SP];
+    StringCchCopy(szFilenameBlake2sp, MAX_PATH, other.szFilename[HASH_TYPE_BLAKE2SP]);
+    bSaveAbsolutePathsBlake2sp = other.bSaveAbsolutePaths[HASH_TYPE_BLAKE2SP];
+
+    return *this;
+}
+
+/*****************************************************************************
+PROGRAM_OPTIONS& PROGRAM_OPTIONS::operator=(const PROGRAM_OPTIONS_FILE& other)
+	other     	: (IN) the save program options to change into regular program options
+
+Return Value:
+returns itself
+
+Notes:
+- This converts the program options saved in the settings file into the program
+  regular options structure
+*****************************************************************************/
+PROGRAM_OPTIONS& PROGRAM_OPTIONS::operator=(const PROGRAM_OPTIONS_FILE& other)
+{
+    StringCchCopy(szFilenamePattern, MAX_PATH, other.szFilenamePattern);
+	bSortList = other.bSortList;
+    bWinsfvComp = other.bWinsfvComp;
+    uiPriority = other.uiPriority;
+    uiWndWidth = other.uiWndWidth;		//saved in lACW units
+    uiWndHeight = other.uiWndHeight;	//saved in lACH units
+    iWndCmdShow = other.iWndCmdShow;
+	bCreateUnixStyle = other.bCreateUnixStyle;
+    bCreateUnicodeFiles = other.bCreateUnicodeFiles;
+    bAutoScrollListView = other.bAutoScrollListView;
+	StringCchCopy(szExcludeString, MAX_PATH, other.szExcludeString);
+    iUnicodeSaveType = other.iUnicodeSaveType;
+    uiWndLeft = other.uiWndLeft;
+    uiWndTop = other.uiWndTop;
+    bEnableQueue = other.bEnableQueue;
+    bUseDefaultCP = other.bUseDefaultCP;
+	StringCchCopy(szCRCStringDelims, MAX_PATH, other.szCRCStringDelims);
+    bAllowCrcAnywhere = other.bAllowCrcAnywhere;
+    bIncludeFileComments = other.bIncludeFileComments;
+    uiDefaultCP = other.uiDefaultCP;
+
+    for(int i = 0; i < 10; i++)
+    {
+        bDisplayInListView[i] = other.bDisplayInListView[i];
+        bCalcPerDefault[i] = other.bCalcPerDefault[i];
+        uiCreateFileMode[i] = other.uiCreateFileMode[i];
+        StringCchCopy(szFilename[i], MAX_PATH, other.szFilename[i]);
+        bSaveAbsolutePaths[i] = other.bSaveAbsolutePaths[i];
+    }
+
+    bHashtypeFromFilename = other.bHashtypeFromFilename;
+    bHideVerified = other.bHideVerified;
+    bNoHashFileOverride = other.bNoHashFileOverride;
+    iHexFormat = other.iHexFormat;
+    uiReadBufferSizeKb = other.uiReadBufferSizeKb;
+
+    bDisplayInListView[HASH_TYPE_BLAKE2SP] = other.bDisplayBlake2spInListView;
+    bCalcPerDefault[HASH_TYPE_BLAKE2SP] = other.bCalcBlake2spPerDefault;
+    uiCreateFileMode[HASH_TYPE_BLAKE2SP] = other.uiCreateFileModeBlake2sp;
+    StringCchCopy(szFilename[HASH_TYPE_BLAKE2SP], MAX_PATH, other.szFilenameBlake2sp);
+    bSaveAbsolutePaths[HASH_TYPE_BLAKE2SP] = other.bSaveAbsolutePathsBlake2sp;
+
+    return *this;
 }

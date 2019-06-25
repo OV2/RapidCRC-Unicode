@@ -137,7 +137,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
+				PreprocessorDefinitions="WIN32;_DEBUG;HAVE_SSE2;_WINDOWS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -924,6 +924,54 @@
 				</File>
 				<File
 					RelativePath=".\sha3\KeccakSponge.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="blake2"
+				>
+				<File
+					RelativePath=".\blake2\blake2-config.h"
+					>
+				</File>
+				<File
+					RelativePath=".\blake2\blake2-impl.h"
+					>
+				</File>
+				<File
+					RelativePath=".\blake2\blake2.h"
+					>
+				</File>
+				<File
+					RelativePath=".\blake2\blake2b-load-sse2.h"
+					>
+				</File>
+				<File
+					RelativePath=".\blake2\blake2b-load-sse41.h"
+					>
+				</File>
+				<File
+					RelativePath=".\blake2\blake2s-load-sse2.h"
+					>
+				</File>
+				<File
+					RelativePath=".\blake2\blake2s-load-sse41.h"
+					>
+				</File>
+				<File
+					RelativePath=".\blake2\blake2s-load-xop.h"
+					>
+				</File>
+				<File
+					RelativePath=".\blake2\blake2s-round.h"
+					>
+				</File>
+				<File
+					RelativePath=".\blake2\blake2s.c"
+					>
+				</File>
+				<File
+					RelativePath=".\blake2\blake2sp.c"
 					>
 				</File>
 			</Filter>

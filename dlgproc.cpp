@@ -61,7 +61,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static UINT uiThreadID;
 	static DWORD dwSortStatus;
 	static SHOWRESULT_PARAMS showresult_params = {NULL, FALSE, FALSE};
-	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, sha3Popup, crcPopup;
+	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, shaPopup, crcPopup;
     static std::list<UINT> fileThreadIds;
     static int iTimerCount; 
 	lFILEINFO *fileList;
@@ -83,7 +83,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		CreateListViewPopupMenu(&popupMenu);
         CreateListViewHeaderPopupMenu(&headerPopupMenu);
         CreateHashFilenameButtonPopupMenu(&hashInNamePopup);
-        CreateSha3ButtonPopupMenu(&sha3Popup);
+        CreateShaButtonPopupMenu(&shaPopup);
         CreateCrcButtonPopupMenu(&crcPopup);
 		RegisterDropWindow(arrHwnd, & pDropTarget);
         uiTaskbarButtonCreatedMessage = RegisterWindowMessage(L"TaskbarButtonCreated");
@@ -348,33 +348,21 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				    return 0;
 			    }
 			    break;
-		    case ID_BTN_SHA1_IN_SHA1:
-			    if(HIWORD(wParam) == BN_CLICKED){
-				    CreateChecksumFiles(arrHwnd, MODE_SHA1);
-				    return 0;
-			    }
-			    break;
-            case ID_BTN_SHA256_IN_SHA256:
-			    if(HIWORD(wParam) == BN_CLICKED){
-				    CreateChecksumFiles(arrHwnd, MODE_SHA256);
-				    return 0;
-			    }
-			    break;
-            case ID_BTN_SHA512_IN_SHA512:
-			    if(HIWORD(wParam) == BN_CLICKED){
-				    CreateChecksumFiles(arrHwnd, MODE_SHA512);
-				    return 0;
-			    }
-			    break;
-            case ID_BTN_SHA3_IN_SHA3:
+            case ID_BTN_SHA_IN_SHA:
 			    if(HIWORD(wParam) == BN_CLICKED){
                     RECT rect;
-                    GetWindowRect(arrHwnd[ID_BTN_SHA3_IN_SHA3], &rect);
+                    GetWindowRect(arrHwnd[ID_BTN_SHA_IN_SHA], &rect);
                     int x = rect.left, y = rect.bottom;
-                    int ret = TrackPopupMenu(sha3Popup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_SHA3_IN_SHA3], NULL);
+                    int ret = TrackPopupMenu(shaPopup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_SHA_IN_SHA], NULL);
                     if(ret)
-                        CreateChecksumFiles(arrHwnd, MODE_SHA3_224 + ret - IDM_SHA3_224);
+                        CreateChecksumFiles(arrHwnd, MODE_SHA1 + ret - IDM_SHA1);
                     return 0;
+			    }
+			    break;
+            case ID_BTN_BLAKE2SP_IN_BLAKE2SP:
+			    if(HIWORD(wParam) == BN_CLICKED){
+				    CreateChecksumFiles(arrHwnd, MODE_BLAKE2SP);
+				    return 0;
 			    }
 			    break;
 		    case ID_BTN_ERROR_DESCR:
@@ -663,6 +651,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         case IDC_CHECK_SHA3_256_DEFAULT:
         case IDC_CHECK_SHA3_512_DEFAULT:
         case IDC_CHECK_CRCC_DEFAULT:
+        case IDC_CHECK_BLAKE2SP_DEFAULT:
 			if(HIWORD(wParam) == BN_CLICKED){
                 unsigned int offset = LOWORD(wParam) - IDC_CHECK_CRC_DEFAULT;
 				program_options_temp.bCalcPerDefault[offset] = (IsDlgButtonChecked(hDlg, LOWORD(wParam)) == BST_CHECKED);
@@ -679,6 +668,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         case IDC_CHECK_DISPLAY_SHA3_256_IN_LIST:
         case IDC_CHECK_DISPLAY_SHA3_512_IN_LIST:
         case IDC_CHECK_DISPLAY_CRCC_IN_LIST:
+        case IDC_CHECK_DISPLAY_BLAKE2SP_IN_LIST:
 			if(HIWORD(wParam) == BN_CLICKED){
                 unsigned int offset = LOWORD(wParam) - IDC_CHECK_DISPLAY_CRC_IN_LIST;
                 program_options_temp.bDisplayInListView[offset] = (IsDlgButtonChecked(hDlg, LOWORD(wParam)) == BST_CHECKED);
@@ -1355,12 +1345,10 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
     MoveWindow(arrHwnd[ID_STATIC_CREATE], lACW * leftMargin, wHeight - lACH * actButtonY + 5, lACW * 7, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * (leftMargin + 7 + 1), wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 17 + 2) + 16, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_SHA1_IN_SHA1], lACW * (leftMargin + 27 + 3) + 32, wHeight - lACH * actButtonY, lACW * 7 + 16, lACH * 19/10.0, FALSE);
-    MoveWindow(arrHwnd[ID_BTN_SHA256_IN_SHA256], lACW * (leftMargin + 34 + 4) + 48, wHeight - lACH * actButtonY, lACW * 9 + 16, lACH * 19/10.0, FALSE);
-    MoveWindow(arrHwnd[ID_BTN_SHA512_IN_SHA512], lACW * (leftMargin + 43 + 5) + 64, wHeight - lACH * actButtonY, lACW * 9 + 16, lACH * 19/10.0, FALSE);
-    MoveWindow(arrHwnd[ID_BTN_SHA3_IN_SHA3], lACW * (leftMargin + 52 + 6) + 80, wHeight - lACH * actButtonY, lACW * 7 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 59 + 7) + 96, wHeight - lACH * actButtonY, lACW * 21, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 80 + 8) + 96, wHeight - lACH * actButtonY, lACW * 25, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_SHA_IN_SHA], lACW * (leftMargin + 27 + 3) + 32, wHeight - lACH * actButtonY, lACW * 7 + 16, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_BTN_BLAKE2SP_IN_BLAKE2SP], lACW * (leftMargin + 34 + 4) + 48, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 44 + 5) + 64, wHeight - lACH * actButtonY, lACW * 21, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 65 + 6) + 64, wHeight - lACH * actButtonY, lACW * 25, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, FALSE);
 	
 	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 37 + 36 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, FALSE);

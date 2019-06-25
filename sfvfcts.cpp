@@ -233,6 +233,7 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
             case MODE_SHA3_224:
             case MODE_SHA3_256:
             case MODE_SHA3_512:
+            case MODE_BLAKE2SP:
                 bWasAbsolute = InterpretMDSHALine(szLine, uiStringLength, uiMode, fileList);
                 break;
             case MODE_BSD:

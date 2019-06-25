@@ -85,7 +85,8 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define HASH_TYPE_SHA3_256 7
 #define HASH_TYPE_SHA3_512 8
 #define HASH_TYPE_CRC32C 9
-#define NUM_HASH_TYPES 10
+#define HASH_TYPE_BLAKE2SP 10
+#define NUM_HASH_TYPES 11
 
 // RapidCRC modes; also used in the action functions
 // Have to equal hash types
@@ -99,6 +100,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MODE_SHA3_256			7
 #define MODE_SHA3_512			8
 #define MODE_CRC32C             9
+#define MODE_BLAKE2SP           10
 #define MODE_BSD                21
 
 //CMDLINE Options for the shell extension
@@ -112,6 +114,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_SHA3_256		7
 #define CMD_SHA3_512		8
 #define CMD_CRC32C          9
+#define CMD_BLAKE2SP        10
 #define CMD_NAME			21
 #define CMD_NTFS			22
 #define CMD_REPARENT		23
@@ -185,8 +188,9 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_STATIC_SHA3_256_VALUE    11
 #define ID_STATIC_SHA3_512_VALUE    12
 #define ID_STATIC_CRCC_VALUE        13
-#define ID_STATIC_INFO				14
-#define ID_MAX_STATIC               14
+#define ID_STATIC_BLAKE2SP_VALUE    14
+#define ID_STATIC_INFO				15
+#define ID_MAX_STATIC               15
 
 #define ID_STATIC_STATUS			21
 #define ID_STATIC_CREATE            22
@@ -202,38 +206,37 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 
 #define ID_BTN_CRC_IN_SFV			31
 #define ID_BTN_MD5_IN_MD5			32
-#define ID_BTN_SHA1_IN_SHA1			33
-#define ID_BTN_SHA256_IN_SHA256     34
-#define ID_BTN_SHA512_IN_SHA512     35
-#define ID_BTN_SHA3_IN_SHA3         36
-#define ID_BTN_CRC_IN_FILENAME		37
-#define ID_BTN_CRC_IN_STREAM		38
-#define ID_BTN_OPTIONS				39
+#define ID_BTN_SHA_IN_SHA			33
+#define ID_BTN_BLAKE2SP_IN_BLAKE2SP 34
+#define ID_BTN_CRC_IN_FILENAME		35
+#define ID_BTN_CRC_IN_STREAM		36
+#define ID_BTN_OPTIONS				37
 
-#define ID_EDIT_FILENAME			40
-#define ID_EDIT_CRC_VALUE			41
-#define ID_EDIT_MD5_VALUE			42
-#define ID_EDIT_ED2K_VALUE			43
-#define ID_EDIT_SHA1_VALUE			44
-#define ID_EDIT_SHA256_VALUE		45
-#define ID_EDIT_SHA512_VALUE		46
-#define ID_EDIT_SHA3_224_VALUE		47
-#define ID_EDIT_SHA3_256_VALUE		48
-#define ID_EDIT_SHA3_512_VALUE		49
-#define ID_EDIT_CRCC_VALUE          50
+#define ID_EDIT_FILENAME			38
+#define ID_EDIT_CRC_VALUE			39
+#define ID_EDIT_MD5_VALUE			40
+#define ID_EDIT_ED2K_VALUE			41
+#define ID_EDIT_SHA1_VALUE			42
+#define ID_EDIT_SHA256_VALUE		43
+#define ID_EDIT_SHA512_VALUE		44
+#define ID_EDIT_SHA3_224_VALUE		45
+#define ID_EDIT_SHA3_256_VALUE		46
+#define ID_EDIT_SHA3_512_VALUE		47
+#define ID_EDIT_CRCC_VALUE          48
+#define ID_EDIT_BLAKE2SP_VALUE      49
 
-#define ID_EDIT_INFO				51
-#define ID_EDIT_STATUS				52
-#define ID_BTN_ERROR_DESCR			53
+#define ID_EDIT_INFO				50
+#define ID_EDIT_STATUS				51
+#define ID_BTN_ERROR_DESCR			52
 
-#define ID_BTN_PLAY_PAUSE			54
-#define ID_BTN_STOP     			55
+#define ID_BTN_PLAY_PAUSE			53
+#define ID_BTN_STOP     			54
 
-#define ID_COMBO_PRIORITY			56
-#define ID_BTN_OPENFILES_PAUSE		57
-#define ID_LAST_TAB_CONTROL			57
+#define ID_COMBO_PRIORITY			55
+#define ID_BTN_OPENFILES_PAUSE		56
+#define ID_LAST_TAB_CONTROL			56
 
-#define ID_NUM_WINDOWS				58
+#define ID_NUM_WINDOWS				57
 
 #define IDM_COPY_CRC				1
 #define IDM_COPY_MD5				2
@@ -245,6 +248,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_COPY_SHA3_256			8
 #define IDM_COPY_SHA3_512			9
 #define IDM_COPY_CRCC               10
+#define IDM_COPY_BLAKE2SP           11
 #define IDM_COPY_ED2K_LINK			20
 #define IDM_REMOVE_ITEMS			21
 #define IDM_CLEAR_LIST				22
@@ -254,7 +258,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_CRC_FILENAME            1
 
 #define IDM_CRC_SFV                 1
-#define IDM_SHA3_224                1
+#define IDM_SHA1                    1
 
 #define IDM_CRC_COLUMN              1
 #define IDM_MD5_COLUMN              2
@@ -266,6 +270,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_SHA3_256_COLUMN         8
 #define IDM_SHA3_512_COLUMN         9
 #define IDM_CRCC_COLUMN             10
+#define IDM_BLAKE2SP_COLUMN         11
 
 //****** file open dialog *******
 #define FDIALOG_OPENCHOICES 0
@@ -317,6 +322,7 @@ typedef struct _FILEINFO {
             BYTE	abSha3_224Result[28];
             BYTE	abSha3_256Result[32];
             BYTE	abSha3_512Result[64];
+            BYTE	abBlake2sp_Result[32];
             DWORD   dwCrc32cResult;
         } r;
         union {
@@ -391,7 +397,9 @@ typedef struct{
 	BOOL *bFileDone;
 }THREAD_PARAMS_HASHCALC;
 
-typedef struct{
+struct PROGRAM_OPTIONS_T;
+
+typedef struct PROGRAM_OPTIONS_FILE_T {
 	DWORD			dwVersion;
 	TCHAR			szFilenamePattern[MAX_PATH];
 	BOOL			bDisplayCrcInListView; // not used anymore
@@ -439,7 +447,49 @@ typedef struct{
     HEX_FORMAT      iHexFormat;
     BOOL            bSaveAbsolutePaths[10];
     UINT            uiReadBufferSizeKb;
-}PROGRAM_OPTIONS;
+    BOOL			bDisplayBlake2spInListView;
+    BOOL            bCalcBlake2spPerDefault;
+    UINT			uiCreateFileModeBlake2sp;
+    TCHAR			szFilenameBlake2sp[MAX_PATH];
+    BOOL            bSaveAbsolutePathsBlake2sp;
+    void            SetDefaults();
+    PROGRAM_OPTIONS_FILE_T& operator=(const PROGRAM_OPTIONS_T& other);
+} PROGRAM_OPTIONS_FILE;
+
+typedef struct PROGRAM_OPTIONS_T {
+    TCHAR			szFilenamePattern[MAX_PATH];
+	BOOL			bSortList;
+	BOOL			bWinsfvComp;
+	UINT			uiPriority;
+    UINT			uiWndWidth;		//saved in lACW units
+	UINT			uiWndHeight;	//saved in lACH units
+	INT				iWndCmdShow;
+	BOOL			bCreateUnixStyle;
+	//RCR Unicode specific
+	BOOL			bCreateUnicodeFiles;
+	BOOL			bAutoScrollListView;
+	TCHAR			szExcludeString[MAX_PATH];
+    UNICODE_TYPE    iUnicodeSaveType;
+	UINT			uiWndLeft;
+	UINT			uiWndTop;
+	BOOL			bEnableQueue;
+	BOOL			bUseDefaultCP;
+	TCHAR			szCRCStringDelims[MAX_PATH];
+	BOOL			bAllowCrcAnywhere;
+    BOOL            bIncludeFileComments;
+    UINT            uiDefaultCP;
+    BOOL			bDisplayInListView[NUM_HASH_TYPES];
+    BOOL            bCalcPerDefault[NUM_HASH_TYPES];
+    UINT			uiCreateFileMode[NUM_HASH_TYPES];
+    TCHAR			szFilename[NUM_HASH_TYPES][MAX_PATH];
+    BOOL            bHashtypeFromFilename;
+    BOOL            bHideVerified;
+    BOOL            bNoHashFileOverride;
+    HEX_FORMAT      iHexFormat;
+    BOOL            bSaveAbsolutePaths[NUM_HASH_TYPES];
+    UINT            uiReadBufferSizeKb;
+    PROGRAM_OPTIONS_T& operator=(const PROGRAM_OPTIONS_FILE_T& other);
+} PROGRAM_OPTIONS;
 
 typedef struct{
 	BOOL bHaveComCtrlv6;							//are the common controls v6 available? (os>=winxp)
@@ -507,7 +557,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStatus);
 void CreateListViewPopupMenu(HMENU *menu);
 void CreateHashFilenameButtonPopupMenu(HMENU *menu);
-void CreateSha3ButtonPopupMenu(HMENU *menu);
+void CreateShaButtonPopupMenu(HMENU *menu);
 void CreateCrcButtonPopupMenu(HMENU *menu);
 void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU pupup,int x,int y, SHOWRESULT_PARAMS * pshowresult_params);
 void CreateListViewHeaderPopupMenu(HMENU *menu);
