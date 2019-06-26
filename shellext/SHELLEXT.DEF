@@ -1,7 +1,5 @@
 ;shellext.def : Declares the module parameters for the DLL.
 
-LIBRARY      rcrcshex
-
 EXPORTS
 	DllRegisterServer private
 	DllUnregisterServer private

@@ -506,6 +506,7 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
         case CMD_SHA3_224:
         case CMD_SHA3_256:
         case CMD_SHA3_512:
+        case CMD_BLAKE2SP:
 			fileList->bDoCalculate[fileList->uiCmdOpts] = true;
 			break;
 		default:

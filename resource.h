@@ -66,12 +66,13 @@
 #define IDC_CHECK_CONTEXT11             1064
 #define IDC_CHECK_CONTEXT12             1065
 #define IDC_CHECK_CONTEXT13             1066
+#define IDC_CHECK_CONTEXT14             1067
+#define IDC_CHECK_CONTEXT15             1068
 #define IDC_RADIO_HEX_DEFAULT           1066
 #define IDC_RADIO_HEX_UPPERCASE         1067
-#define IDC_CHECK_CONTEXT14             1067
 #define IDC_CHECK_ABSOLUTE_PATHS        1067
 #define IDC_RADIO_HEX_LOWERCASE         1068
-#define IDC_STATIC_CTX                  1068
+#define IDC_STATIC_CTX                  1069
 #define IDC_CHECK_DISPLAY_CRC_IN_LIST   4000
 #define IDC_CHECK_DISPLAY_MD5_IN_LIST   4001
 #define IDC_CHECK_DISPLAY_ED2K_IN_LIST  4002

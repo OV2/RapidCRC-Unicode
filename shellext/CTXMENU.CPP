@@ -122,6 +122,7 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
         InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA3_224, TEXT("Create SHA3-224"));
         InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA3_256, TEXT("Create SHA3-256"));
         InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA3_512, TEXT("Create SHA3-512"));
+        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_BLAKE2SP, TEXT("Create BLAKE2SP"));
 		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_NAME, TEXT("Put CRC in Filename"));
 		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_NTFS, TEXT("Put CRC in NTFS Stream"));
 
@@ -159,6 +160,7 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA3_224, FALSE, &mii);
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA3_256, FALSE, &mii);
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA3_512, FALSE, &mii);
+            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_BLAKE2SP, FALSE, &mii);
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_NAME, FALSE, &mii);
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_NTFS, FALSE, &mii);
 		} else {
@@ -179,6 +181,7 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA3_224, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA3_256, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA3_512, MF_BYCOMMAND, hBmp, hBmp);
+            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_BLAKE2SP, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_NAME, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_NTFS, MF_BYCOMMAND, hBmp, hBmp);
 		}
@@ -286,6 +289,10 @@ STDMETHODIMP CShellExt::GetCommandString(THIS_
     else if(idCommand == IDM_SHA3_512)
 	{
         CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA3-512 File", "RapidCRCCreateSHA3_512")
+	}
+    else if(idCommand == IDM_BLAKE2SP)
+	{
+        CMD_HELP_VERB("Opens the files with RapidCRC and creates an BLAKE2SP File", "RapidCRCCreateBLAKE2SP")
 	}
 	else
 	{
@@ -493,6 +500,10 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
     else if(LOWORD(lpcmi->lpVerb) == IDM_SHA3_512)
 	{
 		doRapidCrcOpen(TEXT(" -CreateSHA3512"));
+	}
+    else if(LOWORD(lpcmi->lpVerb) == IDM_BLAKE2SP)
+	{
+		doRapidCrcOpen(TEXT(" -CreateBLAKE2SP"));
 	}
 	else if(LOWORD(lpcmi->lpVerb) == IDM_NAME)
 	{
