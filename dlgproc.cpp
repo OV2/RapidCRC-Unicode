@@ -196,7 +196,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         }
 		break;
 	case WM_GETMINMAXINFO:
-		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 155;
+		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 125;
 		((MINMAXINFO *)lParam)->ptMinTrackSize.y = lAveCharHeight * 25;
 		return 0;
 	case WM_SIZE:
