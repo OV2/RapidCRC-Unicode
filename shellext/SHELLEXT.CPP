@@ -25,6 +25,8 @@
 //
 
 #include "priv.h"
+#include "resource.h"
+#include "SysInfo.h"
 
 //
 // Initialize GUIDs (should be done only and at-least once per DLL/EXE)
@@ -320,6 +322,24 @@ STDMETHODIMP CShellExtClassFactory::LockServer(BOOL fLock)
     return NOERROR;
 }
 
+
+HBITMAP LoadIconAsBitmap(HINSTANCE hResourceDll, UINT nIDResource)
+{
+	HICON hIcon = (HICON)LoadImage(hResourceDll, MAKEINTRESOURCE(nIDResource),
+						IMAGE_ICON, 12, 12, LR_DEFAULTCOLOR);
+
+	if (hIcon)
+	{
+		ICONINFO iconInfo;
+		GetIconInfo(hIcon, & iconInfo);
+		DeleteObject(iconInfo.hbmMask);
+		DestroyIcon(hIcon);
+		return iconInfo.hbmColor;
+	}
+
+	return NULL;
+}
+
 // *********************** CShellExt *************************
 CShellExt::CShellExt()
 {
@@ -329,6 +349,19 @@ CShellExt::CShellExt()
 
     m_cRef = 0L;
     m_pDataObj = NULL;
+
+    if(SysInfo::Instance().IsVistaOrLater()) // only used pre vista, otherwise handled by IconBitmapUtils
+    {
+        m_hBmpRapidCrc_preVista = NULL;
+        m_hBmpOpenWith_preVista = NULL;
+        m_hBmpCreateSfv_preVista = NULL;
+    }
+    else
+    {
+        m_hBmpRapidCrc_preVista = LoadIconAsBitmap(g_hmodThisDll, IDI_RAPIDCRC);
+        m_hBmpOpenWith_preVista = LoadIconAsBitmap(g_hmodThisDll, IDI_OPEN_WITH);
+        m_hBmpCreateSfv_preVista = LoadIconAsBitmap(g_hmodThisDll, IDI_CREATE_SFV);
+    }
 
     g_cRefThisDll++;
 }
@@ -341,6 +374,13 @@ CShellExt::~CShellExt()
 
     if (m_pDataObj)
         m_pDataObj->Release();
+
+    if(m_hBmpRapidCrc_preVista)
+        DeleteObject(m_hBmpRapidCrc_preVista);
+    if(m_hBmpOpenWith_preVista)
+        DeleteObject(m_hBmpOpenWith_preVista);
+    if(m_hBmpCreateSfv_preVista)
+        DeleteObject(m_hBmpCreateSfv_preVista);
 
     g_cRefThisDll--;
 }

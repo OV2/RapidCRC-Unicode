@@ -34,23 +34,6 @@
 
 extern HINSTANCE g_hmodThisDll;
 
-HBITMAP LoadIconAsBitmap(HINSTANCE hResourceDll, UINT nIDResource)
-{
-	HICON hIcon = (HICON)LoadImage(hResourceDll, MAKEINTRESOURCE(nIDResource),
-						IMAGE_ICON, 12, 12, LR_DEFAULTCOLOR);
-
-	if (hIcon)
-	{
-		ICONINFO iconInfo;
-		GetIconInfo(hIcon, & iconInfo);
-		DeleteObject(iconInfo.hbmMask); 
-		DestroyIcon(hIcon);
-		return iconInfo.hbmColor;
-	}
-
-	return NULL;
-}
-
 //
 //  FUNCTION: CShellExt::QueryContextMenu(HMENU, UINT, UINT, UINT, UINT)
 //
@@ -164,15 +147,15 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_NAME, FALSE, &mii);
             SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_NTFS, FALSE, &mii);
 		} else {
-			hBmp = LoadIconAsBitmap(g_hmodThisDll, IDI_RAPIDCRC);
+			hBmp = m_hBmpRapidCrc_preVista;
 			SetMenuItemBitmaps(hMenu,indexMenu,MF_BYPOSITION,hBmp,hBmp);
 
-			hBmp = LoadIconAsBitmap(g_hmodThisDll, IDI_OPEN_WITH);
+			hBmp = m_hBmpOpenWith_preVista;
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_RAPIDCRC, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_REPARENT, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_OPENHASHFILES, MF_BYCOMMAND, hBmp, hBmp);
 
-			hBmp = LoadIconAsBitmap(g_hmodThisDll, IDI_CREATE_SFV);
+			hBmp = m_hBmpCreateSfv_preVista;
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SFV, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_MD5, MF_BYCOMMAND, hBmp, hBmp);
             SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA1, MF_BYCOMMAND, hBmp, hBmp);

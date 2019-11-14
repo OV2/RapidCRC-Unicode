@@ -71,6 +71,10 @@ protected:
 	ULONG			m_cRef;
 	LPDATAOBJECT	m_pDataObj;
 
+    HBITMAP m_hBmpRapidCrc_preVista;
+    HBITMAP m_hBmpOpenWith_preVista;
+    HBITMAP m_hBmpCreateSfv_preVista;
+
 public:
 	CShellExt();
 	~CShellExt();
