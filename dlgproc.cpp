@@ -709,6 +709,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
 INT_PTR CALLBACK DlgProcCtxMenu(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
+static std::map<int,int> checkbox_y_map;
 #define MAX_CONTEX_CHECKBOXES_ID 15
 	switch (message)
 	{
@@ -734,10 +735,16 @@ INT_PTR CALLBACK DlgProcCtxMenu(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		        RegCloseKey(hKey);
 	        }
 
+            // order the checkboxes by ascending y position in this map
+            checkbox_y_map.clear();
 	        for(int i = 0; i < MAX_CONTEX_CHECKBOXES_ID; i++) {
 	            if(!(1 << i & mask)) {
 	                CheckDlgButton(hDlg, IDC_CHECK_CONTEXT1 + i, BST_CHECKED);
 	            }
+                RECT rect;
+                GetClientRect(GetDlgItem(hDlg, IDC_CHECK_CONTEXT1 + i), &rect);
+                MapWindowPoints(GetDlgItem(hDlg, IDC_CHECK_CONTEXT1 + i), hDlg, (LPPOINT)&rect, 2);
+                checkbox_y_map.insert(std::pair<int,int>(rect.bottom, i));
 	        }
 	    }
 
@@ -783,12 +790,10 @@ INT_PTR CALLBACK DlgProcCtxMenu(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			    DWORD dwPos = GetMessagePos();
                 POINT pos = { GET_X_LPARAM(dwPos), GET_Y_LPARAM(dwPos) };
                 ScreenToClient(hDlg, &pos);
-                for(int i = 0; i < MAX_CONTEX_CHECKBOXES_ID; i++) {
-                    RECT rect;
-                    GetClientRect(GetDlgItem(hDlg, IDC_CHECK_CONTEXT1 + i), &rect);
-                    MapWindowPoints(GetDlgItem(hDlg, IDC_CHECK_CONTEXT1 + i), hDlg, (LPPOINT)&rect, 2);
-                    if(pos.y < rect.bottom) {
-                        CheckDlgButton(hDlg, IDC_CHECK_CONTEXT1 + i, IsDlgButtonChecked(hDlg, IDC_CHECK_CONTEXT1 + i) ? BST_UNCHECKED : BST_CHECKED);
+                // check y positions in ascending order to see which checkbox should be toggled
+                for(std::map<int,int>::iterator it = checkbox_y_map.begin(); it != checkbox_y_map.end(); it++) {
+                    if(pos.y < it->first) {
+                        CheckDlgButton(hDlg, IDC_CHECK_CONTEXT1 + it->second, IsDlgButtonChecked(hDlg, IDC_CHECK_CONTEXT1 + it->second) ? BST_UNCHECKED : BST_CHECKED);
                         break;
                     }
                 }
