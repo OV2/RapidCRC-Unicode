@@ -11,15 +11,22 @@ and related or neighboring rights to the source code in this file.
 http://creativecommons.org/publicdomain/zero/1.0/
 */
 
-#ifndef _KeccakSponge_h_
-#define _KeccakSponge_h_
+#ifndef _align_h_
+#define _align_h_
 
-/* For the documentation, please follow the link: */
-/* #include "KeccakSponge-documentation.h" */
+/* on Mac OS-X and possibly others, ALIGN(x) is defined in param.h, and -Werror chokes on the redef. */
+#ifdef ALIGN
+#undef ALIGN
+#endif
 
-#include "KeccakSpongeWidth200.h"
-#include "KeccakSpongeWidth400.h"
-#include "KeccakSpongeWidth800.h"
-#include "KeccakSpongeWidth1600.h"
+#if defined(__GNUC__)
+#define ALIGN(x) __attribute__ ((aligned(x)))
+#elif defined(_MSC_VER)
+#define ALIGN(x) __declspec(align(x))
+#elif defined(__ARMCC_VERSION)
+#define ALIGN(x) __align(x)
+#else
+#define ALIGN(x)
+#endif
 
 #endif

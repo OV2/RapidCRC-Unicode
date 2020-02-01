@@ -819,39 +819,27 @@
 				Name="sha3"
 				>
 				<File
+					RelativePath=".\sha3\align.h"
+					>
+				</File>
+				<File
 					RelativePath=".\sha3\brg_endian.h"
 					>
 				</File>
 				<File
-					RelativePath=".\sha3\KeccakF-1600-int-set.h"
+					RelativePath=".\sha3\KeccakHash.c"
 					>
 				</File>
 				<File
-					RelativePath=".\sha3\KeccakF-1600-interface.h"
+					RelativePath=".\sha3\KeccakHash.h"
 					>
 				</File>
 				<File
-					RelativePath=".\sha3\KeccakF-1600-opt32-settings.h"
+					RelativePath=".\sha3\KeccakP-1600-64.macros"
 					>
-					<FileConfiguration
-						Name="Debug|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|x64"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\sha3\KeccakF-1600-opt32.c"
+					RelativePath=".\sha3\KeccakP-1600-inplace32BI.c"
 					>
 					<FileConfiguration
 						Name="Debug|x64"
@@ -871,27 +859,11 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\sha3\KeccakF-1600-opt64-settings.h"
+					RelativePath=".\sha3\KeccakP-1600-opt64-config.h"
 					>
-					<FileConfiguration
-						Name="Debug|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Release|Win32"
-						ExcludedFromBuild="true"
-						>
-						<Tool
-							Name="VCCustomBuildTool"
-						/>
-					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\sha3\KeccakF-1600-opt64.c"
+					RelativePath=".\sha3\KeccakP-1600-opt64.c"
 					>
 					<FileConfiguration
 						Name="Debug|Win32"
@@ -911,19 +883,35 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\sha3\KeccakNISTInterface.c"
+					RelativePath=".\sha3\KeccakP-1600-SnP.h"
 					>
 				</File>
 				<File
-					RelativePath=".\sha3\KeccakNISTInterface.h"
+					RelativePath=".\sha3\KeccakP-1600-unrolling.macros"
 					>
 				</File>
 				<File
-					RelativePath=".\sha3\KeccakSponge.c"
+					RelativePath=".\sha3\KeccakSponge-common.h"
 					>
 				</File>
 				<File
 					RelativePath=".\sha3\KeccakSponge.h"
+					>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakSponge.inc"
+					>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakSpongeWidth1600.c"
+					>
+				</File>
+				<File
+					RelativePath=".\sha3\KeccakSpongeWidth1600.h"
+					>
+				</File>
+				<File
+					RelativePath=".\sha3\SnP-Relaned.h"
 					>
 				</File>
 			</Filter>

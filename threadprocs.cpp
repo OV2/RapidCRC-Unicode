@@ -31,7 +31,7 @@
 #include "sha256_ossl.h"
 #include "sha512_ossl.h"
 extern "C" {
-#include "sha3\KeccakNISTInterface.h"
+#include "sha3\KeccakHash.h"
 }
 #include "crc32c.h"
 #include "blake2\blake2.h"
@@ -657,13 +657,13 @@ DWORD WINAPI ThreadProc_Sha3_224Calc(VOID * pParam)
 	BYTE * CONST result=(BYTE *)((THREAD_PARAMS_HASHCALC *)pParam)->result;
 	BOOL * CONST bFileDone=((THREAD_PARAMS_HASHCALC *)pParam)->bFileDone;
 
-	sha3hashState hashState;
-	Sha3Init(&hashState, 224);
+	Keccak_HashInstance hashState;
+    Keccak_HashInitialize_SHA3_224(&hashState);
 	do {
 		SignalObjectAndWait(hEvtThreadReady,hEvtThreadGo,INFINITE,FALSE);
-		Sha3Update(&hashState, *buffer, **dwBytesRead * 8);
+		Keccak_HashUpdate(&hashState, *buffer, **dwBytesRead * 8);
 	} while (!(*bFileDone));
-	Sha3Final(&hashState, result);
+	Keccak_HashFinal(&hashState, result);
 	SetEvent(hEvtThreadReady);
 	return 0;
 }
@@ -689,13 +689,13 @@ DWORD WINAPI ThreadProc_Sha3_256Calc(VOID * pParam)
 	BYTE * CONST result=(BYTE *)((THREAD_PARAMS_HASHCALC *)pParam)->result;
 	BOOL * CONST bFileDone=((THREAD_PARAMS_HASHCALC *)pParam)->bFileDone;
 
-	sha3hashState hashState;
-	Sha3Init(&hashState, 256);
+	Keccak_HashInstance hashState;
+	Keccak_HashInitialize_SHA3_256(&hashState);
 	do {
 		SignalObjectAndWait(hEvtThreadReady,hEvtThreadGo,INFINITE,FALSE);
-		Sha3Update(&hashState, *buffer, **dwBytesRead * 8);
+		Keccak_HashUpdate(&hashState, *buffer, **dwBytesRead * 8);
 	} while (!(*bFileDone));
-	Sha3Final(&hashState, result);
+	Keccak_HashFinal(&hashState, result);
 	SetEvent(hEvtThreadReady);
 	return 0;
 }
@@ -721,13 +721,13 @@ DWORD WINAPI ThreadProc_Sha3_512Calc(VOID * pParam)
 	BYTE * CONST result=(BYTE *)((THREAD_PARAMS_HASHCALC *)pParam)->result;
 	BOOL * CONST bFileDone=((THREAD_PARAMS_HASHCALC *)pParam)->bFileDone;
 
-	sha3hashState hashState;
-	Sha3Init(&hashState, 512);
+	Keccak_HashInstance hashState;
+	Keccak_HashInitialize_SHA3_512(&hashState);
 	do {
 		SignalObjectAndWait(hEvtThreadReady,hEvtThreadGo,INFINITE,FALSE);
-		Sha3Update(&hashState, *buffer, **dwBytesRead * 8);
+		Keccak_HashUpdate(&hashState, *buffer, **dwBytesRead * 8);
 	} while (!(*bFileDone));
-	Sha3Final(&hashState, result);
+	Keccak_HashFinal(&hashState, result);
 	SetEvent(hEvtThreadReady);
 	return 0;
 }
