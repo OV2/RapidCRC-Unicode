@@ -674,12 +674,12 @@ returns nothing
 *****************************************************************************/
 VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
 {
-    TCHAR *szCrcHex = TEXT("%08LX");
-    TCHAR *szHashHex = TEXT("%02lx");
+    TCHAR *szCrcHex = TEXT("%08X");
+    TCHAR *szHashHex = TEXT("%02x");
     if(g_program_options.iHexFormat == UPPERCASE) {
-        szHashHex = TEXT("%02LX");
+        szHashHex = TEXT("%02X");
     } else if(g_program_options.iHexFormat == LOWERCASE) {
-        szCrcHex = TEXT("%08lx");
+        szCrcHex = TEXT("%08x");
     }
 
     for(int i=0;i<NUM_HASH_TYPES;i++) {

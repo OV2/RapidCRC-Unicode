@@ -134,7 +134,7 @@ static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult) {
 	HANDLE hFile;
 	DWORD NumberOfBytesWritten;
 
-	StringCchPrintfA(szCrcInHex, 9, "%08LX", crcResult );
+	StringCchPrintfA(szCrcInHex, 9, "%08X", crcResult );
 	StringCchCopy(szFileOut, MAX_PATH_EX, szFileName);
 	StringCchCat(szFileOut, MAX_PATH_EX, TEXT(":CRC32"));
 	hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);

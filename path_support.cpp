@@ -116,7 +116,7 @@ BOOL GenerateNewFilename(TCHAR szFilenameNew[MAX_PATH_EX], CONST TCHAR szFilenam
 
 	// fill the substrings for later use in the pattern string
 	SeparatePathFilenameExt(szFilenameOld, szPath, szFilename, szFileext);
-	//StringCchPrintf(szStringCrc, 15, TEXT("%08LX"), dwCrc32 );
+	//StringCchPrintf(szStringCrc, 15, TEXT("%08X"), dwCrc32 );
 
 	StringCchCopy(szFilenameNew, MAX_PATH_EX, szPath);
 	StringCchCat(szFilenameNew, MAX_PATH_EX, TEXT("\\"));
