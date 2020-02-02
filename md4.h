@@ -43,14 +43,15 @@ public:
 
 	void GetHash(__in_bcount(16) uchar* pHash) const;
 
-private:
 	struct MD4State
 	{
 		static const size_t blockSize = 64;
 		uint64	m_nCount;
-		uint32	m_nState[ 4 ];
-		uchar	m_oBuffer[ blockSize ];
+		uint32	m_nState[4];
+		uchar	m_oBuffer[blockSize];
 	};
+
+private:
 	MD4State m_State;
 
 #ifndef HASHLIB_USE_ASM

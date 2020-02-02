@@ -24,6 +24,7 @@
 
 #include "crc32c.h"
 #include <nmmintrin.h>
+#include <intrin.h>
 
 #define NOMINMAX
 
