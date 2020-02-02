@@ -16,10 +16,8 @@
 // Neutral resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_NEU)
-#ifdef _WIN32
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #pragma code_page(1252)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -135,7 +133,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_OPTIONS, DIALOG
     BEGIN
@@ -164,20 +162,35 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_ICON_APP            ICON                    "icons\\app_icon.ico"
+
 IDI_ICON_OK             ICON                    "icons\\Result Icons OK.ico"
+
 IDI_ICON_NOT_OK         ICON                    "icons\\Result Icons NotOK.ico"
+
 IDI_ICON_NO_CRC         ICON                    "icons\\Result Icons NoCRC.ico"
+
 IDI_ICON_ERROR          ICON                    "icons\\Result Icons Error.ico"
+
 IDI_ICON_OPEN           ICON                    "icons\\folder_open.ico"
+
 IDI_ICON_HASHFILE       ICON                    "icons\\hash.ico"
+
 IDI_ICON_PLAY           ICON                    "icons\\play.ico"
+
 IDI_ICON_PAUSE          ICON                    "icons\\pause.ico"
+
 IDI_ICON_STOP           ICON                    "icons\\stop.ico"
+
 IDI_ICON_MODERN_ERROR   ICON                    "icons\\error.ico"
+
 IDI_ICON_MODERN_NOCRC   ICON                    "icons\\nocrc.ico"
+
 IDI_ICON_MODERN_NOTOK   ICON                    "icons\\notok.ico"
+
 IDI_ICON_MODERN_OK      ICON                    "icons\\ok.ico"
+
 IDI_ICON_MODERN_OK2     ICON                    "icons\\ok_green.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -185,8 +198,8 @@ IDI_ICON_MODERN_OK2     ICON                    "icons\\ok_green.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,3,29,0
- PRODUCTVERSION 0,3,29,0
+ FILEVERSION 0,3,30,0
+ PRODUCTVERSION 0,3,30,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -202,12 +215,12 @@ BEGIN
         BLOCK "040704b0"
         BEGIN
             VALUE "FileDescription", "RapidCRC Unicode"
-            VALUE "FileVersion", "0.3.29"
+            VALUE "FileVersion", "0.3.30.0"
             VALUE "InternalName", "RapidCRC"
             VALUE "LegalCopyright", "Copyright (C) 2004 Sebastian Ewert"
             VALUE "OriginalFilename", "RapidCRC.exe"
             VALUE "ProductName", "RapidCRC Unicode"
-            VALUE "ProductVersion", "0.3.29"
+            VALUE "ProductVersion", "0.3.30.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -221,13 +234,11 @@ END
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -241,7 +252,7 @@ FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,80,216,50,14
     PUSHBUTTON      "Cancel",IDCANCEL,138,216,50,14
-    CONTROL         133,IDC_STATIC_CTX,"Static",SS_BITMAP | SS_NOTIFY | SS_REALSIZEIMAGE,27,7,161,200
+    CONTROL         IDB_BITMAP_CONTEXT,IDC_STATIC_CTX,"Static",SS_BITMAP | SS_NOTIFY | SS_REALSIZEIMAGE,27,7,161,200
     CONTROL         "",IDC_CHECK_CONTEXT1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,10,10,10
     CONTROL         "",IDC_CHECK_CONTEXT2,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,24,10,9
     CONTROL         "",IDC_CHECK_CONTEXT3,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,12,37,10,10
@@ -266,7 +277,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_DIALOG_CONTEXT_MENU, DIALOG
     BEGIN
@@ -311,7 +322,8 @@ END
 //
 
 IDB_BITMAP_CONTEXT      BITMAP                  "context_menu.bmp"
-#endif    // English (U.S.) resources
+
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 

@@ -16,10 +16,8 @@
 // German (Germany) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_DEU)
-#ifdef _WIN32
 LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 #pragma code_page(1252)
-#endif //_WIN32
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -29,22 +27,25 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_CREATE_SFV          ICON                    "icons\\CreateSFV.ico"
+
 IDI_OPEN_WITH           ICON                    "icons\\OpenWith.ico"
+
 IDI_RAPIDCRC            ICON                    "icons\\RapidCRC.ico"
+
 IDI_OPEN_FOLDER         ICON                    "icons\\folder_open.ico"
+
 IDI_HASH_FILE           ICON                    "icons\\hash.ico"
+
 #endif    // German (Germany) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -78,8 +79,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,3,29,0
- PRODUCTVERSION 0,3,29,0
+ FILEVERSION 0,3,30,0
+ PRODUCTVERSION 0,3,30,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -95,12 +96,12 @@ BEGIN
         BLOCK "040904b0"
         BEGIN
             VALUE "FileDescription", "RapidCRC Shell Extension"
-            VALUE "FileVersion", "0.3.29"
+            VALUE "FileVersion", "0.3.30.0"
             VALUE "InternalName", "rcrcshex"
             VALUE "LegalCopyright", "Copyright (C) 2015"
             VALUE "OriginalFilename", "rcrcshex.dll"
             VALUE "ProductName", "RapidCRC Shell Extension"
-            VALUE "ProductVersion", "0.3.29"
+            VALUE "ProductVersion", "0.3.30.0"
         END
     END
     BLOCK "VarFileInfo"
@@ -109,7 +110,7 @@ BEGIN
     END
 END
 
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
