@@ -768,12 +768,14 @@ static std::map<int,int> checkbox_y_map;
                     }
                 }
                 HKEY hKey;
-                if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Software\\RapidCRC"),
-					            0, KEY_SET_VALUE 
+                if(RegCreateKeyEx(HKEY_CURRENT_USER, TEXT("Software\\RapidCRC"), 0, NULL,
+						    0, KEY_SET_VALUE
 #ifdef _WIN64
-					            | KEY_WOW64_32KEY 
+						    | KEY_WOW64_32KEY
 #endif
-					            , &hKey) == ERROR_SUCCESS)
+							, NULL
+						    , &hKey
+							, NULL ) == ERROR_SUCCESS)
                 {
                     if(LONG	regResult = RegSetValueEx(hKey, TEXT("ShellExtMenuItemsMask"), NULL, REG_DWORD, (BYTE *)&mask, 4) != ERROR_SUCCESS){
 		                ShowErrorMsg(NULL, regResult);
