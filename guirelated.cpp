@@ -563,6 +563,7 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
         case IDM_COPY_SHA3_256:
         case IDM_COPY_SHA3_512:
 		case IDM_COPY_ED2K:
+		case IDM_COPY_BLAKE2SP:
 		case IDM_COPY_ED2K_LINK:	HandleClipboard(arrHwnd[ID_LISTVIEW],ret,&finalList);
 									break;
 		case IDM_CLEAR_LIST:		ClearAllItems(arrHwnd,pshowresult_params);
