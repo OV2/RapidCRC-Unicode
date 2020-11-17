@@ -162,10 +162,23 @@ static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult) {
 	StringCchCopy(szFileOut, MAX_PATH_EX, szFileName);
 	StringCchCat(szFileOut, MAX_PATH_EX, TEXT(":CRC32"));
 	hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
-	if(hFile == INVALID_HANDLE_VALUE) return FALSE;
+	if (hFile == INVALID_HANDLE_VALUE) {
+		return FALSE;
+	}
+
+	// save last modified time, restore after writing
+	FILETIME ftModified;
+	BOOL bFtValid = GetFileTime(hFile, NULL, NULL, &ftModified);
+
 	if(!WriteFile(hFile, &szCrcInHex, 8, &NumberOfBytesWritten, NULL)) {
+		if (bFtValid) {
+			SetFileTime(hFile, NULL, NULL, &ftModified);
+		}
 		CloseHandle(hFile);
 		return FALSE;
+	}
+	if (bFtValid) {
+		SetFileTime(hFile, NULL, NULL, &ftModified);
 	}
 	CloseHandle(hFile);
 	return TRUE;
