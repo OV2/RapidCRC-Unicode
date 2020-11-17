@@ -34,6 +34,30 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 void UpdateFileInfoStatus(FILEINFO *pFileInfo, const HWND hwndListView);
 
 /*****************************************************************************
+HANDLE CreateFileWriteWrapper(const TCHAR *szFilename)
+	szFilename : (IN) filename to create
+
+Return Value:
+	returns handle to newly created file
+
+Notes:
+	- wrapper that takes care of existing files with hidden / system flags
+	- will always overwrite existing files
+*****************************************************************************/
+static HANDLE CreateFileWriteWrapper(const TCHAR *szFilename)
+{
+	DWORD dwAttributes = FILE_ATTRIBUTE_NORMAL;
+	if (FileExists(szFilename))
+	{
+		dwAttributes = GetFileAttributes(szFilename);
+	}
+
+	HANDLE hFile = CreateFile(szFilename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, dwAttributes, NULL);
+
+	return hFile;
+}
+
+/*****************************************************************************
 VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 	arrHwnd : (IN) window handle array
 
@@ -553,7 +577,7 @@ static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *
                 continue;
             }
 
-            hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
+			hFile = CreateFileWriteWrapper(szFileOut);
             if(hFile == INVALID_HANDLE_VALUE)
                 return GetLastError();
 
@@ -630,7 +654,7 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
                 if(g_program_options.bNoHashFileOverride && FileExists(szCurChecksumFilename)) {
                     continue;
                 }
-				hFile = CreateFile(szCurChecksumFilename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
+				hFile = CreateFileWriteWrapper(szCurChecksumFilename);
 				if(hFile == INVALID_HANDLE_VALUE){
 					return GetLastError();
 				}
@@ -766,7 +790,13 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
         uiSameCharCount = 0;
     }
 
-	hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
+	DWORD dwAttributes = FILE_ATTRIBUTE_NORMAL;
+	if (FileExists(szFileOut))
+	{
+		dwAttributes = GetFileAttributes(szFileOut);
+	}
+
+	hFile = CreateFileWriteWrapper(szFileOut);
 
 	if(hFile == INVALID_HANDLE_VALUE)
 		return GetLastError();
