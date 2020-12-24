@@ -495,6 +495,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		UpdateOptionsDialogControls(hDlg, TRUE, & program_options_temp);
 
 		EnableWindow(GetDlgItem(hDlg,IDC_ENABLE_QUEUE),g_pstatus.bHaveComCtrlv6);
+		EnableWindow(GetDlgItem(hDlg, IDC_ALWAYS_USE_NEW_WINDOW), program_options_temp.bEnableQueue);
 
 		return TRUE;
 
@@ -588,6 +589,13 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		case IDC_ENABLE_QUEUE:
 			if(HIWORD(wParam) == BN_CLICKED){
 				program_options_temp.bEnableQueue = (IsDlgButtonChecked(hDlg, IDC_ENABLE_QUEUE) == BST_CHECKED);
+				EnableWindow(GetDlgItem(hDlg, IDC_ALWAYS_USE_NEW_WINDOW), program_options_temp.bEnableQueue);
+				return TRUE;
+			}
+			break;
+		case IDC_ALWAYS_USE_NEW_WINDOW:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				program_options_temp.bAlwaysUseNewWindow = (IsDlgButtonChecked(hDlg, IDC_ALWAYS_USE_NEW_WINDOW) == BST_CHECKED);
 				return TRUE;
 			}
 			break;

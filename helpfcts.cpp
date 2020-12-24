@@ -1002,6 +1002,7 @@ void PROGRAM_OPTIONS_FILE::SetDefaults()
     bSaveAbsolutePathsBlake2sp = 0;
     bCalcBlake2spPerDefault = FALSE;
     bDisplayBlake2spInListView = FALSE;
+	bAlwaysUseNewWindow = FALSE;
 }
 
 /*****************************************************************************
@@ -1063,6 +1064,7 @@ PROGRAM_OPTIONS_FILE& PROGRAM_OPTIONS_FILE::operator=(const PROGRAM_OPTIONS& oth
     uiCreateFileModeBlake2sp = other.uiCreateFileMode[HASH_TYPE_BLAKE2SP];
     StringCchCopy(szFilenameBlake2sp, MAX_PATH, other.szFilename[HASH_TYPE_BLAKE2SP]);
     bSaveAbsolutePathsBlake2sp = other.bSaveAbsolutePaths[HASH_TYPE_BLAKE2SP];
+	bAlwaysUseNewWindow = other.bAlwaysUseNewWindow;
 
     return *this;
 }
@@ -1121,6 +1123,7 @@ PROGRAM_OPTIONS& PROGRAM_OPTIONS::operator=(const PROGRAM_OPTIONS_FILE& other)
     uiCreateFileMode[HASH_TYPE_BLAKE2SP] = other.uiCreateFileModeBlake2sp;
     StringCchCopy(szFilename[HASH_TYPE_BLAKE2SP], MAX_PATH, other.szFilenameBlake2sp);
     bSaveAbsolutePaths[HASH_TYPE_BLAKE2SP] = other.bSaveAbsolutePathsBlake2sp;
+	bAlwaysUseNewWindow = other.bAlwaysUseNewWindow;
 
     return *this;
 }

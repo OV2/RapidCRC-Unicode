@@ -121,7 +121,7 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 				fileList->uiCmdOpts = CMD_FORCE_BSD;
 			}
 		}
-		if(g_program_options.bEnableQueue) {
+		if(g_program_options.bEnableQueue && !g_program_options.bAlwaysUseNewWindow) {
 			prevInst = FindSameVersionMainWindow();
 			if(prevInst) {
 				PostMessage(prevInst,WM_ACCEPT_PIPE,(WPARAM)fileList->uiCmdOpts,NULL);
@@ -139,7 +139,7 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 		// get number of files
 		iNumFiles = argc - 1; // -1 because 1st element is the path to the executable itself
 
-		if(g_program_options.bEnableQueue) {
+		if(g_program_options.bEnableQueue && !g_program_options.bAlwaysUseNewWindow) {
 			prevInst = FindSameVersionMainWindow();
 			if(prevInst) {
 				TCHAR *cmdLine = GetCommandLine();

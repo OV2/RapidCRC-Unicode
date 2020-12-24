@@ -34,6 +34,7 @@
 #define IDC_ENABLE_QUEUE                1027
 #define IDC_CHECK_DO_NOT_OVERRIDE       1028
 #define IDC_EDIT_READ_BUFFER_SIZE       1029
+#define IDC_ALWAYS_USE_NEW_WINDOW       1030
 #define IDC_RADIO_ONE_PER_FILE          1040
 #define IDC_CHECK_HIDE_VERIFIED         1040
 #define IDC_RADIO_ONE_PER_DIR           1041
@@ -100,7 +101,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        135
+#define _APS_NEXT_RESOURCE_VALUE        136
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1068
 #define _APS_NEXT_SYMED_VALUE           101

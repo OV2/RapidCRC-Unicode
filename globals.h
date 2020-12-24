@@ -452,6 +452,7 @@ typedef struct PROGRAM_OPTIONS_FILE_T {
     UINT			uiCreateFileModeBlake2sp;
     TCHAR			szFilenameBlake2sp[MAX_PATH];
     BOOL            bSaveAbsolutePathsBlake2sp;
+	BOOL            bAlwaysUseNewWindow;
     void            SetDefaults();
     PROGRAM_OPTIONS_FILE_T& operator=(const PROGRAM_OPTIONS_T& other);
 } PROGRAM_OPTIONS_FILE;
@@ -488,6 +489,7 @@ typedef struct PROGRAM_OPTIONS_T {
     HEX_FORMAT      iHexFormat;
     BOOL            bSaveAbsolutePaths[NUM_HASH_TYPES];
     UINT            uiReadBufferSizeKb;
+	BOOL			bAlwaysUseNewWindow;
     PROGRAM_OPTIONS_T& operator=(const PROGRAM_OPTIONS_FILE_T& other);
 } PROGRAM_OPTIONS;
 
