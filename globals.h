@@ -255,6 +255,9 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 
 #define IDM_HIDE_VERIFIED           23
 
+#define IDM_SELECT_ALL              24
+#define IDM_SELECT_NONE             25
+
 #define IDM_CRC_FILENAME            1
 
 #define IDM_CRC_SFV                 1
@@ -565,6 +568,7 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU pupup,int x,int y, S
 void CreateListViewHeaderPopupMenu(HMENU *menu);
 BOOL ListViewHeaderPopup(HWND pHwnd,HMENU pupup,int x,int y);
 VOID ClearAllItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshowresult_params);
+void RemoveItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], list<FILEINFO*> *finalList);
 void HideVerifiedItems(CONST HWND hListView);
 void RestoreVerifiedItems(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
 VOID SetMainWindowTitle(CONST HWND hWnd, int seconds, double bytes_per_second);

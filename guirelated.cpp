@@ -315,6 +315,9 @@ void CreateListViewPopupMenu(HMENU *menu) {
     InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_CLEAR_LIST,TEXT("Clear List"));
 	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_REMOVE_ITEMS,TEXT("Remove Selected Items"));
+	InsertMenu(*menu, 0, MF_BYPOSITION | MF_SEPARATOR, NULL, NULL);
+	InsertMenu(*menu, 0, MF_BYPOSITION | MF_STRING, IDM_SELECT_NONE, TEXT("Select None"));
+	InsertMenu(*menu, 0, MF_BYPOSITION | MF_STRING, IDM_SELECT_ALL, TEXT("Select All"));
 }
 
 /*****************************************************************************
@@ -574,6 +577,13 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
                                         RestoreVerifiedItems(arrHwnd);
                                     else
                                         HideVerifiedItems(arrHwnd[ID_LISTVIEW]);
+									break;
+		case IDM_SELECT_ALL:
+			ListView_SetItemState(arrHwnd[ID_LISTVIEW], -1, LVIS_SELECTED, LVIS_SELECTED);
+			break;
+		case IDM_SELECT_NONE:
+			ListView_SetItemState(arrHwnd[ID_LISTVIEW], -1, 0, LVIS_SELECTED);
+			break;
 		default:					return;
 	}
 	

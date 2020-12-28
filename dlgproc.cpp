@@ -34,7 +34,7 @@ __inline VOID ProcessTextQuery(NMLVDISPINFO * pnmlvdispinfo);
 __inline VOID ProcessColumnClick(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST NMLISTVIEW * pnmlistview, DWORD * pdwSortStatus);
 __inline VOID ProcessSelChangeInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], NMLISTVIEW * pnmlistview, SHOWRESULT_PARAMS * pshowresult_params);
 __inline VOID ProcessClickInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], NMITEMACTIVATE * pnmitemactivate, SHOWRESULT_PARAMS * pshowresult_params);
-__inline BOOL ProcessKeyPressedInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LPNMLVKEYDOWN pnkd, SHOWRESULT_PARAMS * pshowresult_params);
+__inline BOOL ProcessKeyPressedInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LPNMLVKEYDOWN pnkd);
 __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD wWidth, CONST WORD wHeight, CONST LONG lACW, CONST LONG lACH);
 
 /*****************************************************************************
@@ -172,8 +172,8 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				//ListViewPopup(arrHwnd,popupMenu,((NMITEMACTIVATE *)lParam)->ptAction.x,((NMITEMACTIVATE *)lParam)->ptAction.y,&showresult_params);
 				return 0;
 			case LVN_KEYDOWN: //now handled by LVN_ITEMCHANGED
-				//ProcessKeyPressedInList(arrHwnd, (LPNMLVKEYDOWN) lParam, & showresult_params);
-				//return 0;
+				if(ProcessKeyPressedInList(arrHwnd, (LPNMLVKEYDOWN) lParam))
+					return 0;
 				break;
 			case LVN_INSERTITEM:
 				if(g_program_options.bAutoScrollListView)
@@ -1239,44 +1239,44 @@ __declspec(deprecated) __inline VOID ProcessClickInList(CONST HWND arrHwnd[ID_NU
 }
 
 /*****************************************************************************
-__inline BOOL ProcessKeyPressedInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LPNMLVKEYDOWN pnkd,
-										SHOWRESULT_PARAMS * pshowresult_params)
+__inline BOOL ProcessKeyPressedInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LPNMLVKEYDOWN pnkds)
 	arrHwnd				: (IN) array of window handles
 	pnkd				: (IN) Structure that was passed to the main dialog in the notification
-	pshowresult_params	: (OUT) struct for ShowResult
 
 Return Value:
-returns TRUE if successfull, FALSE otherwise
+returns TRUE if key was handled, FALSE otherwise
 
-Notes:
-- updates the text windows that displays info about an item via MyShowResult
 *****************************************************************************/
-__declspec(deprecated) __inline BOOL ProcessKeyPressedInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LPNMLVKEYDOWN pnkd,
-							 SHOWRESULT_PARAMS * pshowresult_params)
+__declspec(deprecated) __inline BOOL ProcessKeyPressedInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LPNMLVKEYDOWN pnkd)
 {
 	INT iSelectedItem;
 	LVITEM lvitem;
 
 	iSelectedItem = ListView_GetSelectionMark(arrHwnd[ID_LISTVIEW]);
 
-	if( (pnkd->wVKey == VK_UP) || (pnkd->wVKey == VK_DOWN)){
-		if(pnkd->wVKey == VK_UP)
-			lvitem.iItem = ListView_GetNextItem(arrHwnd[ID_LISTVIEW], iSelectedItem, LVNI_ABOVE);
-		else if(pnkd->wVKey == VK_DOWN)
-			lvitem.iItem = ListView_GetNextItem(arrHwnd[ID_LISTVIEW], iSelectedItem, LVNI_BELOW);
+	switch (pnkd->wVKey)
+	{
+		case VK_DELETE:
+		{
+			list<FILEINFO*> finalList;
+			UINT uiSelected = ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]);
+			if (uiSelected) // do nothing if no item is selected
+			{
+				FillFinalList(arrHwnd[ID_LISTVIEW], &finalList, uiSelected);
+				RemoveItems(arrHwnd, &finalList);
+			}
+			return TRUE;
+		}
+		case 'A':
+		{
+			if (GetAsyncKeyState(VK_CONTROL)) {
+				ListView_SetItemState(arrHwnd[ID_LISTVIEW], -1, LVIS_SELECTED, LVIS_SELECTED);
+				return TRUE;
+			}
+		}
+	}
 
-		if(lvitem.iItem < 0)
-			return FALSE;
-
-		lvitem.mask		= LVIF_PARAM;
-		lvitem.iSubItem = 0;
-		ListView_GetItem(arrHwnd[ID_LISTVIEW], & lvitem);
-		ShowResult(arrHwnd, (FILEINFO *)lvitem.lParam, pshowresult_params);
-    } else if(pnkd->wVKey == VK_DELETE) {
-
-    }
-
-	return TRUE;
+	return FALSE;
 }
 
 /*****************************************************************************
