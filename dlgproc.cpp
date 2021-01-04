@@ -1250,7 +1250,6 @@ returns TRUE if key was handled, FALSE otherwise
 __declspec(deprecated) __inline BOOL ProcessKeyPressedInList(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST LPNMLVKEYDOWN pnkd)
 {
 	INT iSelectedItem;
-	LVITEM lvitem;
 
 	iSelectedItem = ListView_GetSelectionMark(arrHwnd[ID_LISTVIEW]);
 
