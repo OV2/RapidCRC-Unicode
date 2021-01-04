@@ -77,6 +77,7 @@ CDropTarget::CDropTarget(HWND arrHwnd[ID_NUM_WINDOWS])
 	m_fAllowDrop		= FALSE;
     m_rightClickDrop    = FALSE;
     m_dropMenu = CreatePopupMenu();
+	InsertMenu(m_dropMenu, 0, MF_BYPOSITION | MF_STRING, IDM_DDROP_CHOICE_NORMAL, TEXT("Force open as regular files"));
     InsertMenu(m_dropMenu, 0, MF_BYPOSITION | MF_STRING, IDM_DDROP_CHOICE_BSD, TEXT("Force open as BSD-style"));
     InsertMenu(m_dropMenu, 0, MF_BYPOSITION | MF_STRING, IDM_DDROP_CHOICE_ALLHASHES, TEXT("Open all hash files"));
     InsertMenu(m_dropMenu, 0, MF_BYPOSITION | MF_STRING, IDM_DDROP_CHOICE_REPARENT, TEXT("Reparent hash file"));
@@ -215,6 +216,9 @@ HRESULT __stdcall CDropTarget::Drop(IDataObject * pDataObject, DWORD grfKeyState
             case IDM_DDROP_CHOICE_BSD:
                 uiCmdMode = CMD_FORCE_BSD;
                 break;
+			case IDM_DDROP_CHOICE_NORMAL:
+				uiCmdMode = CMD_FORCE_NORMAL;
+				break;
             default:
                 uiCmdMode = 0;
                 break;

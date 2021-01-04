@@ -120,6 +120,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_REPARENT		23
 #define CMD_ALLHASHES       24
 #define CMD_FORCE_BSD       25
+#define CMD_FORCE_NORMAL	26
 
 
 #define CRCI(x) (x)->hashInfo[HASH_TYPE_CRC32]
@@ -281,12 +282,14 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define FDIALOG_CHOICE_REPARENT 1
 #define FDIALOG_CHOICE_ALLHASHES 2
 #define FDIALOG_CHOICE_BSD 3
+#define FDIALOG_CHOICE_NORMAL 4
 
 //****** dragndrop menu *******
 #define IDM_DDROP_CHOICE_OPEN 1
 #define IDM_DDROP_CHOICE_REPARENT 2
 #define IDM_DDROP_CHOICE_ALLHASHES 3
 #define IDM_DDROP_CHOICE_BSD 4
+#define IDM_DDROP_CHOICE_NORMAL 5
 
 //****** custom datatypes *******
 

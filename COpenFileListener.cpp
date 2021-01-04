@@ -50,6 +50,9 @@ STDMETHODIMP COpenFileListener::OnFileOk(IFileDialog* pfd)
             else if(choice==FDIALOG_CHOICE_BSD) {
                 pFInfoList->uiCmdOpts = CMD_FORCE_BSD;
             }
+			else if(choice == FDIALOG_CHOICE_NORMAL) {
+				pFInfoList->uiCmdOpts = CMD_FORCE_NORMAL;
+			}
 		}
 
 		pfdc->Release();

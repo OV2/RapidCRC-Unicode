@@ -309,6 +309,9 @@ BOOL OpenFilesVistaUp(HWND hwnd, lFILEINFO *pFInfoList)
                     hr = pfdc->AddControlItem(FDIALOG_OPENCHOICES, 
 											  FDIALOG_CHOICE_BSD, 
 											  L"&Force open as BSD-style");
+					hr = pfdc->AddControlItem(FDIALOG_OPENCHOICES,
+											  FDIALOG_CHOICE_NORMAL,
+											  L"Force open as r&egular files");
 				}
 			}
 		}

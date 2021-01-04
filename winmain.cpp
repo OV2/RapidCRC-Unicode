@@ -120,6 +120,10 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 			{
 				fileList->uiCmdOpts = CMD_FORCE_BSD;
 			}
+			else if (lstrcmpi(argv[2], TEXT("-ForceNormal")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_FORCE_NORMAL;
+			}
 		}
 		if(g_program_options.bEnableQueue && !g_program_options.bAlwaysUseNewWindow) {
 			prevInst = FindSameVersionMainWindow();

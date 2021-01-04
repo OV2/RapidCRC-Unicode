@@ -467,7 +467,7 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
         UINT detectedMode = MODE_NORMAL;
         if(fileList->uiCmdOpts == CMD_FORCE_BSD)
             detectedMode = MODE_BSD;
-        else
+        else if(fileList->uiCmdOpts != CMD_FORCE_NORMAL)
             detectedMode = DetermineHashType(fileList->fInfos.front().szFilename);
 
         if(detectedMode != MODE_NORMAL) {
