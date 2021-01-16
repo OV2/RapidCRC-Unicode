@@ -448,13 +448,15 @@ DWORD WriteFileComment(CONST HANDLE hFile, CONST FILEINFO *pFileInfo, UINT start
     SYSTEMTIME st;
     FILETIME ft;
     TCHAR szTimeStamp[50];
+	TIME_ZONE_INFORMATION tz;
+	DWORD dst = GetTimeZoneInformation(&tz);
 
     FileTimeToLocalFileTime( &pFileInfo->ftModificationTime, &ft );
     FileTimeToSystemTime( &ft, &st );
     int chars = GetTimeFormat( LOCALE_USER_DEFAULT, 0, &st, TEXT("HH':'mm'.'ss"), szTimeStamp, 50 );
     GetDateFormat( LOCALE_USER_DEFAULT, 0, &st, TEXT("' 'yyyy'-'MM'-'dd"), szTimeStamp + chars - 1, 50 - chars );
-    StringCbPrintf(szLine, MAX_LINE_LENGTH, TEXT(";%13I64d  %s %s%s"), pFileInfo->qwFilesize, szTimeStamp, pFileInfo->szFilename.GetString() + startChar,
-		g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
+    StringCbPrintf(szLine, MAX_LINE_LENGTH, TEXT(";%13I64d  %s (UTC%+d) %s%s"), pFileInfo->qwFilesize, szTimeStamp, -tz.Bias / 60,
+		pFileInfo->szFilename.GetString() + startChar, g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
 	StringCbLength(szLine, MAX_LINE_LENGTH, & stStringLength);
 
 
