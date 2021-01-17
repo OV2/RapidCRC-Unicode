@@ -326,26 +326,14 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				finalList.push_back(&(*it));
 			}
 			finalList.sort(ListPointerCompFunction);
-			switch(fileList->uiCmdOpts) {
-				case CMD_SFV:
-				case CMD_MD5:
-				case CMD_SHA1:
-                case CMD_SHA256:
-                case CMD_SHA512:
-                case CMD_SHA3_224:
-                case CMD_SHA3_256:
-                case CMD_SHA3_512:
-                case CMD_BLAKE2SP:
-					CreateChecksumFiles(arrHwnd,fileList->uiCmdOpts,&finalList);
-					break;
-				case CMD_NAME:
-                    ActionHashIntoFilename(arrHwnd, TRUE, &finalList, HASH_TYPE_CRC32);
-					break;
-				case CMD_NTFS:
-					ActionCrcIntoStream(arrHwnd,TRUE,&finalList);
-					break;
-				default:
-					break;
+			if (fileList->uiCmdOpts == CMD_NTFS) {
+				ActionCrcIntoStream(arrHwnd, TRUE, &finalList);
+			}
+			else if (fileList->uiCmdOpts >= CMD_NAME) {
+				ActionHashIntoFilename(arrHwnd, TRUE, &finalList, fileList->uiCmdOpts - CMD_NAME);
+			}
+			else if (fileList->uiCmdOpts < CMD_NORMAL) {
+				CreateChecksumFiles(arrHwnd, fileList->uiCmdOpts, &finalList);
 			}
 			finalList.clear();
 		}

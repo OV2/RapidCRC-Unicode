@@ -30,7 +30,7 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode, CONST TCHAR szChkS
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename);
 static DWORD CreateChecksumFiles_OnePerJob(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename);
 static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult);
-static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode);
+static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode, CONST UINT uiCMD);
 void UpdateFileInfoStatus(FILEINFO *pFileInfo, const HWND hwndListView);
 
 /*****************************************************************************
@@ -72,7 +72,7 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 {
 	list<FILEINFO*> finalList;
 
-	if(CheckIfRehashNecessary(arrHwnd,MODE_SFV))
+	if(CheckIfRehashNecessary(arrHwnd, MODE_SFV, CMD_NTFS))
 		return;
 
 	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]));
@@ -199,7 +199,7 @@ VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], UINT uiHashType)
 {
 	list<FILEINFO*> finalList;
 
-	if(CheckIfRehashNecessary(arrHwnd, uiHashType))
+	if(CheckIfRehashNecessary(arrHwnd, uiHashType, CMD_NAME + uiHashType))
 		return;
 
 	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]));
@@ -486,7 +486,7 @@ DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode)
 	if(ListView_GetItemCount(arrHwnd[ID_LISTVIEW]) == 0)
 		return NOERROR;
 
-	if(CheckIfRehashNecessary(arrHwnd,uiMode))
+	if(CheckIfRehashNecessary(arrHwnd, uiMode, uiMode))
 		return NOERROR;
 
 	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]));
@@ -945,7 +945,7 @@ Notes:
     - if hashes are missing the user is asked if he wants a rehash of those lists that
 	  are missing the hashes
 *****************************************************************************/
-static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode)
+static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, CONST UINT uiCMD)
 {
 	LVITEM lvitem={0};
 	bool doRehash=false;
@@ -992,6 +992,7 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT
 		for(list<lFILEINFO*>::iterator it=rehashList.begin();it!=rehashList.end();it++) {
 			SyncQueue.deleteFromList(*it);
 			(*it)->bDoCalculate[uiMode] = true;
+			(*it)->uiCmdOpts = uiCMD;
 			SyncQueue.pushQueue(*it);
 		}
 		PostMessage(arrHwnd[ID_MAIN_WND], WM_START_THREAD_CALC, NULL, NULL);

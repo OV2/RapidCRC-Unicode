@@ -493,24 +493,14 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
         }
     }
 
-	switch(fileList->uiCmdOpts) {
-		case CMD_SFV:
-		case CMD_NAME:
-		case CMD_NTFS:
-			fileList->bDoCalculate[HASH_TYPE_CRC32] = true;
-			break;
-		case CMD_MD5:
-		case CMD_SHA1:
-        case CMD_SHA256:
-        case CMD_SHA512:
-        case CMD_SHA3_224:
-        case CMD_SHA3_256:
-        case CMD_SHA3_512:
-        case CMD_BLAKE2SP:
-			fileList->bDoCalculate[fileList->uiCmdOpts] = true;
-			break;
-		default:
-			break;
+	if (fileList->uiCmdOpts == CMD_NTFS) {
+		fileList->bDoCalculate[HASH_TYPE_CRC32] = true;
+	}
+	else if (fileList->uiCmdOpts >= CMD_NAME) {
+		fileList->bDoCalculate[fileList->uiCmdOpts - CMD_NAME] = true;
+	}
+	else if (fileList->uiCmdOpts < CMD_NORMAL) {
+		fileList->bDoCalculate[fileList->uiCmdOpts] = true;
 	}
 
 	if(g_program_options.bSortList)

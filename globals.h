@@ -115,7 +115,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_SHA3_512		8
 #define CMD_CRC32C          9
 #define CMD_BLAKE2SP        10
-#define CMD_NAME			21
+#define CMD_NAME			100
 #define CMD_NTFS			22
 #define CMD_REPARENT		23
 #define CMD_ALLHASHES       24
