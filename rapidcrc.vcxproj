@@ -195,6 +195,25 @@
     <ClCompile Include="actfcts.cpp" />
     <ClCompile Include="blake2\blake2s.c" />
     <ClCompile Include="blake2\blake2sp.c" />
+    <ClCompile Include="blake3\blake3.c" />
+    <ClCompile Include="blake3\blake3_avx2.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3_avx512.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3_dispatch.c" />
+    <ClCompile Include="blake3\blake3_portable.c" />
+    <ClCompile Include="blake3\blake3_sse2.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3_sse41.c">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="COpenFileListener.cpp" />
     <ClCompile Include="crc32c.cpp" />
     <ClCompile Include="CSyncQueue.cpp" />
@@ -246,6 +265,8 @@
     <ClInclude Include="blake2\blake2s-load-sse41.h" />
     <ClInclude Include="blake2\blake2s-load-xop.h" />
     <ClInclude Include="blake2\blake2s-round.h" />
+    <ClInclude Include="blake3\blake3.h" />
+    <ClInclude Include="blake3\blake3_impl.h" />
     <ClInclude Include="COpenFileListener.h" />
     <ClInclude Include="crc32c.h" />
     <ClInclude Include="CSyncQueue.h" />
@@ -280,6 +301,22 @@
 </Command>
       <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
     </CustomBuild>
+    <MASM Include="blake3\blake3_avx2_x86-64_windows_msvc.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </MASM>
+    <MASM Include="blake3\blake3_avx512_x86-64_windows_msvc.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </MASM>
+    <MASM Include="blake3\blake3_sse2_x86-64_windows_msvc.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </MASM>
+    <MASM Include="blake3\blake3_sse41_x86-64_windows_msvc.asm">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+    </MASM>
     <MASM Include="crc32x86.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>

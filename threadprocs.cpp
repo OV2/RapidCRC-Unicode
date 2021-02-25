@@ -35,6 +35,7 @@ extern "C" {
 }
 #include "crc32c.h"
 #include "blake2\blake2.h"
+#include "blake3\blake3.h"
 #include "CSyncQueue.h"
 
 DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
@@ -48,6 +49,7 @@ DWORD WINAPI ThreadProc_Sha3_256Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Sha3_512Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Crc32cCalc(VOID * pParam);
 DWORD WINAPI ThreadProc_Blake2spCalc(VOID * pParam);
+DWORD WINAPI ThreadProc_Blake3Calc(VOID * pParam);
 
 // used in UINT __stdcall ThreadProc_Calc(VOID * pParam)
 #define SWAPBUFFERS() \
@@ -71,7 +73,8 @@ threadfunc hash_function[] = {
     ThreadProc_Sha3_256Calc,
     ThreadProc_Sha3_512Calc,
     ThreadProc_Crc32cCalc,
-    ThreadProc_Blake2spCalc
+    ThreadProc_Blake2spCalc,
+	ThreadProc_Blake3Calc,
 };
 
 /*****************************************************************************
@@ -928,6 +931,29 @@ DWORD WINAPI ThreadProc_Blake2spCalc(VOID * pParam)
 	} while (!(*bFileDone));
 
 	blake2sp_final( &state, result, 32 );
+
+	SetEvent(hEvtThreadReady);
+	return 0;
+}
+
+DWORD WINAPI ThreadProc_Blake3Calc(VOID * pParam)
+{
+	BYTE ** CONST buffer = ((THREAD_PARAMS_HASHCALC *)pParam)->buffer;
+	DWORD ** CONST dwBytesRead = ((THREAD_PARAMS_HASHCALC *)pParam)->dwBytesRead;
+	CONST HANDLE hEvtThreadReady = ((THREAD_PARAMS_HASHCALC *)pParam)->hHandleReady;
+	CONST HANDLE hEvtThreadGo = ((THREAD_PARAMS_HASHCALC *)pParam)->hHandleGo;
+	BYTE * CONST result = (BYTE *)((THREAD_PARAMS_HASHCALC *)pParam)->result;
+	BOOL * CONST bFileDone = ((THREAD_PARAMS_HASHCALC *)pParam)->bFileDone;
+
+	blake3_hasher hasher;
+	blake3_hasher_init(&hasher);
+
+	do {
+		SignalObjectAndWait(hEvtThreadReady, hEvtThreadGo, INFINITE, FALSE);
+		blake3_hasher_update(&hasher, *buffer, **dwBytesRead);
+	} while (!(*bFileDone));
+
+	blake3_hasher_finalize(&hasher, result, BLAKE3_OUT_LEN);
 
 	SetEvent(hEvtThreadReady);
 	return 0;

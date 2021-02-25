@@ -187,6 +187,8 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	arrHwnd[ID_EDIT_CRCC_VALUE]		    = CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_CRCC_VALUE, g_hInstance, NULL);
     arrHwnd[ID_STATIC_BLAKE2SP_VALUE]	= CreateWindow(TEXT("STATIC"), TEXT("BLAKE2SP:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_BLAKE2SP_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_BLAKE2SP_VALUE]		= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_BLAKE2SP_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_STATIC_BLAKE3_VALUE]	    = CreateWindow(TEXT("STATIC"), TEXT("BLAKE3:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_BLAKE3_VALUE, g_hInstance, NULL);
+	arrHwnd[ID_EDIT_BLAKE3_VALUE]		= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_BLAKE3_VALUE, g_hInstance, NULL);
 	arrHwnd[ID_STATIC_INFO]				= CreateWindow(TEXT("STATIC"), TEXT("Info:"), SS_LEFTNOWORDWRAP | WS_VISIBLE | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_STATIC_INFO, g_hInstance, NULL);
 	arrHwnd[ID_EDIT_INFO]				= CreateWindow(TEXT("EDIT"), NULL, ES_AUTOHSCROLL | ES_READONLY | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_EDIT_INFO, g_hInstance, NULL);
 	arrHwnd[ID_BTN_ERROR_DESCR]			= CreateWindow(TEXT("BUTTON"), TEXT("Descr."), BS_PUSHBUTTON | WS_CHILD, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_ERROR_DESCR, g_hInstance, NULL);
@@ -202,8 +204,8 @@ VOID CreateAndInitChildWindows(HWND arrHwnd[ID_NUM_WINDOWS], WNDPROC arrOldWndPr
 	SendMessage(arrHwnd[ID_BTN_MD5_IN_MD5],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 	arrHwnd[ID_BTN_SHA_IN_SHA]		    = CreateWindow(TEXT("BUTTON"), TEXT("SHA"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_SHA_IN_SHA, g_hInstance, NULL);
 	SendMessage(arrHwnd[ID_BTN_SHA_IN_SHA],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
-    arrHwnd[ID_BTN_BLAKE2SP_IN_BLAKE2SP]= CreateWindow(TEXT("BUTTON"), TEXT("Blake2sp"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_BLAKE2SP_IN_BLAKE2SP, g_hInstance, NULL);
-	SendMessage(arrHwnd[ID_BTN_BLAKE2SP_IN_BLAKE2SP],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
+    arrHwnd[ID_BTN_BLAKE_IN_BLAKE]      = CreateWindow(TEXT("BUTTON"), TEXT("Blake"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_BLAKE_IN_BLAKE, g_hInstance, NULL);
+	SendMessage(arrHwnd[ID_BTN_BLAKE_IN_BLAKE],BM_SETIMAGE,IMAGE_ICON,(LPARAM)LoadImage(g_hInstance,MAKEINTRESOURCE(IDI_ICON_HASHFILE),IMAGE_ICON,16,16,LR_DEFAULTCOLOR|LR_SHARED));
 	arrHwnd[ID_BTN_OPTIONS]				= CreateWindow(TEXT("BUTTON"), TEXT("Options"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_OPTIONS, g_hInstance, NULL);
 
     arrHwnd[ID_BTN_PLAY_PAUSE]			= CreateWindow(TEXT("BUTTON"), TEXT("P"), BS_PUSHBUTTON | WS_VISIBLE | WS_CHILD | WS_TABSTOP| BS_ICON | BS_CENTER, 0, 0, 0, 0, hMainWnd, (HMENU)ID_BTN_PLAY_PAUSE, g_hInstance, NULL);
@@ -270,6 +272,18 @@ void CreateHashFilenameButtonPopupMenu(HMENU *menu) {
         StringCchPrintf(menuText,100,TEXT("Put %s into Filename"),g_hash_names[i]);
         InsertMenu(*menu,i, MF_BYPOSITION | MF_STRING, IDM_CRC_FILENAME + i,menuText);
     }
+}
+
+/*****************************************************************************
+void CreateBlakeButtonPopupMenu(HMENU *menu)
+
+*****************************************************************************/
+void CreateBlakeButtonPopupMenu(HMENU *menu) {
+	*menu = CreatePopupMenu();
+
+	for (int i = 0; i < 2; i++) {
+		InsertMenu(*menu, i, MF_BYPOSITION | MF_STRING, IDM_BLAKE + i, g_hash_names[HASH_TYPE_BLAKE2SP + i]);
+	}
 }
 
 /*****************************************************************************
@@ -1278,7 +1292,7 @@ VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStat
 	EnableWindow(arrHwnd[ID_BTN_CRC_IN_SFV], bStatus);
 	EnableWindow(arrHwnd[ID_BTN_MD5_IN_MD5], bStatus);
 	EnableWindow(arrHwnd[ID_BTN_SHA_IN_SHA], bStatus);
-    EnableWindow(arrHwnd[ID_BTN_BLAKE2SP_IN_BLAKE2SP], bStatus);
+    EnableWindow(arrHwnd[ID_BTN_BLAKE_IN_BLAKE], bStatus);
 	ShowWindow(arrHwnd[ID_BTN_PLAY_PAUSE],!bStatus);
     ShowWindow(arrHwnd[ID_BTN_STOP],!bStatus);
 	if(!g_program_options.bEnableQueue)

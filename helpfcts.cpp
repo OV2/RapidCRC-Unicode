@@ -1003,6 +1003,11 @@ void PROGRAM_OPTIONS_FILE::SetDefaults()
     bCalcBlake2spPerDefault = FALSE;
     bDisplayBlake2spInListView = FALSE;
 	bAlwaysUseNewWindow = FALSE;
+	uiCreateFileModeBlake3 = CREATE_ONE_FILE;
+	StringCchPrintf(szFilenameBlake3, MAX_PATH, TEXT("checksum.%s"), g_hash_ext[HASH_TYPE_BLAKE3]);
+	bSaveAbsolutePathsBlake3 = 0;
+	bCalcBlake3PerDefault = FALSE;
+	bDisplayBlake3InListView = FALSE;
 }
 
 /*****************************************************************************
@@ -1066,6 +1071,12 @@ PROGRAM_OPTIONS_FILE& PROGRAM_OPTIONS_FILE::operator=(const PROGRAM_OPTIONS& oth
     bSaveAbsolutePathsBlake2sp = other.bSaveAbsolutePaths[HASH_TYPE_BLAKE2SP];
 	bAlwaysUseNewWindow = other.bAlwaysUseNewWindow;
 
+	bDisplayBlake3InListView = other.bDisplayInListView[HASH_TYPE_BLAKE3];
+	bCalcBlake3PerDefault = other.bCalcPerDefault[HASH_TYPE_BLAKE3];
+	uiCreateFileModeBlake3 = other.uiCreateFileMode[HASH_TYPE_BLAKE3];
+	StringCchCopy(szFilenameBlake3, MAX_PATH, other.szFilename[HASH_TYPE_BLAKE3]);
+	bSaveAbsolutePathsBlake3 = other.bSaveAbsolutePaths[HASH_TYPE_BLAKE3];
+
     return *this;
 }
 
@@ -1124,6 +1135,12 @@ PROGRAM_OPTIONS& PROGRAM_OPTIONS::operator=(const PROGRAM_OPTIONS_FILE& other)
     StringCchCopy(szFilename[HASH_TYPE_BLAKE2SP], MAX_PATH, other.szFilenameBlake2sp);
     bSaveAbsolutePaths[HASH_TYPE_BLAKE2SP] = other.bSaveAbsolutePathsBlake2sp;
 	bAlwaysUseNewWindow = other.bAlwaysUseNewWindow;
+
+	bDisplayInListView[HASH_TYPE_BLAKE3] = other.bDisplayBlake3InListView;
+	bCalcPerDefault[HASH_TYPE_BLAKE3] = other.bCalcBlake3PerDefault;
+	uiCreateFileMode[HASH_TYPE_BLAKE3] = other.uiCreateFileModeBlake3;
+	StringCchCopy(szFilename[HASH_TYPE_BLAKE3], MAX_PATH, other.szFilenameBlake3);
+	bSaveAbsolutePaths[HASH_TYPE_BLAKE3] = other.bSaveAbsolutePathsBlake3;
 
     return *this;
 }

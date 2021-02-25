@@ -102,6 +102,11 @@
                     <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
                   </Extension>
                 </ProgId>
+                <ProgId Id='RCRC.blake3' Description='Blake3 File (RapidCRC)' Icon="HashFileIcon" IconIndex="0">
+                  <Extension Id='blake3' ContentType='application/blake3'>
+                    <Verb Id='open' Command='Open' TargetFile='RapidCRCEXE' Argument='"%1"' />
+                  </Extension>
+                </ProgId>
             </Component>
 
           </Directory>

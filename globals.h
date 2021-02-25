@@ -86,7 +86,8 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define HASH_TYPE_SHA3_512 8
 #define HASH_TYPE_CRC32C 9
 #define HASH_TYPE_BLAKE2SP 10
-#define NUM_HASH_TYPES 11
+#define HASH_TYPE_BLAKE3 11
+#define NUM_HASH_TYPES 12
 
 // RapidCRC modes; also used in the action functions
 // Have to equal hash types
@@ -101,6 +102,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MODE_SHA3_512			8
 #define MODE_CRC32C             9
 #define MODE_BLAKE2SP           10
+#define MODE_BLAKE3             11
 #define MODE_BSD                21
 
 //CMDLINE Options for the shell extension
@@ -115,6 +117,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_SHA3_512		8
 #define CMD_CRC32C          9
 #define CMD_BLAKE2SP        10
+#define CMD_BLAKE3          11
 #define CMD_NAME			100
 #define CMD_NTFS			22
 #define CMD_REPARENT		23
@@ -190,8 +193,9 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_STATIC_SHA3_512_VALUE    12
 #define ID_STATIC_CRCC_VALUE        13
 #define ID_STATIC_BLAKE2SP_VALUE    14
-#define ID_STATIC_INFO				15
-#define ID_MAX_STATIC               15
+#define ID_STATIC_BLAKE3_VALUE      15
+#define ID_STATIC_INFO				16
+#define ID_MAX_STATIC               16
 
 #define ID_STATIC_STATUS			21
 #define ID_STATIC_CREATE            22
@@ -208,7 +212,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_BTN_CRC_IN_SFV			31
 #define ID_BTN_MD5_IN_MD5			32
 #define ID_BTN_SHA_IN_SHA			33
-#define ID_BTN_BLAKE2SP_IN_BLAKE2SP 34
+#define ID_BTN_BLAKE_IN_BLAKE		34
 #define ID_BTN_CRC_IN_FILENAME		35
 #define ID_BTN_CRC_IN_STREAM		36
 #define ID_BTN_OPTIONS				37
@@ -225,19 +229,20 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_EDIT_SHA3_512_VALUE		47
 #define ID_EDIT_CRCC_VALUE          48
 #define ID_EDIT_BLAKE2SP_VALUE      49
+#define ID_EDIT_BLAKE3_VALUE        50
 
-#define ID_EDIT_INFO				50
-#define ID_EDIT_STATUS				51
-#define ID_BTN_ERROR_DESCR			52
+#define ID_EDIT_INFO				51
+#define ID_EDIT_STATUS				52
+#define ID_BTN_ERROR_DESCR			53
 
-#define ID_BTN_PLAY_PAUSE			53
-#define ID_BTN_STOP     			54
+#define ID_BTN_PLAY_PAUSE			54
+#define ID_BTN_STOP     			55
 
-#define ID_COMBO_PRIORITY			55
-#define ID_BTN_OPENFILES_PAUSE		56
-#define ID_LAST_TAB_CONTROL			56
+#define ID_COMBO_PRIORITY			56
+#define ID_BTN_OPENFILES_PAUSE		57
+#define ID_LAST_TAB_CONTROL			57
 
-#define ID_NUM_WINDOWS				57
+#define ID_NUM_WINDOWS				58
 
 #define IDM_COPY_CRC				1
 #define IDM_COPY_MD5				2
@@ -250,6 +255,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_COPY_SHA3_512			9
 #define IDM_COPY_CRCC               10
 #define IDM_COPY_BLAKE2SP           11
+#define IDM_COPY_BLAKE3             12
 #define IDM_COPY_ED2K_LINK			20
 #define IDM_REMOVE_ITEMS			21
 #define IDM_CLEAR_LIST				22
@@ -263,6 +269,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 
 #define IDM_CRC_SFV                 1
 #define IDM_SHA1                    1
+#define IDM_BLAKE					1
 
 #define IDM_CRC_COLUMN              1
 #define IDM_MD5_COLUMN              2
@@ -275,6 +282,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_SHA3_512_COLUMN         9
 #define IDM_CRCC_COLUMN             10
 #define IDM_BLAKE2SP_COLUMN         11
+#define IDM_BLAKE3_COLUMN           12
 
 //****** file open dialog *******
 #define FDIALOG_OPENCHOICES 0
@@ -329,6 +337,7 @@ typedef struct _FILEINFO {
             BYTE	abSha3_256Result[32];
             BYTE	abSha3_512Result[64];
             BYTE	abBlake2sp_Result[32];
+			BYTE	abBlake3_Result[32];
             DWORD   dwCrc32cResult;
         } r;
         union {
@@ -340,6 +349,8 @@ typedef struct _FILEINFO {
             BYTE	abSha3_224Found[28];
             BYTE	abSha3_256Found[32];
             BYTE	abSha3_512Found[64];
+			BYTE	abBlake2sp_Found[32];
+			BYTE	abBlake3_Found[32];
             DWORD   dwCrc32cFound;
         } f;
         CString szResult;
@@ -459,6 +470,11 @@ typedef struct PROGRAM_OPTIONS_FILE_T {
     TCHAR			szFilenameBlake2sp[MAX_PATH];
     BOOL            bSaveAbsolutePathsBlake2sp;
 	BOOL            bAlwaysUseNewWindow;
+	BOOL			bDisplayBlake3InListView;
+	BOOL            bCalcBlake3PerDefault;
+	UINT			uiCreateFileModeBlake3;
+	TCHAR			szFilenameBlake3[MAX_PATH];
+	BOOL            bSaveAbsolutePathsBlake3;
     void            SetDefaults();
     PROGRAM_OPTIONS_FILE_T& operator=(const PROGRAM_OPTIONS_T& other);
 } PROGRAM_OPTIONS_FILE;
@@ -565,6 +581,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStatus);
 void CreateListViewPopupMenu(HMENU *menu);
 void CreateHashFilenameButtonPopupMenu(HMENU *menu);
+void CreateBlakeButtonPopupMenu(HMENU *menu);
 void CreateShaButtonPopupMenu(HMENU *menu);
 void CreateCrcButtonPopupMenu(HMENU *menu);
 void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU pupup,int x,int y, SHOWRESULT_PARAMS * pshowresult_params);
@@ -631,7 +648,6 @@ BOOL RegularFromLongFilename(TCHAR szRegularFilename[MAX_PATH], const TCHAR *szL
 BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList);
 
 //SFV and MD5 functions (sfvfcts.cpp)
-BOOL EnterSfvMode(lFILEINFO *fileList);
 DWORD WriteSfvHeader(CONST HANDLE hFile);
 BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode);
 DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], BOOL bIsSfv);

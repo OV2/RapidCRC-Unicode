@@ -19,6 +19,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx</Extensions>
     </Filter>
+    <Filter Include="Source Files\blake3">
+      <UniqueIdentifier>{e79fa07b-1668-47b3-9a9d-c42fa5821892}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="actfcts.cpp">
@@ -104,6 +107,27 @@
     </ClCompile>
     <ClCompile Include="blake2\blake2sp.c">
       <Filter>Source Files\blake2</Filter>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3.c">
+      <Filter>Source Files\blake3</Filter>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3_avx2.c">
+      <Filter>Source Files\blake3</Filter>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3_avx512.c">
+      <Filter>Source Files\blake3</Filter>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3_dispatch.c">
+      <Filter>Source Files\blake3</Filter>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3_portable.c">
+      <Filter>Source Files\blake3</Filter>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3_sse2.c">
+      <Filter>Source Files\blake3</Filter>
+    </ClCompile>
+    <ClCompile Include="blake3\blake3_sse41.c">
+      <Filter>Source Files\blake3</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -200,6 +224,12 @@
     <ClInclude Include="Utility.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="blake3\blake3.h">
+      <Filter>Source Files\blake3</Filter>
+    </ClInclude>
+    <ClInclude Include="blake3\blake3_impl.h">
+      <Filter>Source Files\blake3</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="crc32x86.asm">
@@ -216,6 +246,21 @@
     </MASM>
     <MASM Include="sha512-586.asm">
       <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="MD4_asm.asm">
+      <Filter>Source Files</Filter>
+    </MASM>
+    <MASM Include="blake3\blake3_avx2_x86-64_windows_msvc.asm">
+      <Filter>Source Files\blake3</Filter>
+    </MASM>
+    <MASM Include="blake3\blake3_avx512_x86-64_windows_msvc.asm">
+      <Filter>Source Files\blake3</Filter>
+    </MASM>
+    <MASM Include="blake3\blake3_sse2_x86-64_windows_msvc.asm">
+      <Filter>Source Files\blake3</Filter>
+    </MASM>
+    <MASM Include="blake3\blake3_sse41_x86-64_windows_msvc.asm">
+      <Filter>Source Files\blake3</Filter>
     </MASM>
   </ItemGroup>
   <ItemGroup>
@@ -286,9 +331,6 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="crc32x64.asm">
-      <Filter>Source Files</Filter>
-    </CustomBuild>
-    <CustomBuild Include="MD4_asm.asm">
       <Filter>Source Files</Filter>
     </CustomBuild>
     <CustomBuild Include="md5-ms-amd64-v2.asm">

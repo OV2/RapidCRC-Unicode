@@ -61,7 +61,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static UINT uiThreadID;
 	static DWORD dwSortStatus;
 	static SHOWRESULT_PARAMS showresult_params = {NULL, FALSE, FALSE};
-	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, shaPopup, crcPopup;
+	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, shaPopup, crcPopup, blakePopup;
     static std::list<UINT> fileThreadIds;
     static int iTimerCount; 
 	lFILEINFO *fileList;
@@ -83,6 +83,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		CreateListViewPopupMenu(&popupMenu);
         CreateListViewHeaderPopupMenu(&headerPopupMenu);
         CreateHashFilenameButtonPopupMenu(&hashInNamePopup);
+		CreateBlakeButtonPopupMenu(&blakePopup);
         CreateShaButtonPopupMenu(&shaPopup);
         CreateCrcButtonPopupMenu(&crcPopup);
 		RegisterDropWindow(arrHwnd, & pDropTarget);
@@ -359,11 +360,16 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
                     return 0;
 			    }
 			    break;
-            case ID_BTN_BLAKE2SP_IN_BLAKE2SP:
-			    if(HIWORD(wParam) == BN_CLICKED){
-				    CreateChecksumFiles(arrHwnd, MODE_BLAKE2SP);
-				    return 0;
-			    }
+            case ID_BTN_BLAKE_IN_BLAKE:
+				if (HIWORD(wParam) == BN_CLICKED) {
+					RECT rect;
+					GetWindowRect(arrHwnd[ID_BTN_BLAKE_IN_BLAKE], &rect);
+					int x = rect.left, y = rect.bottom;
+					int ret = TrackPopupMenu(blakePopup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_BLAKE_IN_BLAKE], NULL);
+					if (ret)
+						CreateChecksumFiles(arrHwnd, MODE_BLAKE2SP + ret - IDM_BLAKE);
+					return 0;
+				}
 			    break;
 		    case ID_BTN_ERROR_DESCR:
 			    if(HIWORD(wParam) == BN_CLICKED){
@@ -660,6 +666,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         case IDC_CHECK_SHA3_512_DEFAULT:
         case IDC_CHECK_CRCC_DEFAULT:
         case IDC_CHECK_BLAKE2SP_DEFAULT:
+		case IDC_CHECK_BLAKE3_DEFAULT:
 			if(HIWORD(wParam) == BN_CLICKED){
                 unsigned int offset = LOWORD(wParam) - IDC_CHECK_CRC_DEFAULT;
 				program_options_temp.bCalcPerDefault[offset] = (IsDlgButtonChecked(hDlg, LOWORD(wParam)) == BST_CHECKED);
@@ -677,6 +684,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         case IDC_CHECK_DISPLAY_SHA3_512_IN_LIST:
         case IDC_CHECK_DISPLAY_CRCC_IN_LIST:
         case IDC_CHECK_DISPLAY_BLAKE2SP_IN_LIST:
+		case IDC_CHECK_DISPLAY_BLAKE3_IN_LIST:
 			if(HIWORD(wParam) == BN_CLICKED){
                 unsigned int offset = LOWORD(wParam) - IDC_CHECK_DISPLAY_CRC_IN_LIST;
                 program_options_temp.bDisplayInListView[offset] = (IsDlgButtonChecked(hDlg, LOWORD(wParam)) == BST_CHECKED);
@@ -1360,7 +1368,7 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * (leftMargin + 7 + 1), wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 17 + 2) + 16, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_SHA_IN_SHA], lACW * (leftMargin + 27 + 3) + 32, wHeight - lACH * actButtonY, lACW * 7 + 16, lACH * 19/10.0, FALSE);
-    MoveWindow(arrHwnd[ID_BTN_BLAKE2SP_IN_BLAKE2SP], lACW * (leftMargin + 34 + 4) + 48, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
+    MoveWindow(arrHwnd[ID_BTN_BLAKE_IN_BLAKE], lACW * (leftMargin + 34 + 4) + 48, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 44 + 5) + 64, wHeight - lACH * actButtonY, lACW * 21, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 65 + 6) + 64, wHeight - lACH * actButtonY, lACW * 25, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, FALSE);
