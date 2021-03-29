@@ -31,8 +31,37 @@
 #include "resource.h"
 #include "SysInfo.h"
 #include "IconBitmapUtils.h"
+#include <vector>
 
 extern HINSTANCE g_hmodThisDll;
+
+struct ctxMenuEntry {
+	UINT id;
+	TCHAR *menuText;
+	TCHAR *helpText;
+	TCHAR *verb;
+	TCHAR *cmdParam;
+	UINT iconId;
+};
+
+constexpr ctxMenuEntry menuEntries[] = {
+	{ IDM_RAPIDCRC, TEXT("Open"), TEXT("Opens the files with RapidCRC and calculates checksum"), TEXT("RapidCRCOpen"), NULL, IDI_OPEN_FOLDER																					  },
+	{ IDM_REPARENT, TEXT("Open with reparent"), TEXT("Opens the files with RapidCRC and calculates checksum, offering reparent action for checksum files"), TEXT("RapidCRCOpenReparent"), TEXT(" -Reparent"), IDI_OPEN_FOLDER	  },
+	{ IDM_OPENHASHFILES, TEXT("Open all hash files"), TEXT("Opens all hash files in RapidCRC and calculates checksums"), TEXT("RapidCRCOpenHashFiles"), TEXT(" -HashFilesOnly"), IDI_OPEN_FOLDER								  },
+    { IDM_SEP, TEXT(""), TEXT(""), TEXT(""), TEXT(""), 0                                                                                                                                                                          },
+	{ IDM_SFV, TEXT("Create SFV"), TEXT("Opens the files with RapidCRC and creates an SFV File"), TEXT("RapidCRCCreateSFV"), TEXT(" -CreateSFV"), IDI_HASH_FILE																	  },
+	{ IDM_MD5, TEXT("Create MD5"), TEXT("Opens the files with RapidCRC and creates an MD5 File"), TEXT("RapidCRCCreateMD5"), TEXT(" -CreateMD5"), IDI_HASH_FILE																	  },
+	{ IDM_SHA1, TEXT("Create SHA1"), TEXT("Opens the files with RapidCRC and creates an SHA1 File"), TEXT("RapidCRCCreateSHA1"), TEXT(" -CreateSHA1"), IDI_HASH_FILE															  },
+	{ IDM_SHA256, TEXT("Create SHA256"), TEXT("Opens the files with RapidCRC and creates an SHA256 File"), TEXT("RapidCRCCreateSHA256"), TEXT(" -CreateSHA256"), IDI_HASH_FILE													  },
+	{ IDM_SHA512, TEXT("Create SHA512"), TEXT("Opens the files with RapidCRC and creates an SHA512 File"), TEXT("RapidCRCCreateSHA512"), TEXT(" -CreateSHA512"), IDI_HASH_FILE													  },
+	{ IDM_SHA3_224, TEXT("Create SHA3-224"), TEXT("Opens the files with RapidCRC and puts the CRC into the Filename"), TEXT("RapidCRCPutName"), TEXT(" -CreateSHA3224"), IDI_HASH_FILE											  },
+	{ IDM_SHA3_256, TEXT("Create SHA3-256"), TEXT("Opens the files with RapidCRC and puts the CRC into an NTFS Stream"), TEXT("RapidCRCPutNTFS"), TEXT(" -CreateSHA3256"), IDI_HASH_FILE										  },
+	{ IDM_SHA3_512, TEXT("Create SHA3-512"), TEXT("Opens the files with RapidCRC and creates an SHA3-224 File"), TEXT("RapidCRCCreateSHA3_244"), TEXT(" -CreateSHA3512"), IDI_HASH_FILE											  },
+	{ IDM_BLAKE2SP, TEXT("Create BLAKE2SP"), TEXT("Opens the files with RapidCRC and creates an SHA3-256 File"), TEXT("RapidCRCCreateSHA3_256"), TEXT(" -CreateBLAKE2SP"), IDI_HASH_FILE										  },
+	{ IDM_BLAKE3, TEXT("Create BLAKE3"), TEXT("Opens the files with RapidCRC and creates an SHA3-512 File"), TEXT("RapidCRCCreateSHA3_512"), TEXT(" -CreateBLAKE3"), IDI_HASH_FILE												  },
+	{ IDM_NAME, TEXT("Put CRC in Filename"), TEXT("Opens the files with RapidCRC and creates an BLAKE2SP File"), TEXT("RapidCRCCreateBLAKE2SP"), TEXT(" -PutNAME"), IDI_HASH_FILE												  },
+	{ IDM_NTFS, TEXT("Put CRC in NTFS Stream"), TEXT("Opens the files with RapidCRC and creates an BLAKE3 File"), TEXT("RapidCRCCreateBLAKE3"), TEXT(" -PutNTFS"), IDI_HASH_FILE												  },
+};
 
 //
 //  FUNCTION: CShellExt::QueryContextMenu(HMENU, UINT, UINT, UINT, UINT)
@@ -93,21 +122,11 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
     if(!(1 << id & mask)) InsertMenu(hSubMenu, count++, f, idCmdFirst + id, t);
 
         unsigned int count = 0;
-		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_RAPIDCRC, TEXT("Open"));
-		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_REPARENT, TEXT("Open with reparent"));
-        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_OPENHASHFILES, TEXT("Open all hash files"));
-		InsertOptional(MF_SEPARATOR | MF_BYPOSITION, 3, NULL);
-		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SFV, TEXT("Create SFV"));
-		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_MD5, TEXT("Create MD5"));
-		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA1, TEXT("Create SHA1"));
-        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA256, TEXT("Create SHA256"));
-        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA512, TEXT("Create SHA512"));
-        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA3_224, TEXT("Create SHA3-224"));
-        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA3_256, TEXT("Create SHA3-256"));
-        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_SHA3_512, TEXT("Create SHA3-512"));
-        InsertOptional(MF_STRING | MF_BYPOSITION, IDM_BLAKE2SP, TEXT("Create BLAKE2SP"));
-		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_NAME, TEXT("Put CRC in Filename"));
-		InsertOptional(MF_STRING | MF_BYPOSITION, IDM_NTFS, TEXT("Put CRC in NTFS Stream"));
+		for (const ctxMenuEntry &entry: menuEntries)
+		{
+			UINT flags = entry.id == IDM_SEP ? MF_SEPARATOR : MF_BYPOSITION;
+			InsertOptional(flags | MF_BYPOSITION, entry.id, entry.menuText);
+		}
 
 		mii.fMask = MIIM_SUBMENU | MIIM_STRING | MIIM_ID;
 		mii.cbSize = sizeof(mii);
@@ -129,44 +148,40 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 			mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_RAPIDCRC);
 			SetMenuItemInfo(hMenu, indexMenu, TRUE, &mii);
 
-			mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_OPEN_FOLDER);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_RAPIDCRC, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_REPARENT, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_OPENHASHFILES, FALSE, &mii);
+			for (const ctxMenuEntry &entry : menuEntries)
+			{
+				if (entry.iconId == 0)
+					continue;
 
-			mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_HASH_FILE);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SFV, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_MD5, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA1, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA256, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA512, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA3_224, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA3_256, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_SHA3_512, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_BLAKE2SP, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_NAME, FALSE, &mii);
-            SetMenuItemInfo(hSubMenu, idCmdFirst + IDM_NTFS, FALSE, &mii);
+				if (entry.iconId == IDI_OPEN_FOLDER)
+				{
+					mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_OPEN_FOLDER);
+				}
+				else
+				{
+					mii.hbmpItem = m_iconBitmapUtils.IconToBitmapPARGB32(g_hmodThisDll, IDI_HASH_FILE);
+				}
+				SetMenuItemInfo(hSubMenu, idCmdFirst + entry.id, FALSE, &mii);
+			}
 		} else {
 			hBmp = m_hBmpRapidCrc_preVista;
 			SetMenuItemBitmaps(hMenu,indexMenu,MF_BYPOSITION,hBmp,hBmp);
 
-			hBmp = m_hBmpOpenWith_preVista;
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_RAPIDCRC, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_REPARENT, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_OPENHASHFILES, MF_BYCOMMAND, hBmp, hBmp);
+			for (const ctxMenuEntry &entry : menuEntries)
+			{
+				if (entry.iconId == 0)
+					continue;
 
-			hBmp = m_hBmpCreateSfv_preVista;
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SFV, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_MD5, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA1, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA256, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA512, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA3_224, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA3_256, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_SHA3_512, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_BLAKE2SP, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_NAME, MF_BYCOMMAND, hBmp, hBmp);
-            SetMenuItemBitmaps(hSubMenu, idCmdFirst + IDM_NTFS, MF_BYCOMMAND, hBmp, hBmp);
+				if (entry.iconId == IDI_OPEN_FOLDER)
+				{
+					hBmp = m_hBmpOpenWith_preVista;
+				}
+				else
+				{
+					hBmp = m_hBmpCreateSfv_preVista;
+				}
+				SetMenuItemBitmaps(hSubMenu, idCmdFirst + entry.id, MF_BYCOMMAND, hBmp, hBmp);
+			}
 		}
 
 		return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(IDM_SUBMENU + 1));
@@ -174,26 +189,6 @@ STDMETHODIMP CShellExt::QueryContextMenu(HMENU hMenu,
 
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, USHORT(0));
 }
-
-#define CMD_HELP_VERB(helpStr, verbStr) \
-    switch(uFlags)\
-		{\
-			case GCS_HELPTEXTA:\
-	            hr = StringCbCopyA(pszName, uMaxNameLen, helpStr);\
-				break;\
-	        case GCS_HELPTEXTW:\
-                hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L##helpStr);\
-				break;\
-			case GCS_VERBA:\
-	            hr = StringCbCopyA(pszName, uMaxNameLen, verbStr);\
-				break;\
-			case GCS_VERBW:\
-                hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, L##verbStr);\
-				break;\
-			default:\
-	            hr = S_OK;\
-				break;\
-		}
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -219,68 +214,32 @@ STDMETHODIMP CShellExt::GetCommandString(THIS_
 										 UINT uMaxNameLen)
 {
     HRESULT  hr = E_INVALIDARG;
-	
 
-    if(idCommand == IDM_RAPIDCRC)
-    {
-        CMD_HELP_VERB("Opens the files with RapidCRC and calculates checksum", "RapidCRCOpen")
-	}
-	else if(idCommand == IDM_REPARENT)
-    {
-        CMD_HELP_VERB("Opens the files with RapidCRC and calculates checksum, offering reparent action for checksum files", "RapidCRCOpenReparent")
-	}
-    else if(idCommand == IDM_OPENHASHFILES)
-    {
-        CMD_HELP_VERB("Opens all hash files in RapidCRC and calculates checksums", "RapidCRCOpenHashFiles")
-	}
-	else if(idCommand == IDM_SFV)
+	for (const ctxMenuEntry &entry : menuEntries)
 	{
-        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SFV File", "RapidCRCCreateSFV")
+		if (entry.id == idCommand)
+		{
+			switch (uFlags)
+			{
+			case GCS_HELPTEXTA:
+				hr = WideCharToMultiByte(CP_ACP, 0, entry.helpText, -1, pszName, uMaxNameLen, NULL, NULL) > 0 ? S_OK : S_FALSE;
+				break;
+				case GCS_HELPTEXTW:
+				hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, entry.helpText);
+				break;
+			case GCS_VERBA:
+				hr = WideCharToMultiByte(CP_ACP, 0, entry.verb, -1, pszName, uMaxNameLen, NULL, NULL) > 0 ? S_OK : S_FALSE;
+				break;
+			case GCS_VERBW:
+                hr = StringCbCopyW((LPWSTR)pszName, uMaxNameLen, entry.verb);
+				break;
+			default:
+	            hr = S_OK;
+				break;
+			}
+		}
 	}
-	else if(idCommand == IDM_MD5)
-	{
-        CMD_HELP_VERB("Opens the files with RapidCRC and creates an MD5 File", "RapidCRCCreateMD5")
-	}
-	else if(idCommand == IDM_SHA1)
-	{
-        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA1 File", "RapidCRCCreateSHA1")
-	}
-    else if(idCommand == IDM_SHA256)
-	{
-        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA256 File", "RapidCRCCreateSHA256")
-	}
-    else if(idCommand == IDM_SHA512)
-	{
-        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA512 File", "RapidCRCCreateSHA512")
-	}
-	else if(idCommand == IDM_NAME)
-	{
-        CMD_HELP_VERB("Opens the files with RapidCRC and puts the CRC into the Filename", "RapidCRCPutName")
-	}
-	else if(idCommand == IDM_NTFS)
-	{
-        CMD_HELP_VERB("Opens the files with RapidCRC and puts the CRC into an NTFS Stream", "RapidCRCPutNTFS")
-	}
-    else if(idCommand == IDM_SHA3_224)
-	{
-        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA3-224 File", "RapidCRCCreateSHA3_244")
-	}
-    else if(idCommand == IDM_SHA3_256)
-	{
-        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA3-256 File", "RapidCRCCreateSHA3_256")
-	}
-    else if(idCommand == IDM_SHA3_512)
-	{
-        CMD_HELP_VERB("Opens the files with RapidCRC and creates an SHA3-512 File", "RapidCRCCreateSHA3_512")
-	}
-    else if(idCommand == IDM_BLAKE2SP)
-	{
-        CMD_HELP_VERB("Opens the files with RapidCRC and creates an BLAKE2SP File", "RapidCRCCreateBLAKE2SP")
-	}
-	else
-	{
-		    return hr;
-    }
+
 	return hr;
 }
 
@@ -318,190 +277,48 @@ STDMETHODIMP CShellExt::InvokeCommand(LPCMINVOKECOMMANDINFO lpcmi)
         }
     }
 
+	std::vector<wchar_t> convertedVerb;
+	const wchar_t *verb = NULL;
 
     if( !fUnicode && HIWORD(lpcmi->lpVerb))
     {
-        if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCOpen"))
-        {
-            doRapidCrcOpen(NULL);
-        }
-		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCOpenReparent"))
-        {
-            doRapidCrcOpen(TEXT(" -Reparent"));
-        }
-        else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCOpenHashFiles"))
-        {
-            doRapidCrcOpen(TEXT(" -HashFilesOnly"));
-        }
-		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSFV"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSFV"));
-		}
-		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateMD5"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateMD5"));
-		}
-		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA1"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA1"));
-		}
-        else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA256"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA256"));
-		}
-        else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA512"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA512"));
-		}
-        else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA3_244"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA3224"));
-		}
-        else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA3_256"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA3256"));
-		}
-        else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCCreateSHA3_512"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA3512"));
-		}
-		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCPutName"))
-		{
-			doRapidCrcOpen(TEXT(" -PutNAME"));
-		}
-		else if(!lstrcmpiA(lpcmi->lpVerb, "RapidCRCPutNTFS"))
-		{
-			doRapidCrcOpen(TEXT(" -PutNTFS"));
-		}
-		else
-		{
-			return E_FAIL;
-		}
-
+		int req_len = MultiByteToWideChar(CP_ACP, 0, lpcmi->lpVerb, -1, NULL, NULL);
+		convertedVerb.resize(req_len);
+		MultiByteToWideChar(CP_ACP, 0, lpcmi->lpVerb, -1, convertedVerb.data(), req_len);
+		verb = convertedVerb.data();
     }
-
     else if( fUnicode && HIWORD(((CMINVOKECOMMANDINFOEX *) lpcmi)->lpVerbW))
     {
-        if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCOpen"))
-        {
-            doRapidCrcOpen(NULL);
-        }
-		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCOpenReparent"))
-        {
-            doRapidCrcOpen(TEXT(" -Reparent"));
-        }
-        else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCHashFiles"))
-        {
-            doRapidCrcOpen(TEXT(" -HashFilesOnly"));
-        }
-		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSFV"))
+		verb = ((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW;
+    }
+    else
+    {
+		int id = LOWORD(lpcmi->lpVerb);
+		for (const ctxMenuEntry &entry : menuEntries)
 		{
-			doRapidCrcOpen(TEXT(" -CreateSFV"));
-		}
-		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateMD5"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateMD5"));
-		}
-		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA1"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA1"));
-		}
-        else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA256"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA256"));
-		}
-        else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA512"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA512"));
-		}
-        else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA3_224"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA3224"));
-		}
-        else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA3_256"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA3256"));
-		}
-        else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCCreateSHA3_512"))
-		{
-			doRapidCrcOpen(TEXT(" -CreateSHA3512"));
-		}
-		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCPutName"))
-		{
-			doRapidCrcOpen(TEXT(" -PutNAME"));
-		}
-		else if(!lstrcmpiW(((CMINVOKECOMMANDINFOEX *)lpcmi)->lpVerbW, L"RapidCRCPutNTFS"))
-		{
-			doRapidCrcOpen(TEXT(" -PutNTFS"));
-		}
-		else
-		{
-			return E_FAIL;
+			if (id == entry.id)
+			{
+				doRapidCrcOpen(entry.cmdParam);
+				return S_OK;
+			}
 		}
     }
 
-    else if(LOWORD(lpcmi->lpVerb) == IDM_RAPIDCRC)
-    {
-        doRapidCrcOpen(NULL);
-    }
-	else if(LOWORD(lpcmi->lpVerb) == IDM_REPARENT)
-    {
-        doRapidCrcOpen(TEXT(" -Reparent"));
-    }
-    else if(LOWORD(lpcmi->lpVerb) == IDM_OPENHASHFILES)
-    {
-        doRapidCrcOpen(TEXT(" -HashFilesOnly"));
-    }
-	else if(LOWORD(lpcmi->lpVerb) == IDM_SFV)
-	{
-		doRapidCrcOpen(TEXT(" -CreateSFV"));
-	}
-	else if(LOWORD(lpcmi->lpVerb) == IDM_MD5)
-	{
-		doRapidCrcOpen(TEXT(" -CreateMD5"));
-	}
-	else if(LOWORD(lpcmi->lpVerb) == IDM_SHA1)
-	{
-		doRapidCrcOpen(TEXT(" -CreateSHA1"));
-	}
-    else if(LOWORD(lpcmi->lpVerb) == IDM_SHA256)
-	{
-		doRapidCrcOpen(TEXT(" -CreateSHA256"));
-	}
-    else if(LOWORD(lpcmi->lpVerb) == IDM_SHA512)
-	{
-		doRapidCrcOpen(TEXT(" -CreateSHA512"));
-	}
-    else if(LOWORD(lpcmi->lpVerb) == IDM_SHA3_224)
-	{
-		doRapidCrcOpen(TEXT(" -CreateSHA3224"));
-	}
-    else if(LOWORD(lpcmi->lpVerb) == IDM_SHA3_256)
-	{
-		doRapidCrcOpen(TEXT(" -CreateSHA3256"));
-	}
-    else if(LOWORD(lpcmi->lpVerb) == IDM_SHA3_512)
-	{
-		doRapidCrcOpen(TEXT(" -CreateSHA3512"));
-	}
-    else if(LOWORD(lpcmi->lpVerb) == IDM_BLAKE2SP)
-	{
-		doRapidCrcOpen(TEXT(" -CreateBLAKE2SP"));
-	}
-	else if(LOWORD(lpcmi->lpVerb) == IDM_NAME)
-	{
-		doRapidCrcOpen(TEXT(" -PutNAME"));
-	}
-	else if(LOWORD(lpcmi->lpVerb) == IDM_NTFS)
-	{
-		doRapidCrcOpen(TEXT(" -PutNTFS"));
-	}
-    else // and here is the real action
-    {
-		return E_FAIL;
-	}
 
-    return S_OK;
+	if(verb)
+	{
+		for (const ctxMenuEntry &entry : menuEntries)
+		{
+			if (!lstrcmp(verb, entry.verb))
+			{
+				doRapidCrcOpen(entry.cmdParam);
+				return S_OK;
+			}
+		}
+	}
+    
+
+    return E_FAIL;
 }
 
 void CShellExt::doRapidCrcOpen(TCHAR *command) {

@@ -100,6 +100,10 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 			{
 				fileList->uiCmdOpts = CMD_BLAKE2SP;
 			}
+			else if (lstrcmpi(argv[2], TEXT("-CreateBLAKE3")) == 0)
+			{
+				fileList->uiCmdOpts = CMD_BLAKE3;
+			}
 			else if(lstrcmpi(argv[2], TEXT("-PutNAME")) == 0)
 			{
 				fileList->uiCmdOpts = CMD_NAME;

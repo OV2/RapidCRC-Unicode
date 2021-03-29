@@ -726,7 +726,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 INT_PTR CALLBACK DlgProcCtxMenu(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 static std::map<int,int> checkbox_y_map;
-#define MAX_CONTEX_CHECKBOXES_ID 15
+#define MAX_CONTEX_CHECKBOXES_ID 16
 	switch (message)
 	{
     case WM_INITDIALOG :

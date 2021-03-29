@@ -54,7 +54,8 @@
 #define IDM_SHA3_256 12
 #define IDM_SHA3_512 13
 #define IDM_BLAKE2SP 14
-#define IDM_SUBMENU 15
+#define IDM_BLAKE3 15
+#define IDM_SUBMENU 16
 #define ResultFromShort(i)  ResultFromScode(MAKE_SCODE(SEVERITY_SUCCESS, 0, (USHORT)(i)))
 
 //***************************
