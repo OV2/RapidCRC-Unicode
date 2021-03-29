@@ -317,21 +317,43 @@ void CreateListViewPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
     TCHAR menuText[100];
 
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_COPY_ED2K_LINK,TEXT("Copy ED2K Link to Clipboard"));
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
-    for(int i=0;i<NUM_HASH_TYPES;i++) {
-        StringCchPrintf(menuText,100,TEXT("Copy %s to Clipboard"),g_hash_names[i]);
-        InsertMenu(*menu,i, MF_BYPOSITION | MF_STRING,IDM_COPY_CRC + i,menuText);
-    }
+	AppendMenu(*menu, MF_STRING, IDM_SELECT_ALL, TEXT("Select All"));
+	AppendMenu(*menu, MF_STRING, IDM_SELECT_NONE, TEXT("Select None"));
+	AppendMenu(*menu, MF_SEPARATOR, NULL, NULL);
+	AppendMenu(*menu, MF_STRING, IDM_REMOVE_ITEMS, TEXT("Remove Selected Items"));
+	AppendMenu(*menu, MF_STRING, IDM_CLEAR_LIST, TEXT("Clear List"));
+	AppendMenu(*menu, MF_SEPARATOR, NULL, NULL);
+	AppendMenu(*menu, MF_STRING, IDM_HIDE_VERIFIED, TEXT("Hide Verified Items"));
+	AppendMenu(*menu, MF_SEPARATOR, NULL, NULL);
 
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
-    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_HIDE_VERIFIED,TEXT("Hide Verified Items"));
-    InsertMenu(*menu,0, MF_BYPOSITION | MF_SEPARATOR,NULL,NULL);
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_CLEAR_LIST,TEXT("Clear List"));
-	InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING,IDM_REMOVE_ITEMS,TEXT("Remove Selected Items"));
-	InsertMenu(*menu, 0, MF_BYPOSITION | MF_SEPARATOR, NULL, NULL);
-	InsertMenu(*menu, 0, MF_BYPOSITION | MF_STRING, IDM_SELECT_NONE, TEXT("Select None"));
-	InsertMenu(*menu, 0, MF_BYPOSITION | MF_STRING, IDM_SELECT_ALL, TEXT("Select All"));
+	// calculate submenu
+	HMENU hCalcSubMenu = CreatePopupMenu();
+	MENUITEMINFO mii = { 0 };
+	mii.fMask = MIIM_SUBMENU | MIIM_STRING | MIIM_ID;
+	mii.cbSize = sizeof(mii);
+	mii.wID = IDM_SUBMENU_CALC;
+	mii.hSubMenu = hCalcSubMenu;
+	mii.dwTypeData = TEXT("Calculate");
+	InsertMenuItem(*menu, -1, TRUE, &mii);
+
+	for (int i = 0; i < NUM_HASH_TYPES; i++) {
+		AppendMenu(hCalcSubMenu, MF_STRING, IDM_CALC_HASH + i, g_hash_names[i]);
+	}
+
+	// clipboard submenu
+	HMENU hClipSubMenu = CreatePopupMenu();
+	mii.fMask = MIIM_SUBMENU | MIIM_STRING | MIIM_ID;
+	mii.cbSize = sizeof(mii);
+	mii.wID = IDM_SUBMENU_CALC;
+	mii.hSubMenu = hClipSubMenu;
+	mii.dwTypeData = TEXT("Copy to Clipboard");
+	InsertMenuItem(*menu, -1, TRUE, &mii);
+
+    for(int i=0;i<NUM_HASH_TYPES;i++) {
+		AppendMenu(hClipSubMenu, MF_STRING,IDM_COPY_CRC + i, g_hash_names[i]);
+    }
+	AppendMenu(hClipSubMenu, MF_SEPARATOR, NULL, NULL);
+	AppendMenu(hClipSubMenu, MF_STRING, IDM_COPY_ED2K_LINK, TEXT("ED2K"));
 }
 
 /*****************************************************************************
@@ -570,17 +592,6 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 
     ret = TrackPopupMenu(popup,TPM_RETURNCMD | TPM_NONOTIFY,x,y,0,arrHwnd[ID_LISTVIEW],NULL);
 	switch(ret) {
-		case IDM_COPY_CRC:
-        case IDM_COPY_CRCC:
-		case IDM_COPY_MD5:
-		case IDM_COPY_SHA1:
-        case IDM_COPY_SHA256:
-        case IDM_COPY_SHA512:
-        case IDM_COPY_SHA3_224:
-        case IDM_COPY_SHA3_256:
-        case IDM_COPY_SHA3_512:
-		case IDM_COPY_ED2K:
-		case IDM_COPY_BLAKE2SP:
 		case IDM_COPY_ED2K_LINK:	HandleClipboard(arrHwnd[ID_LISTVIEW],ret,&finalList);
 									break;
 		case IDM_CLEAR_LIST:		ClearAllItems(arrHwnd,pshowresult_params);
@@ -598,9 +609,16 @@ void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU popup,int x,int y, S
 		case IDM_SELECT_NONE:
 			ListView_SetItemState(arrHwnd[ID_LISTVIEW], -1, 0, LVIS_SELECTED);
 			break;
-		default:					return;
+		default:					break;
 	}
-	
+	if (ret >= IDM_COPY_CRC && ret < IDM_COPY_CRC + NUM_HASH_TYPES)
+	{
+		HandleClipboard(arrHwnd[ID_LISTVIEW], ret, &finalList);
+	}
+	else if(ret >= IDM_CALC_HASH && ret < IDM_CALC_HASH + NUM_HASH_TYPES)
+	{
+		CheckIfRehashNecessary(arrHwnd, ret - IDM_CALC_HASH, CMD_NORMAL, true);
+	}
 }
 
 /*****************************************************************************

@@ -30,7 +30,6 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode, CONST TCHAR szChkS
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename);
 static DWORD CreateChecksumFiles_OnePerJob(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename);
 static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult);
-static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode, CONST UINT uiCMD);
 void UpdateFileInfoStatus(FILEINFO *pFileInfo, const HWND hwndListView);
 
 /*****************************************************************************
@@ -933,9 +932,10 @@ VOID FillFinalList(CONST HWND hListView, list<FILEINFO*> *finalList,CONST UINT u
 }
 
 /*****************************************************************************
-static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode)
+bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS],CONST UINT uiMode, bool bAutoRehash = false)
 	arrHwnd			: (IN) array with window handles
 	uiMode			: (IN) create MD5 or SFV files
+	bAutoRehash     : (IN) if true, does not ask user and simply calculates necessary hashes
 
 Return Value:
 	returns true if rehash was/is necessary
@@ -945,10 +945,10 @@ Notes:
     - if hashes are missing the user is asked if he wants a rehash of those lists that
 	  are missing the hashes
 *****************************************************************************/
-static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, CONST UINT uiCMD)
+bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, CONST UINT uiCMD, bool bAutoRehash /*= false*/)
 {
 	LVITEM lvitem={0};
-	bool doRehash=false;
+	bool doRehash= bAutoRehash;
 	bool needRehash=false;
 	UINT uiIndex;
 	list<lFILEINFO*> *doneList;
@@ -978,7 +978,7 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UIN
 	if(!rehashList.empty())
 		needRehash=true;
 	
-	if( needRehash ){
+	if(needRehash && !doRehash){
         TCHAR *hashName = g_hash_names[uiMode];
 		TCHAR msgString[MAX_PATH_EX];
 		StringCchPrintf(msgString,MAX_PATH_EX,TEXT("You have to calculate the %s checksums first. Click OK to do that now."),hashName);
@@ -988,7 +988,7 @@ static bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UIN
 			return true;
 		doRehash = true;
 	}
-	if(doRehash) {
+	if(needRehash && doRehash) {
 		for(list<lFILEINFO*>::iterator it=rehashList.begin();it!=rehashList.end();it++) {
 			SyncQueue.deleteFromList(*it);
 			(*it)->bDoCalculate[uiMode] = true;

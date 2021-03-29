@@ -245,25 +245,19 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_NUM_WINDOWS				58
 
 #define IDM_COPY_CRC				1
-#define IDM_COPY_MD5				2
-#define IDM_COPY_ED2K				3
-#define IDM_COPY_SHA1				4
-#define IDM_COPY_SHA256				5
-#define IDM_COPY_SHA512				6
-#define IDM_COPY_SHA3_224		    7
-#define IDM_COPY_SHA3_256			8
-#define IDM_COPY_SHA3_512			9
-#define IDM_COPY_CRCC               10
-#define IDM_COPY_BLAKE2SP           11
-#define IDM_COPY_BLAKE3             12
-#define IDM_COPY_ED2K_LINK			20
-#define IDM_REMOVE_ITEMS			21
-#define IDM_CLEAR_LIST				22
+// needs space for all hash types
+#define IDM_CALC_HASH               50
+#define IDM_COPY_ED2K_LINK			100
+#define IDM_REMOVE_ITEMS			101
+#define IDM_CLEAR_LIST				102
 
-#define IDM_HIDE_VERIFIED           23
+#define IDM_HIDE_VERIFIED           103
 
-#define IDM_SELECT_ALL              24
-#define IDM_SELECT_NONE             25
+#define IDM_SELECT_ALL              104
+#define IDM_SELECT_NONE             105
+
+#define IDM_SUBMENU_CALC			106
+#define IDM_SUBMENU_CLIPBOARD		107
 
 #define IDM_CRC_FILENAME            1
 
@@ -550,6 +544,7 @@ BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode);
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,list<FILEINFO*> *finalList);
 VOID FillFinalList(CONST HWND hListView, list<FILEINFO*> *finalList,CONST UINT uiNumSelected);
+bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, CONST UINT uiCMD, bool bAutoRehash = false);
 
 //dialog and window procecures (dlgproc.cpp)
 LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
