@@ -171,9 +171,9 @@ bool ListCompFunction(const FILEINFO& pFileinfo1, const FILEINFO& pFileinfo2)
 	ReduceToPath(szFilenameTemp1);
 	ReduceToPath(szFilenameTemp2);
 
-	iDiff = lstrcmpi( szFilenameTemp1, szFilenameTemp2);
+	iDiff = StrCmpLogicalW( szFilenameTemp1, szFilenameTemp2);
 	if(iDiff==0)
-		iDiff = lstrcmpi( pFileinfo1.szFilenameShort, pFileinfo2.szFilenameShort);
+		iDiff = StrCmpLogicalW( pFileinfo1.szFilenameShort, pFileinfo2.szFilenameShort);
 
 	if(iDiff < 0)
 		return true;
@@ -230,10 +230,10 @@ INT QuickCompFunction(const void * pElem1, const void * pElem2)
 	ReduceToPath(szFilenameTemp1);
 	ReduceToPath(szFilenameTemp2);
 
-	iDiff = lstrcmpi( szFilenameTemp1, szFilenameTemp2);
+	iDiff = StrCmpLogicalW(szFilenameTemp1, szFilenameTemp2);
 
 	if(iDiff != 0)
 		return iDiff;
 	else
-		return lstrcmpi( pFileinfo1->szFilenameShort, pFileinfo2->szFilenameShort);
+		return StrCmpLogicalW(pFileinfo1->szFilenameShort, pFileinfo2->szFilenameShort);
 }
