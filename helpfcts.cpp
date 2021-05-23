@@ -977,7 +977,7 @@ void PROGRAM_OPTIONS_FILE::SetDefaults()
 	uiWndLeft = 10;
 	uiWndTop = 10;
 	bEnableQueue = FALSE;
-	bUseDefaultCP = FALSE;
+	bUseDefaultCP = TRUE;
 	bCalcSha1PerDefault= -1;
 	bDisplaySha1InListView = -1;
 	StringCchCopy(szCRCStringDelims, MAX_PATH_EX, TEXT("{[(_)]}") );
