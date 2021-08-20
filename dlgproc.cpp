@@ -611,6 +611,12 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 				return TRUE;
 			}
 			break;
+		case IDC_ENABLE_UNBUFFERED_READS:
+			if (HIWORD(wParam) == BN_CLICKED) {
+				program_options_temp.bUseUnbufferedReads = (IsDlgButtonChecked(hDlg, IDC_ENABLE_UNBUFFERED_READS) == BST_CHECKED);
+				return TRUE;
+			}
+			break;
         case IDC_CHECK_HASHTYPE_FROM_FILENAME:
 			if(HIWORD(wParam) == BN_CLICKED){
                 program_options_temp.bHashtypeFromFilename = (IsDlgButtonChecked(hDlg, IDC_CHECK_HASHTYPE_FROM_FILENAME) == BST_CHECKED);

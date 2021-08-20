@@ -1008,6 +1008,7 @@ void PROGRAM_OPTIONS_FILE::SetDefaults()
 	bSaveAbsolutePathsBlake3 = 0;
 	bCalcBlake3PerDefault = FALSE;
 	bDisplayBlake3InListView = FALSE;
+	bUseUnbufferedReads = FALSE;
 }
 
 /*****************************************************************************
@@ -1070,6 +1071,7 @@ PROGRAM_OPTIONS_FILE& PROGRAM_OPTIONS_FILE::operator=(const PROGRAM_OPTIONS& oth
     StringCchCopy(szFilenameBlake2sp, MAX_PATH, other.szFilename[HASH_TYPE_BLAKE2SP]);
     bSaveAbsolutePathsBlake2sp = other.bSaveAbsolutePaths[HASH_TYPE_BLAKE2SP];
 	bAlwaysUseNewWindow = other.bAlwaysUseNewWindow;
+	bUseUnbufferedReads = other.bUseUnbufferedReads;
 
 	bDisplayBlake3InListView = other.bDisplayInListView[HASH_TYPE_BLAKE3];
 	bCalcBlake3PerDefault = other.bCalcPerDefault[HASH_TYPE_BLAKE3];
@@ -1135,6 +1137,7 @@ PROGRAM_OPTIONS& PROGRAM_OPTIONS::operator=(const PROGRAM_OPTIONS_FILE& other)
     StringCchCopy(szFilename[HASH_TYPE_BLAKE2SP], MAX_PATH, other.szFilenameBlake2sp);
     bSaveAbsolutePaths[HASH_TYPE_BLAKE2SP] = other.bSaveAbsolutePathsBlake2sp;
 	bAlwaysUseNewWindow = other.bAlwaysUseNewWindow;
+	bUseUnbufferedReads = other.bUseUnbufferedReads;
 
 	bDisplayInListView[HASH_TYPE_BLAKE3] = other.bDisplayBlake3InListView;
 	bCalcPerDefault[HASH_TYPE_BLAKE3] = other.bCalcBlake3PerDefault;

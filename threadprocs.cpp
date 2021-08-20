@@ -104,8 +104,16 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 	QWORD qwStart, qwStop, wqFreq;
 	HANDLE hFile;
     UINT uiBufferSize = g_program_options.uiReadBufferSizeKb * 1024;
-	BYTE *readBuffer = (BYTE *)malloc(uiBufferSize);
-	BYTE *calcBuffer = (BYTE *)malloc(uiBufferSize);
+	bool doUnbufferedReads = g_program_options.bUseUnbufferedReads;
+	BYTE *readBuffer = NULL;
+	BYTE *calcBuffer = NULL;
+	if (doUnbufferedReads) {
+		readBuffer = (BYTE *)VirtualAlloc(NULL, uiBufferSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+		calcBuffer = (BYTE *)VirtualAlloc(NULL, uiBufferSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+	} else {
+		readBuffer = (BYTE *)malloc(uiBufferSize);
+		calcBuffer = (BYTE *)malloc(uiBufferSize);
+	}
 	BYTE *tempBuffer;
 	DWORD readWords[2];
 	DWORD *dwBytesReadRb = &readWords[0];
@@ -201,8 +209,12 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
                 DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 
 				QueryPerformanceCounter((LARGE_INTEGER*) &qwStart);
+				DWORD flags = FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN;
+				if (doUnbufferedReads) {
+					flags |= FILE_FLAG_NO_BUFFERING;
+				}
 				hFile = CreateFile(curFileInfo.szFilename,
-						GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED | FILE_FLAG_SEQUENTIAL_SCAN , 0);
+						GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, flags, 0);
 				if(hFile == INVALID_HANDLE_VALUE) {
 					curFileInfo.dwError = GetLastError();
                 } else {
@@ -355,8 +367,13 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 	PostMessage(arrHwnd[ID_MAIN_WND], WM_THREAD_CALC_DONE, 0, 0);
 	
-	free(readBuffer);
-	free(calcBuffer);
+	if (doUnbufferedReads) {
+		VirtualFree(readBuffer, 0, MEM_RELEASE);
+		VirtualFree(calcBuffer, 0, MEM_RELEASE);
+	} else {
+		free(readBuffer);
+		free(calcBuffer);
+	}
 
 	_endthreadex( 0 );
 	return 0;

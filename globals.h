@@ -408,9 +408,9 @@ typedef struct{
 	BOOL *bFileDone;
 }THREAD_PARAMS_HASHCALC;
 
-struct PROGRAM_OPTIONS_T;
+struct PROGRAM_OPTIONS;
 
-typedef struct PROGRAM_OPTIONS_FILE_T {
+struct PROGRAM_OPTIONS_FILE {
 	DWORD			dwVersion;
 	TCHAR			szFilenamePattern[MAX_PATH];
 	BOOL			bDisplayCrcInListView; // not used anymore
@@ -469,11 +469,12 @@ typedef struct PROGRAM_OPTIONS_FILE_T {
 	UINT			uiCreateFileModeBlake3;
 	TCHAR			szFilenameBlake3[MAX_PATH];
 	BOOL            bSaveAbsolutePathsBlake3;
+	BOOL			bUseUnbufferedReads;
     void            SetDefaults();
-    PROGRAM_OPTIONS_FILE_T& operator=(const PROGRAM_OPTIONS_T& other);
-} PROGRAM_OPTIONS_FILE;
+    PROGRAM_OPTIONS_FILE& operator=(const PROGRAM_OPTIONS& other);
+};
 
-typedef struct PROGRAM_OPTIONS_T {
+struct PROGRAM_OPTIONS {
     TCHAR			szFilenamePattern[MAX_PATH];
 	BOOL			bSortList;
 	BOOL			bWinsfvComp;
@@ -506,8 +507,9 @@ typedef struct PROGRAM_OPTIONS_T {
     BOOL            bSaveAbsolutePaths[NUM_HASH_TYPES];
     UINT            uiReadBufferSizeKb;
 	BOOL			bAlwaysUseNewWindow;
-    PROGRAM_OPTIONS_T& operator=(const PROGRAM_OPTIONS_FILE_T& other);
-} PROGRAM_OPTIONS;
+	BOOL			bUseUnbufferedReads;
+    PROGRAM_OPTIONS& operator=(const PROGRAM_OPTIONS_FILE& other);
+};
 
 typedef struct{
 	BOOL bHaveComCtrlv6;							//are the common controls v6 available? (os>=winxp)
