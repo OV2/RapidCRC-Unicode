@@ -64,16 +64,16 @@ DWORD WriteSfvHeader(CONST HANDLE hFile)
 }
 
 /*****************************************************************************
-DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], BOOL bIsSfv)
+DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], UINT uiMode)
 	hFile		    : (IN) handle to an open file
 	szFilename	    : (IN) string of the filename that we want to write into the hash file
 	szHashResult	: (IN) string of the hash result
-    bIsSfv          : (IN) is this a sfv hash
+    uiMode          : (IN) type of hash file
 
 Return Value:
 - returns NOERROR or GetLastError()
 *****************************************************************************/
-DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], BOOL bIsSfv)
+DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], UINT uiMode)
 {
 	TCHAR szFilenameTemp[MAX_PATH_EX];
 	TCHAR szLine[MAX_LINE_LENGTH];
@@ -89,12 +89,15 @@ DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CON
 		    ReplaceChar(szFilenameTemp, MAX_PATH_EX, TEXT('\\'), TEXT('/'));
     }
 
-    if(bIsSfv)
+    if(uiMode == MODE_SFV || uiMode == MODE_CRC32C)
         StringCchPrintf(szLine, MAX_LINE_LENGTH, TEXT("%s %s%s"), szFilenameTemp,
 		    szHashResult, g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
-    else
-        StringCchPrintf(szLine, MAX_LINE_LENGTH, TEXT("%s *%s%s"), szHashResult,
-		    szFilenameTemp, g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
+	else
+	{
+		const TCHAR *psz_format = uiMode == MODE_BLAKE3 ? TEXT("%s  %s%s") : TEXT("%s *%s%s");
+		StringCchPrintf(szLine, MAX_LINE_LENGTH, psz_format, szHashResult,
+			szFilenameTemp, g_program_options.bCreateUnixStyle ? TEXT("\n") : TEXT("\r\n"));
+	}
 
 	StringCbLength(szLine, MAX_LINE_LENGTH, & stStringLength);
 

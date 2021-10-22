@@ -647,7 +647,7 @@ BOOL GetDataViaPipe(CONST HWND arrHwnd[ID_NUM_WINDOWS],lFILEINFO *fileList);
 //SFV and MD5 functions (sfvfcts.cpp)
 DWORD WriteSfvHeader(CONST HANDLE hFile);
 BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode);
-DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], BOOL bIsSfv);
+DWORD WriteHashLine(CONST HANDLE hFile, CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR szHashResult[RESULT_AS_STRING_MAX_LENGTH], UINT uiMode);
 DWORD WriteFileComment(CONST HANDLE hFile, CONST FILEINFO *pFileInfo, UINT startChar);
 #ifdef UNICODE
 BOOL WriteCurrentBOM(CONST HANDLE hFile);

@@ -621,7 +621,7 @@ static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *
             const TCHAR *szFilename = pFileinfo->szFilename;
                 if(!g_program_options.bSaveAbsolutePaths[uiMode])
                     szFilename = GetFilenameWithoutPathPointer(pFileinfo->szFilename);
-            dwResult = WriteHashLine(hFile, szFilename, pFileinfo->hashInfo[uiMode].szResult, uiMode == MODE_SFV);
+            dwResult = WriteHashLine(hFile, szFilename, pFileinfo->hashInfo[uiMode].szResult, uiMode);
 
             CloseHandle(hFile);
 
@@ -707,7 +707,7 @@ static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode,CONST TCHAR szChkSu
                 if(!g_program_options.bSaveAbsolutePaths[uiMode])
                     szFilename = GetFilenameWithoutPathPointer((*it)->szFilenameShort);
 
-                dwResult = WriteHashLine(hFile, szFilename, (*it)->hashInfo[uiMode].szResult, uiMode == MODE_SFV);
+                dwResult = WriteHashLine(hFile, szFilename, (*it)->hashInfo[uiMode].szResult, uiMode);
 
 			    if(dwResult != NOERROR){
 				    CloseHandle(hFile);
@@ -841,10 +841,9 @@ static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CON
 	    }
     }
 
-    BOOL bIsSfv = (uiMode == MODE_SFV || uiMode == MODE_CRC32C);
 	for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
         
-        dwResult = WriteHashLine(hFile, (*it)->szFilename.GetString() + uiSameCharCount, (*it)->hashInfo[uiMode].szResult, bIsSfv);
+        dwResult = WriteHashLine(hFile, (*it)->szFilename.GetString() + uiSameCharCount, (*it)->hashInfo[uiMode].szResult, uiMode);
 		
 		if(dwResult != NOERROR){
 			CloseHandle(hFile);
