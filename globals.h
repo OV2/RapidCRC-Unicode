@@ -119,7 +119,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_BLAKE2SP        10
 #define CMD_BLAKE3          11
 #define CMD_NAME			100
-#define CMD_NTFS			22
+#define CMD_NTFS			200
 #define CMD_REPARENT		23
 #define CMD_ALLHASHES       24
 #define CMD_FORCE_BSD       25
@@ -260,6 +260,8 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_SUBMENU_CLIPBOARD		107
 
 #define IDM_CRC_FILENAME            1
+
+#define IDM_CRC_STREAM				1
 
 #define IDM_CRC_SFV                 1
 #define IDM_SHA1                    1
@@ -540,8 +542,8 @@ extern UINT g_hash_column_widths[];
 //action functions (actfcts.cpp)
 VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], UINT uiHashType);
 VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], BOOL noPrompt, list<FILEINFO*> *finalList, UINT uiHashType);
-VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
-VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList);
+VOID ActionHashIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS], UINT uiHashType);
+VOID ActionHashIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS], BOOL noPrompt, list<FILEINFO*> *finalList, UINT uiHashType);
 BOOL OpenFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS]);
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode);
 DWORD CreateChecksumFiles(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode,list<FILEINFO*> *finalList);
@@ -578,6 +580,7 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
 VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStatus);
 void CreateListViewPopupMenu(HMENU *menu);
 void CreateHashFilenameButtonPopupMenu(HMENU *menu);
+void CreateHashStreamButtonPopupMenu(HMENU *menu);
 void CreateBlakeButtonPopupMenu(HMENU *menu);
 void CreateShaButtonPopupMenu(HMENU *menu);
 void CreateCrcButtonPopupMenu(HMENU *menu);

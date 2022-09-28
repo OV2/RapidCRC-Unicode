@@ -29,7 +29,7 @@ static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *
 static DWORD CreateChecksumFiles_OnePerDir(CONST UINT uiMode, CONST TCHAR szChkSumFilename[MAX_PATH_EX], list<FILEINFO*> *finalList);
 static DWORD CreateChecksumFiles_OneFile(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename);
 static DWORD CreateChecksumFiles_OnePerJob(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMode, list<FILEINFO*> *finalList, BOOL askForFilename);
-static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult);
+static BOOL SaveHashIntoStream(TCHAR CONST *szFileName, const TCHAR * szResult, UINT uiHashType);
 void UpdateFileInfoStatus(FILEINFO *pFileInfo, const HWND hwndListView);
 
 /*****************************************************************************
@@ -67,11 +67,11 @@ Notes:
 	- wrapper for the three parameter version
 	- calls FillFinalList to get its list
 *****************************************************************************/
-VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+VOID ActionHashIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS], UINT uiHashType)
 {
 	list<FILEINFO*> finalList;
 
-	if(CheckIfRehashNecessary(arrHwnd, MODE_SFV, CMD_NTFS))
+	if(CheckIfRehashNecessary(arrHwnd, uiHashType, CMD_NTFS + uiHashType))
 		return;
 
 	FillFinalList(arrHwnd[ID_LISTVIEW],&finalList,ListView_GetSelectedCount(arrHwnd[ID_LISTVIEW]));
@@ -80,7 +80,7 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS])
 		finalList.unique(ListPointerUniqFunction);
 	}
 
-	ActionCrcIntoStream(arrHwnd,FALSE,&finalList);
+	ActionHashIntoStream(arrHwnd,FALSE,&finalList, uiHashType);
 }
 
 /*****************************************************************************
@@ -96,7 +96,7 @@ Notes:
 	- Adds the CRC value to the files as a secondary NTFS stream (:CRC32)
 	- noPrompt is used to suppress the prompt when called by the shell extension
 *****************************************************************************/
-VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList)
+VOID ActionHashIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList, UINT uiHashType)
 {
 	TCHAR szFilenameTemp[MAX_PATH_EX];
 	BOOL bAFileWasProcessed;
@@ -107,18 +107,18 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<F
 
 	if(noPrompt || MessageBox(arrHwnd[ID_MAIN_WND],
 				(uiNumSelected?
-				TEXT("\'OK\' to put the CRC value into the stream of the selected files"):
-				TEXT("\'OK\' to put the CRC value into the stream of the files that are missing a CRC (the \'blue\' ones)")),
+				TEXT("\'OK\' to put the hash value into the stream of the selected files"):
+				TEXT("\'OK\' to put the hash value into the stream of the files that are missing a hash (the \'blue\' ones)")),
 				TEXT("Question"),
 				MB_OKCANCEL | MB_ICONQUESTION | MB_APPLMODAL | MB_SETFOREGROUND) == IDOK){
 		bAFileWasProcessed = FALSE;
 		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 			pFileinfo = (*it);
-            if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && (!(CRCI(pFileinfo).dwFound)) ){
+            if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && !(pFileinfo->hashInfo[uiHashType].dwFound) ){
 					bAFileWasProcessed = TRUE;
-					if(SaveCRCIntoStream(pFileinfo->szFilename,CRCI(pFileinfo).r.dwCrc32Result)){
-						CRCI(pFileinfo).f.dwCrc32Found = CRCI(pFileinfo).r.dwCrc32Result;
-						CRCI(pFileinfo).dwFound = HASH_FOUND_STREAM;
+					if(SaveHashIntoStream(pFileinfo->szFilename, pFileinfo->hashInfo[uiHashType].szResult, uiHashType)){
+						memcpy((BYTE *)&pFileinfo->hashInfo[uiHashType].f, (BYTE *)&pFileinfo->hashInfo[uiHashType].r, g_hash_lengths[uiHashType]);
+						pFileinfo->hashInfo[uiHashType].dwFound = HASH_FOUND_STREAM;
                         UpdateFileInfoStatus(pFileinfo, arrHwnd[ID_LISTVIEW]);
 					}
 					else{
@@ -135,31 +135,37 @@ VOID ActionCrcIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<F
 			DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 		}
 		else
-			MessageBox(arrHwnd[ID_MAIN_WND], TEXT("No files missing a CRC found"), TEXT("Info"), MB_OK);
+			MessageBox(arrHwnd[ID_MAIN_WND], TEXT("No files missing a hash found"), TEXT("Info"), MB_OK);
 	}
 	return;
 }
 
 /*****************************************************************************
-VOID SaveCRCIntoStream(TCHAR *szFileName,DWORD crcResult)
+VOID SaveHashIntoStream(TCHAR CONST *szFileName, const TCHAR * szResult, UINT uiHashType)
 	szFileName : (IN) target file to write crcResult into
-    crcResult  : (IN) the CRC value to write
+    szResult   : (IN) the HASH value to write
+	uiHashType : (IN) hash type to write the value for
 
 Return Value:
 	returns true if the operation succeded, false otherwise
 
 Notes:
-	helper function for ActionCrcIntoStream - this is the actual writing logic
+	helper function for ActionHashIntoStream - this is the actual writing logic
 *****************************************************************************/
-static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult) {
+static BOOL SaveHashIntoStream(TCHAR CONST *szFileName, const TCHAR * szResult, UINT uiHashType) {
 	TCHAR szFileOut[MAX_PATH_EX]=TEXT("");
-	CHAR szCrcInHex[9];
+	CHAR szHashUtf8[RESULT_AS_STRING_MAX_LENGTH];
 	HANDLE hFile;
 	DWORD NumberOfBytesWritten;
 
-	StringCchPrintfA(szCrcInHex, 9, "%08X", crcResult );
+	// historically the hash was saved as a char string, so we keep doing this
+	int hashStringLen = WideCharToMultiByte(CP_UTF8, 0, szResult, -1, szHashUtf8, RESULT_AS_STRING_MAX_LENGTH, NULL, NULL);
+	if (!hashStringLen)
+		return FALSE;
+
 	StringCchCopy(szFileOut, MAX_PATH_EX, szFileName);
-	StringCchCat(szFileOut, MAX_PATH_EX, TEXT(":CRC32"));
+	StringCchCat(szFileOut, MAX_PATH_EX, TEXT(":"));
+	StringCchCat(szFileOut, MAX_PATH_EX, g_hash_names[uiHashType]);
 	hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 	if (hFile == INVALID_HANDLE_VALUE) {
 		return FALSE;
@@ -169,7 +175,7 @@ static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult) {
 	FILETIME ftModified;
 	BOOL bFtValid = GetFileTime(hFile, NULL, NULL, &ftModified);
 
-	if(!WriteFile(hFile, &szCrcInHex, 8, &NumberOfBytesWritten, NULL)) {
+	if(!WriteFile(hFile, &szHashUtf8, hashStringLen, &NumberOfBytesWritten, NULL)) {
 		if (bFtValid) {
 			SetFileTime(hFile, NULL, NULL, &ftModified);
 		}
@@ -184,14 +190,15 @@ static BOOL SaveCRCIntoStream(TCHAR CONST *szFileName,DWORD crcResult) {
 }
 
 /*****************************************************************************
-VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS])
+VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], UINT uiHashType)
 	arrHwnd : (IN) window handle array
+	uiHashType : (IN) hash type to save in file name
 
 Return Value:
 	returns nothing
 
 Notes:
-	- wrapper for the three parameter version
+	- wrapper for the four parameter version
 	- calls FillFinalList to get its list
 *****************************************************************************/
 VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], UINT uiHashType)
@@ -210,10 +217,11 @@ VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], UINT uiHashType)
 }
 
 /*****************************************************************************
-VOID ActionCrcIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<FILEINFO*> *finalList)
+VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], BOOL noPrompt, list<FILEINFO*> *finalList, UINT uiHashType)
 	arrHwnd		: (IN) window handle array
 	noPrompt	: (IN) determines if confirmation prompt is displayed
-	finalList	: (IN) pointer to list of fileinfo pointers on which the action is to be performed
+	finalList	: (IN) pointer to list of fileinfo pointers on which the action is to be performed3
+	uiHashType  : (IN) hash type to save in file name
 
 Return Value:
 	returns nothing

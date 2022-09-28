@@ -21,7 +21,6 @@
 #include "globals.h"
 #include "CSyncQueue.h"
 
-static DWORD GetTypeOfPath(CONST TCHAR szPath[MAX_PATH_EX]);
 static VOID SetBasePath(lFILEINFO *fileList);
 
 /*****************************************************************************
@@ -289,40 +288,107 @@ BOOL HasFileExtension(CONST TCHAR szFilename[MAX_PATH_EX], CONST TCHAR *szExtens
 }
 
 /*****************************************************************************
-BOOL GetCrcFromStream(TCHAR szFilename[MAX_PATH_EX], DWORD * pdwFoundCrc)
-	szFilename		: (IN) string; assumed to be the szFilename member of the
+BOOL GetHashFromStream(TCHAR CONST *szFileName, BYTE * abResult, UINT uiHashType)
+	szFileName		: (IN) string; assumed to be the szFilename member of the
 						   FILEINFO struct
-	pdwFoundCrc		: (OUT) return value is TRUE this parameter is set to the found
-							CRC32 as a DWORD
+	abResult		: (IN, OUT) return value is TRUE if the bytes this parameter
+							points to are set to the HASH byte values
+    uiHashType      : (IN) hash type to look for
 
 Return Value:
-	returns TRUE if a CRC was found in the :CRC32 stream. Otherwise FALSE
+	returns TRUE if a HASH was found in the :<HASHNAME> stream. Otherwise FALSE
 
 *****************************************************************************/
-BOOL GetCrcFromStream(TCHAR CONST *szFileName, DWORD * pdwFoundCrc)
+BOOL GetHashFromStream(TCHAR CONST *szFileName, BYTE * abResult, UINT uiHashType)
 {
-	BOOL bFound;
-	CHAR szCrc[9];
-	TCHAR szCrcUnicode[9];
-	TCHAR szFileIn[MAX_PATH_EX+6]=TEXT("");
-	bFound = FALSE;
 	HANDLE hFile;
 	DWORD NumberOfBytesRead;
+	UINT hashLength = g_hash_lengths[uiHashType];
+	UINT hashLengthChars = hashLength * 2;
 
-	StringCchCopy(szFileIn, MAX_PATH_EX+6, szFileName);
-	StringCchCat(szFileIn, MAX_PATH_EX+6, TEXT(":CRC32"));
-	hFile = CreateFile(szFileIn, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
-	if(hFile == INVALID_HANDLE_VALUE) return FALSE;
-	if(!ReadFile(hFile, &szCrc, 8, &NumberOfBytesRead, NULL)) {
+	CString szStream(szFileName);
+	szStream.AppendFormat(TEXT(":%s"), g_hash_names[uiHashType]);
+	std::vector<CHAR> charsHashAnsi(hashLengthChars);
+	std::vector<TCHAR> charsHash(hashLengthChars);
+
+	hFile = CreateFile(szStream, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN , 0);
+	if (hFile == INVALID_HANDLE_VALUE)
+	{
+		return FALSE;
+	}
+	if(!ReadFile(hFile, charsHashAnsi.data(), hashLengthChars, &NumberOfBytesRead, NULL)) {
 		CloseHandle(hFile);
 		return FALSE;
 	}
     // since we read individual bytes, we have to transfer them into a TCHAR array (for HexToDword)
-	UnicodeFromAnsi(szCrcUnicode,9,szCrc);
+	UnicodeFromAnsi(charsHash.data(), hashLengthChars, charsHashAnsi.data());
 	CloseHandle(hFile);
-	(*pdwFoundCrc) = HexToDword(szCrcUnicode, 8);
+	
+	for (int i = 0; i < hashLength; i++)
+	{
+		*(abResult + i) = (BYTE)HexToDword(&charsHash[i * 2], 2);
+	}
 
 	return TRUE;
+}
+
+/*****************************************************************************
+BOOL GetHashFromStreams(FILEINFO *fileInfo)
+	fileInfo		: (IN, OUT) fileInfo to check for hashes in streams,
+	                            found hashes will be stored in the corresponding
+								hashinfo
+
+Return Value:
+	returns TRUE if a HASH was found in any stream. Otherwise FALSE
+
+*****************************************************************************/
+BOOL GetHashFromStreams(FILEINFO *fileInfo)
+{
+	BOOL found = FALSE;
+	WIN32_FIND_STREAM_DATA streamData;
+	HANDLE searchHandle = FindFirstStreamW(fileInfo->szFilename, FindStreamInfoStandard, &streamData, 0);
+	if (searchHandle != INVALID_HANDLE_VALUE)
+	{
+		// first stream is always ::$DATA, we can skip this
+		while(FindNextStreamW(searchHandle, &streamData))
+		{
+			CString streamname(streamData.cStreamName);
+			int start = 1;
+			streamname = streamname.Tokenize(TEXT(":"), start);
+			int uiHashType = -1;
+			for (int i = 0; i < NUM_HASH_TYPES; i++)
+			{
+				// check if the stream name corresponds to a hash type
+				if (streamname.Compare(g_hash_names[i]) == 0 && (streamData.StreamSize.QuadPart >= g_hash_lengths[i] * 2))
+				{
+					uiHashType = i;
+					break;
+				}
+			}
+			if (uiHashType >= 0)
+			{
+				BOOL ret = GetHashFromStream(fileInfo->szFilename, (BYTE*)(&fileInfo->hashInfo[uiHashType].f), uiHashType);
+				if (ret)
+				{
+					found = TRUE;
+					fileInfo->hashInfo[uiHashType].dwFound = HASH_FOUND_STREAM;
+				}
+				// need to reverse bytes for crc types (DWORDS are low byte before high byte)
+				if (uiHashType == HASH_TYPE_CRC32 || uiHashType == HASH_TYPE_CRC32C)
+				{
+					DWORD reversedCrc = 0;
+					BYTE *crc = (BYTE*)(&fileInfo->hashInfo[uiHashType].f);
+					for (int i = 0; i < 4; i++)
+					{
+						*((BYTE *)&reversedCrc + i) = crc[3 - i];
+					}
+					fileInfo->hashInfo[uiHashType].f.dwCrc32Found = reversedCrc; // f is union, no special case for crc32c needed
+				}
+			}
+		}
+		FindClose(searchHandle);
+	}
+	return found;
 }
 
 /*****************************************************************************
@@ -650,12 +716,13 @@ VOID ProcessFileProperties(lFILEINFO *fileList)
 			if ((*it).dwError == NO_ERROR){
 				fileList->qwFilesizeSum += (*it).qwFilesize;
 
-				if(fileList->uiRapidCrcMode == MODE_NORMAL)
-                    if(!GetHashFromFilename(&(*it)))
-					    if(GetCrcFromStream((*it).szFilename, & (*it).hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found))
-						    (*it).hashInfo[HASH_TYPE_CRC32].dwFound = HASH_FOUND_STREAM;
-					    else
-						    (*it).hashInfo[HASH_TYPE_CRC32].dwFound = HASH_FOUND_NONE;
+				if (fileList->uiRapidCrcMode == MODE_NORMAL)
+				{
+					if (!GetHashFromFilename(&(*it)))
+					{
+						GetHashFromStreams(&(*it));
+					}
+				}
 			}
 		}
 

@@ -61,7 +61,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static UINT uiThreadID;
 	static DWORD dwSortStatus;
 	static SHOWRESULT_PARAMS showresult_params = {NULL, FALSE, FALSE};
-	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, shaPopup, crcPopup, blakePopup;
+	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, hashInStreamPopup, shaPopup, crcPopup, blakePopup;
     static std::list<UINT> fileThreadIds;
     static int iTimerCount; 
 	lFILEINFO *fileList;
@@ -83,6 +83,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		CreateListViewPopupMenu(&popupMenu);
         CreateListViewHeaderPopupMenu(&headerPopupMenu);
         CreateHashFilenameButtonPopupMenu(&hashInNamePopup);
+		CreateHashStreamButtonPopupMenu(&hashInStreamPopup);
 		CreateBlakeButtonPopupMenu(&blakePopup);
         CreateShaButtonPopupMenu(&shaPopup);
         CreateCrcButtonPopupMenu(&crcPopup);
@@ -133,7 +134,19 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             if(ret)
                 CreateChecksumFiles(arrHwnd, ret - IDM_CRC_SFV);
             return 0;
-        }
+        } else if ((HWND)wParam == arrHwnd[ID_BTN_CRC_IN_STREAM]) {
+			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
+			if (x == -1 && y == -1) {
+				POINT pt = { 0, 0 };
+				ClientToScreen(arrHwnd[ID_BTN_CRC_IN_STREAM], &pt);
+				x = pt.x;
+				y = pt.y;
+			}
+			int ret = TrackPopupMenu(hashInStreamPopup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_CRC_IN_STREAM], NULL);
+			if (ret)
+				ActionHashIntoStream(arrHwnd, ret - IDM_CRC_STREAM);
+			return 0;
+		}
         break;
 	case WM_NOTIFY:
 		switch(wParam)
@@ -327,7 +340,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			    break;
 		    case ID_BTN_CRC_IN_STREAM:
 			    if(HIWORD(wParam) == BN_CLICKED){
-				    ActionCrcIntoStream(arrHwnd);
+				    ActionHashIntoStream(arrHwnd, HASH_TYPE_CRC32);
 				    return 0;
 			    }
 			    break;

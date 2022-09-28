@@ -341,8 +341,8 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 				finalList.push_back(&(*it));
 			}
 			finalList.sort(ListPointerCompFunction);
-			if (fileList->uiCmdOpts == CMD_NTFS) {
-				ActionCrcIntoStream(arrHwnd, TRUE, &finalList);
+			if (fileList->uiCmdOpts >= CMD_NTFS) {
+				ActionHashIntoStream(arrHwnd, TRUE, &finalList, fileList->uiCmdOpts - CMD_NTFS);
 			}
 			else if (fileList->uiCmdOpts >= CMD_NAME) {
 				ActionHashIntoFilename(arrHwnd, TRUE, &finalList, fileList->uiCmdOpts - CMD_NAME);

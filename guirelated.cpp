@@ -275,6 +275,22 @@ void CreateHashFilenameButtonPopupMenu(HMENU *menu) {
 }
 
 /*****************************************************************************
+void CreateHashStreamButtonPopupMenu(HMENU *menu)
+
+*****************************************************************************/
+void CreateHashStreamButtonPopupMenu(HMENU *menu) {
+	*menu = CreatePopupMenu();
+	TCHAR menuText[100];
+
+	for (int i = 0; i < NUM_HASH_TYPES; i++) {
+		if (i == 2) continue;
+		StringCchPrintf(menuText, 100, TEXT("Put %s into Stream"), g_hash_names[i]);
+		InsertMenu(*menu, i, MF_BYPOSITION | MF_STRING, IDM_CRC_STREAM + i, menuText);
+	}
+}
+
+
+/*****************************************************************************
 void CreateBlakeButtonPopupMenu(HMENU *menu)
 
 *****************************************************************************/
