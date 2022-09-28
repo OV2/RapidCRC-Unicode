@@ -324,7 +324,7 @@ BOOL GetHashFromStream(TCHAR CONST *szFileName, BYTE * abResult, UINT uiHashType
 	UnicodeFromAnsi(charsHash.data(), hashLengthChars, charsHashAnsi.data());
 	CloseHandle(hFile);
 	
-	for (int i = 0; i < hashLength; i++)
+	for (UINT i = 0; i < hashLength; i++)
 	{
 		*(abResult + i) = (BYTE)HexToDword(&charsHash[i * 2], 2);
 	}

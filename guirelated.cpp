@@ -331,7 +331,6 @@ void CreateListViewPopupMenu(HMENU *menu)
 *****************************************************************************/
 void CreateListViewPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
-    TCHAR menuText[100];
 
 	AppendMenu(*menu, MF_STRING, IDM_SELECT_ALL, TEXT("Select All"));
 	AppendMenu(*menu, MF_STRING, IDM_SELECT_NONE, TEXT("Select None"));
