@@ -123,13 +123,9 @@ FILEINFO_STATUS InfoToIntValue(FILEINFO * pFileinfo)
 		iResult = STATUS_ERROR;
 	else {
         for(int i=0; i < NUM_HASH_TYPES; i++) {
-            if(pFileinfo->hashInfo.find(i) != pFileinfo->hashInfo.end() && pFileinfo->hashInfo[i].dwFound) {
+            if(pFileinfo->hashInfo.count(i) > 0 && pFileinfo->hashInfo[i].dwFound) {
                 if( (pFileinfo->parentList->bCalculated[i]) ){
-                    bool bOk = false;
-                    if(i == HASH_TYPE_CRC32)
-                        bOk = (CRCI(pFileinfo).r.dwCrc32Result == CRCI(pFileinfo).f.dwCrc32Found);
-                    else
-                        bOk = (memcmp( &pFileinfo->hashInfo[i].r,
+                    bool bOk = (memcmp( &pFileinfo->hashInfo[i].r,
                                    &pFileinfo->hashInfo[i].f,
                                    g_hash_lengths[i] ) == 0);
                     if(bOk)
