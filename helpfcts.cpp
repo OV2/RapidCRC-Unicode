@@ -683,6 +683,9 @@ VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
     }
 
     for(int i=0;i<NUM_HASH_TYPES;i++) {
+		// skip if not found, otherwise we insert into map
+		if (pFileinfo->hashInfo.count(i) == 0)
+			continue;
         CString &rPrint = pFileinfo->hashInfo[i].szResult;
         rPrint = TEXT("");
         if(fileList->bCalculated[i] && pFileinfo->dwError == NOERROR) {
