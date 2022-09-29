@@ -114,7 +114,7 @@ VOID ActionHashIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<
 		bAFileWasProcessed = FALSE;
 		for(list<FILEINFO*>::iterator it=finalList->begin();it!=finalList->end();it++) {
 			pFileinfo = (*it);
-            if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && !(pFileinfo->hashInfo[uiHashType].dwFound) ){
+            if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && pFileinfo->hashInfo[uiHashType].dwFound != HASH_FOUND_STREAM){
 					bAFileWasProcessed = TRUE;
 					if(SaveHashIntoStream(pFileinfo->szFilename, pFileinfo->hashInfo[uiHashType].szResult, uiHashType)){
 						memcpy((BYTE *)&pFileinfo->hashInfo[uiHashType].f, (BYTE *)&pFileinfo->hashInfo[uiHashType].r, g_hash_lengths[uiHashType]);
