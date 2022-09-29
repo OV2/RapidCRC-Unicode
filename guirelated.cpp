@@ -981,7 +981,6 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 	TCHAR szTemp2[MAX_RESULT_LINE];
 	TCHAR szFormatString[MAX_RESULT_LINE];
 	DOUBLE fSize;
-	BOOL bAreHashesEqual;
 
     for(int i=0;i<NUM_HASH_TYPES;i++) {
         pshowresult_params->bHashIsWrong[i] = FALSE;
@@ -1035,7 +1034,6 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08X  =>  %08X found in SFV file"), CRCI(pFileinfo).r.dwCrc32Result, CRCI(pFileinfo).f.dwCrc32Found );
 					else
 						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08X  =>  %08X found in filename/stream"), CRCI(pFileinfo).r.dwCrc32Result, CRCI(pFileinfo).f.dwCrc32Found );
-					pshowresult_params->bHashIsWrong[HASH_TYPE_CRC32] = TRUE;
 				}
 				else
 					StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08X"), CRCI(pFileinfo).r.dwCrc32Result );
@@ -1061,7 +1059,6 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 					StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT("  =>  "));
 					StringCchCat(szTemp1, MAX_RESULT_LINE, szTemp2);
 					StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT(" found in MD5 file"));
-					pshowresult_params->bHashIsWrong[HASH_TYPE_MD5] = TRUE;
 				}
 			}
 			else
@@ -1096,7 +1093,6 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 					StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT("  =>  "));
 					StringCchCat(szTemp1, MAX_RESULT_LINE, szTemp2);
 					StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT(" found in SHA1 file"));
-					pshowresult_params->bHashIsWrong[HASH_TYPE_SHA1] = TRUE;
 				}
 			}
 			else
