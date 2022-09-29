@@ -985,6 +985,14 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 
     for(int i=0;i<NUM_HASH_TYPES;i++) {
         pshowresult_params->bHashIsWrong[i] = FALSE;
+		if (pFileinfo && pFileinfo->parentList->bCalculated[i] && pFileinfo->hashInfo[i].dwFound)
+		{
+			bool bOk = (memcmp(&pFileinfo->hashInfo[i].r, &pFileinfo->hashInfo[i].f, g_hash_lengths[i]) == 0);
+			if (!bOk)
+			{
+				pshowresult_params->bHashIsWrong[i] = TRUE;
+			}
+		}
     }
 
 	if(pFileinfo == NULL){
@@ -1022,7 +1030,7 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 		}
 		else{
             if(pFileinfo->parentList->bCalculated[HASH_TYPE_CRC32]){
-                if( (CRCI(pFileinfo).dwFound) && (CRCI(pFileinfo).r.dwCrc32Result != CRCI(pFileinfo).f.dwCrc32Found)){
+                if(pshowresult_params->bHashIsWrong[HASH_TYPE_CRC32]){
 					if(pFileinfo->parentList->uiRapidCrcMode == MODE_SFV)
 						StringCchPrintf(szTemp1, MAX_RESULT_LINE, TEXT("%08X  =>  %08X found in SFV file"), CRCI(pFileinfo).r.dwCrc32Result, CRCI(pFileinfo).f.dwCrc32Found );
 					else
@@ -1044,22 +1052,16 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 
 			if(pFileinfo->parentList->bCalculated[HASH_TYPE_MD5]){
 				StringCchCopy(szTemp1,MAX_RESULT_LINE,MD5I(pFileinfo).szResult);
-				if(MD5I(pFileinfo).dwFound){
-					bAreHashesEqual = TRUE;
-					for(INT i = 0; i < 16; ++i)
-						if(MD5I(pFileinfo).r.abMd5Result[i] != MD5I(pFileinfo).f.abMd5Found[i])
-							bAreHashesEqual = FALSE;
-					if(!bAreHashesEqual){
-						StringCchPrintf(szTemp2, MAX_RESULT_LINE, TEXT("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"),
-							MD5I(pFileinfo).f.abMd5Found[0], MD5I(pFileinfo).f.abMd5Found[1], MD5I(pFileinfo).f.abMd5Found[2], MD5I(pFileinfo).f.abMd5Found[3], 
-							MD5I(pFileinfo).f.abMd5Found[4], MD5I(pFileinfo).f.abMd5Found[5], MD5I(pFileinfo).f.abMd5Found[6], MD5I(pFileinfo).f.abMd5Found[7], 
-							MD5I(pFileinfo).f.abMd5Found[8], MD5I(pFileinfo).f.abMd5Found[9], MD5I(pFileinfo).f.abMd5Found[10], MD5I(pFileinfo).f.abMd5Found[11], 
-							MD5I(pFileinfo).f.abMd5Found[12], MD5I(pFileinfo).f.abMd5Found[13], MD5I(pFileinfo).f.abMd5Found[14], MD5I(pFileinfo).f.abMd5Found[15]);
-						StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT("  =>  "));
-						StringCchCat(szTemp1, MAX_RESULT_LINE, szTemp2);
-						StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT(" found in MD5 file"));
-						pshowresult_params->bHashIsWrong[HASH_TYPE_MD5] = TRUE;
-					}
+				if(pshowresult_params->bHashIsWrong[HASH_TYPE_MD5]){
+					StringCchPrintf(szTemp2, MAX_RESULT_LINE, TEXT("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"),
+						MD5I(pFileinfo).f.abMd5Found[0], MD5I(pFileinfo).f.abMd5Found[1], MD5I(pFileinfo).f.abMd5Found[2], MD5I(pFileinfo).f.abMd5Found[3], 
+						MD5I(pFileinfo).f.abMd5Found[4], MD5I(pFileinfo).f.abMd5Found[5], MD5I(pFileinfo).f.abMd5Found[6], MD5I(pFileinfo).f.abMd5Found[7], 
+						MD5I(pFileinfo).f.abMd5Found[8], MD5I(pFileinfo).f.abMd5Found[9], MD5I(pFileinfo).f.abMd5Found[10], MD5I(pFileinfo).f.abMd5Found[11], 
+						MD5I(pFileinfo).f.abMd5Found[12], MD5I(pFileinfo).f.abMd5Found[13], MD5I(pFileinfo).f.abMd5Found[14], MD5I(pFileinfo).f.abMd5Found[15]);
+					StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT("  =>  "));
+					StringCchCat(szTemp1, MAX_RESULT_LINE, szTemp2);
+					StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT(" found in MD5 file"));
+					pshowresult_params->bHashIsWrong[HASH_TYPE_MD5] = TRUE;
 				}
 			}
 			else
@@ -1084,23 +1086,17 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
 
 			if(pFileinfo->parentList->bCalculated[HASH_TYPE_SHA1]){
 				StringCchCopy(szTemp1,MAX_RESULT_LINE,SHA1I(pFileinfo).szResult);
-				if(SHA1I(pFileinfo).dwFound){
-					bAreHashesEqual = TRUE;
-					for(INT i = 0; i < 20; ++i)
-						if(SHA1I(pFileinfo).r.abSha1Result[i] != SHA1I(pFileinfo).f.abSha1Found[i])
-							bAreHashesEqual = FALSE;
-					if(!bAreHashesEqual){
-						StringCchPrintf(szTemp2, MAX_RESULT_LINE, TEXT("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"),
-							SHA1I(pFileinfo).f.abSha1Found[0], SHA1I(pFileinfo).f.abSha1Found[1], SHA1I(pFileinfo).f.abSha1Found[2], SHA1I(pFileinfo).f.abSha1Found[3], 
-							SHA1I(pFileinfo).f.abSha1Found[4], SHA1I(pFileinfo).f.abSha1Found[5], SHA1I(pFileinfo).f.abSha1Found[6], SHA1I(pFileinfo).f.abSha1Found[7], 
-							SHA1I(pFileinfo).f.abSha1Found[8], SHA1I(pFileinfo).f.abSha1Found[9], SHA1I(pFileinfo).f.abSha1Found[10], SHA1I(pFileinfo).f.abSha1Found[11], 
-							SHA1I(pFileinfo).f.abSha1Found[12], SHA1I(pFileinfo).f.abSha1Found[13], SHA1I(pFileinfo).f.abSha1Found[14], SHA1I(pFileinfo).f.abSha1Found[15],
-							SHA1I(pFileinfo).f.abSha1Found[16], SHA1I(pFileinfo).f.abSha1Found[17], SHA1I(pFileinfo).f.abSha1Found[18], SHA1I(pFileinfo).f.abSha1Found[19]);
-						StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT("  =>  "));
-						StringCchCat(szTemp1, MAX_RESULT_LINE, szTemp2);
-						StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT(" found in SHA1 file"));
-						pshowresult_params->bHashIsWrong[HASH_TYPE_SHA1] = TRUE;
-					}
+				if(pshowresult_params->bHashIsWrong[HASH_TYPE_SHA1]){
+					StringCchPrintf(szTemp2, MAX_RESULT_LINE, TEXT("%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x"),
+						SHA1I(pFileinfo).f.abSha1Found[0], SHA1I(pFileinfo).f.abSha1Found[1], SHA1I(pFileinfo).f.abSha1Found[2], SHA1I(pFileinfo).f.abSha1Found[3], 
+						SHA1I(pFileinfo).f.abSha1Found[4], SHA1I(pFileinfo).f.abSha1Found[5], SHA1I(pFileinfo).f.abSha1Found[6], SHA1I(pFileinfo).f.abSha1Found[7], 
+						SHA1I(pFileinfo).f.abSha1Found[8], SHA1I(pFileinfo).f.abSha1Found[9], SHA1I(pFileinfo).f.abSha1Found[10], SHA1I(pFileinfo).f.abSha1Found[11], 
+						SHA1I(pFileinfo).f.abSha1Found[12], SHA1I(pFileinfo).f.abSha1Found[13], SHA1I(pFileinfo).f.abSha1Found[14], SHA1I(pFileinfo).f.abSha1Found[15],
+						SHA1I(pFileinfo).f.abSha1Found[16], SHA1I(pFileinfo).f.abSha1Found[17], SHA1I(pFileinfo).f.abSha1Found[18], SHA1I(pFileinfo).f.abSha1Found[19]);
+					StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT("  =>  "));
+					StringCchCat(szTemp1, MAX_RESULT_LINE, szTemp2);
+					StringCchCat(szTemp1, MAX_RESULT_LINE, TEXT(" found in SHA1 file"));
+					pshowresult_params->bHashIsWrong[HASH_TYPE_SHA1] = TRUE;
 				}
 			}
 			else
