@@ -511,8 +511,8 @@ Notes:
 4.) if we have an .sfv file we process the .sfv file
 5.) call ProcessFileProperties to get file properties like size etc...
 6.) eventually sort the list (this seems pointless, will check in a later version)
-7.) sets bDoCalculate[HASH_TYPE_CRC32], bDoCalculate[HASH_TYPE_MD5] and bDoCalculate[HASH_TYPE_ED2K] of the job structure depending on in which
-	program mode we are and or if we want those by default. These values are passed by the caller to THREAD_CALC
+7.) sets bDoCalculate[] of the job structure depending on in which
+program mode we are and or if we want those by default. These values are passed by the caller to THREAD_CALC
 *****************************************************************************/
 VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
 					 SHOWRESULT_PARAMS * pshowresult_params,
@@ -559,8 +559,8 @@ VOID PostProcessList(CONST HWND arrHwnd[ID_NUM_WINDOWS],
         }
     }
 
-	if (fileList->uiCmdOpts == CMD_NTFS) {
-		fileList->bDoCalculate[HASH_TYPE_CRC32] = true;
+	if (fileList->uiCmdOpts >= CMD_NTFS) {
+		fileList->bDoCalculate[fileList->uiCmdOpts - CMD_NTFS] = true;
 	}
 	else if (fileList->uiCmdOpts >= CMD_NAME) {
 		fileList->bDoCalculate[fileList->uiCmdOpts - CMD_NAME] = true;
