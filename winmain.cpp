@@ -106,10 +106,12 @@ lFILEINFO *ParseCommandLine(BOOL *bPipeNecessary) {
 			}
 			else if(lstrcmpi(argv[2], TEXT("-PutNAME")) == 0)
 			{
+				g_pstatus.bStartedWithClosableShellExtAction = TRUE;
 				fileList->uiCmdOpts = CMD_NAME;
 			}
 			else if(lstrcmpi(argv[2], TEXT("-PutNTFS")) == 0)
 			{
+				g_pstatus.bStartedWithClosableShellExtAction = TRUE;
 				fileList->uiCmdOpts = CMD_NTFS;
 			}
 			else if(lstrcmpi(argv[2], TEXT("-Reparent")) == 0)

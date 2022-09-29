@@ -472,6 +472,7 @@ struct PROGRAM_OPTIONS_FILE {
 	TCHAR			szFilenameBlake3[MAX_PATH];
 	BOOL            bSaveAbsolutePathsBlake3;
 	BOOL			bUseUnbufferedReads;
+	BOOL			bCloseAfterActionFromShellExt;
     void            SetDefaults();
     PROGRAM_OPTIONS_FILE& operator=(const PROGRAM_OPTIONS& other);
 };
@@ -510,12 +511,14 @@ struct PROGRAM_OPTIONS {
     UINT            uiReadBufferSizeKb;
 	BOOL			bAlwaysUseNewWindow;
 	BOOL			bUseUnbufferedReads;
+	BOOL			bCloseAfterActionFromShellExt;
     PROGRAM_OPTIONS& operator=(const PROGRAM_OPTIONS_FILE& other);
 };
 
 typedef struct{
 	BOOL bHaveComCtrlv6;							//are the common controls v6 available? (os>=winxp)
     BOOL bIsVista;
+	BOOL bStartedWithClosableShellExtAction;
 }PROGRAM_STATUS;
 
 typedef struct{
