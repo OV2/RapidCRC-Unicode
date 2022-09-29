@@ -159,8 +159,8 @@ static BOOL SaveHashIntoStream(TCHAR CONST *szFileName, const TCHAR * szResult, 
 	DWORD NumberOfBytesWritten;
 
 	// historically the hash was saved as a char string, so we keep doing this
-	int hashStringLen = WideCharToMultiByte(CP_UTF8, 0, szResult, -1, szHashUtf8, RESULT_AS_STRING_MAX_LENGTH, NULL, NULL);
-	if (!hashStringLen)
+	int hashStringLen = (WideCharToMultiByte(CP_UTF8, 0, szResult, -1, szHashUtf8, RESULT_AS_STRING_MAX_LENGTH, NULL, NULL) - 1);
+	if (hashStringLen < 1)
 		return FALSE;
 
 	StringCchCopy(szFileOut, MAX_PATH_EX, szFileName);
