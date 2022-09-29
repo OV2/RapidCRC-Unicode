@@ -329,7 +329,7 @@ BOOL InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEIN
 		    if(! IsLegalHexSymbol(szLine[uiIndex]))
 			    bHashOK = FALSE;
 	    if(bHashOK){
-		    fileinfoTmp.hashInfo[uiMode].dwFound = TRUE;
+		    fileinfoTmp.hashInfo[uiMode].dwFound = HASH_FOUND_FILE;
 		    for(uiIndex=0; uiIndex < g_hash_lengths[uiMode]; ++uiIndex)
 			    *((BYTE *)&fileinfoTmp.hashInfo[uiMode].f + uiIndex) = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
 		    fileinfoTmp.dwError = NOERROR;
@@ -413,7 +413,7 @@ BOOL InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
 		    if(! IsLegalHexSymbol(szLastBrace[uiIndex]))
 			    bHashOK = FALSE;
 	    if(bHashOK){
-		    fileInfo->hashInfo[iHashIndex].dwFound = TRUE;
+		    fileInfo->hashInfo[iHashIndex].dwFound = HASH_FOUND_FILE;
             if(iHashIndex == HASH_TYPE_CRC32) {
                 fileInfo->hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found = HexToDword(szLastBrace, 8);
             } else {
