@@ -626,6 +626,7 @@ VOID ReplaceChar(TCHAR * szString, CONST size_t stBufferLength, CONST TCHAR tcIn
 #endif
 int CALLBACK BrowseFolderSetSelProc (HWND hWnd, UINT uMsg, LPARAM lParam, LPARAM lpData);
 void FormatRemaingTime(TCHAR *szBuffer, int seconds, int max_length);
+CString HashBytesToString(const BYTE *abBytes, UINT uiHashType);
 
 //path support functions (path_support.cpp)
 BOOL IsThisADirectory(CONST TCHAR szName[MAX_PATH_EX]);

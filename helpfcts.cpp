@@ -941,6 +941,22 @@ VOID FormatRemaingTime(TCHAR *szBuffer, int seconds, int max_length)
     }
 }
 
+CString HashBytesToString(const BYTE *abBytes, UINT uiHashType)
+{
+	CString s;
+	if (uiHashType == HASH_TYPE_CRC32 || uiHashType == HASH_TYPE_CRC32C)
+	{
+		s.Format(TEXT("%08X"), *((DWORD*)abBytes));
+	}
+	else
+	{
+		for (UINT j = 0; j < g_hash_lengths[uiHashType]; j++) {
+			s.AppendFormat(TEXT("%02x"), *(abBytes + j));
+		}
+	}
+	return s;
+}
+
 /*****************************************************************************
 VOID PROGRAM_OPTIONS_FILE::SetDefaults()
 
