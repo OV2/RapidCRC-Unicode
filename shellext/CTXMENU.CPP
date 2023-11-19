@@ -54,13 +54,13 @@ constexpr ctxMenuEntry menuEntries[] = {
 	{ IDM_SHA1, TEXT("Create SHA1"), TEXT("Opens the files with RapidCRC and creates an SHA1 File"), TEXT("RapidCRCCreateSHA1"), TEXT(" -CreateSHA1"), IDI_HASH_FILE															  },
 	{ IDM_SHA256, TEXT("Create SHA256"), TEXT("Opens the files with RapidCRC and creates an SHA256 File"), TEXT("RapidCRCCreateSHA256"), TEXT(" -CreateSHA256"), IDI_HASH_FILE													  },
 	{ IDM_SHA512, TEXT("Create SHA512"), TEXT("Opens the files with RapidCRC and creates an SHA512 File"), TEXT("RapidCRCCreateSHA512"), TEXT(" -CreateSHA512"), IDI_HASH_FILE													  },
-	{ IDM_SHA3_224, TEXT("Create SHA3-224"), TEXT("Opens the files with RapidCRC and puts the CRC into the Filename"), TEXT("RapidCRCPutName"), TEXT(" -CreateSHA3224"), IDI_HASH_FILE											  },
-	{ IDM_SHA3_256, TEXT("Create SHA3-256"), TEXT("Opens the files with RapidCRC and puts the CRC into an NTFS Stream"), TEXT("RapidCRCPutNTFS"), TEXT(" -CreateSHA3256"), IDI_HASH_FILE										  },
-	{ IDM_SHA3_512, TEXT("Create SHA3-512"), TEXT("Opens the files with RapidCRC and creates an SHA3-224 File"), TEXT("RapidCRCCreateSHA3_244"), TEXT(" -CreateSHA3512"), IDI_HASH_FILE											  },
-	{ IDM_BLAKE2SP, TEXT("Create BLAKE2SP"), TEXT("Opens the files with RapidCRC and creates an SHA3-256 File"), TEXT("RapidCRCCreateSHA3_256"), TEXT(" -CreateBLAKE2SP"), IDI_HASH_FILE										  },
-	{ IDM_BLAKE3, TEXT("Create BLAKE3"), TEXT("Opens the files with RapidCRC and creates an SHA3-512 File"), TEXT("RapidCRCCreateSHA3_512"), TEXT(" -CreateBLAKE3"), IDI_HASH_FILE												  },
-	{ IDM_NAME, TEXT("Put CRC in Filename"), TEXT("Opens the files with RapidCRC and creates an BLAKE2SP File"), TEXT("RapidCRCCreateBLAKE2SP"), TEXT(" -PutNAME"), IDI_HASH_FILE												  },
-	{ IDM_NTFS, TEXT("Put CRC in NTFS Stream"), TEXT("Opens the files with RapidCRC and creates an BLAKE3 File"), TEXT("RapidCRCCreateBLAKE3"), TEXT(" -PutNTFS"), IDI_HASH_FILE												  },
+	{ IDM_SHA3_224, TEXT("Create SHA3-224"), TEXT("Opens the files with RapidCRC and creates an SHA3-224 File"), TEXT("RapidCRCPutName"), TEXT(" -CreateSHA3224"), IDI_HASH_FILE											  },
+	{ IDM_SHA3_256, TEXT("Create SHA3-256"), TEXT("Opens the files with RapidCRC and creates an SHA3-256 File"), TEXT("RapidCRCPutNTFS"), TEXT(" -CreateSHA3256"), IDI_HASH_FILE										  },
+	{ IDM_SHA3_512, TEXT("Create SHA3-512"), TEXT("Opens the files with RapidCRC and creates an SHA3-512 File"), TEXT("RapidCRCCreateSHA3_244"), TEXT(" -CreateSHA3512"), IDI_HASH_FILE											  },
+	{ IDM_BLAKE2SP, TEXT("Create BLAKE2SP"), TEXT("Opens the files with RapidCRC and creates an BLAKE2SP File"), TEXT("RapidCRCCreateSHA3_256"), TEXT(" -CreateBLAKE2SP"), IDI_HASH_FILE										  },
+	{ IDM_BLAKE3, TEXT("Create BLAKE3"), TEXT("Opens the files with RapidCRC and creates an BLAKE3 File"), TEXT("RapidCRCCreateSHA3_512"), TEXT(" -CreateBLAKE3"), IDI_HASH_FILE												  },
+	{ IDM_NAME, TEXT("Put CRC in Filename"), TEXT("Opens the files with RapidCRC and puts the CRC into the Filename"), TEXT("RapidCRCCreateBLAKE2SP"), TEXT(" -PutNAME"), IDI_HASH_FILE												  },
+	{ IDM_NTFS, TEXT("Put CRC in NTFS Stream"), TEXT("Opens the files with RapidCRC and puts the CRC into an NTFS Stream"), TEXT("RapidCRCCreateBLAKE3"), TEXT(" -PutNTFS"), IDI_HASH_FILE												  },
 };
 
 //
