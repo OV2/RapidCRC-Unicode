@@ -31,12 +31,10 @@
 //
 // Initialize GUIDs (should be done only and at-least once per DLL/EXE)
 //
-#pragma data_seg(".text")
 #define INITGUID
 #include <initguid.h>
 #include <shlguid.h>
 #include "shellext.h"
-#pragma data_seg()
 
 //
 // Global variables
