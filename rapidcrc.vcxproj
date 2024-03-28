@@ -213,6 +213,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="COpenFileListener.cpp" />
+    <ClCompile Include="crc32.cpp" />
     <ClCompile Include="crc32c.cpp" />
     <ClCompile Include="CSyncQueue.cpp" />
     <ClCompile Include="dlgproc.cpp" />
@@ -266,6 +267,7 @@
     <ClInclude Include="blake3\blake3.h" />
     <ClInclude Include="blake3\blake3_impl.h" />
     <ClInclude Include="COpenFileListener.h" />
+    <ClInclude Include="crc32.h" />
     <ClInclude Include="crc32c.h" />
     <ClInclude Include="CSyncQueue.h" />
     <ClInclude Include="ed2k_hash.h" />
@@ -289,16 +291,6 @@
     <ClInclude Include="Utility.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="crc32x64.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">ml64.exe /c  /nologo /Fo"$(IntDir)crc32x64.obj" /W3 /Zi /errorReport:prompt  %(Filename)%(Extension)
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">$(IntDir)crc32x64.obj;%(Outputs)</Outputs>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">ml64.exe /c /Cx /Fo $(IntDir) "%(FullPath)"
-</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename).obj;%(Outputs)</Outputs>
-    </CustomBuild>
     <MASM Include="blake3\blake3_avx2_x86-64_windows_msvc.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -314,10 +306,6 @@
     <MASM Include="blake3\blake3_sse41_x86-64_windows_msvc.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </MASM>
-    <MASM Include="crc32x86.asm">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </MASM>
     <MASM Include="m5_win32.asm">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>

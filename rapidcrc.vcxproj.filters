@@ -129,6 +129,9 @@
     <ClCompile Include="blake3\blake3_sse41.c">
       <Filter>Source Files\blake3</Filter>
     </ClCompile>
+    <ClCompile Include="crc32.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="crc32c.h">
@@ -230,11 +233,11 @@
     <ClInclude Include="blake3\blake3_impl.h">
       <Filter>Source Files\blake3</Filter>
     </ClInclude>
+    <ClInclude Include="crc32.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <MASM Include="crc32x86.asm">
-      <Filter>Source Files</Filter>
-    </MASM>
     <MASM Include="m5_win32.asm">
       <Filter>Source Files</Filter>
     </MASM>
@@ -330,9 +333,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="crc32x64.asm">
-      <Filter>Source Files</Filter>
-    </CustomBuild>
     <CustomBuild Include="md5-ms-amd64-v2.asm">
       <Filter>Source Files</Filter>
     </CustomBuild>
