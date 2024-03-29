@@ -205,8 +205,8 @@ IDI_ICON_MODERN_OK2     ICON                    "icons\\ok_green.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 0,3,39,0
- PRODUCTVERSION 0,3,39,0
+ FILEVERSION 0,3,40,0
+ PRODUCTVERSION 0,3,40,0
  FILEFLAGSMASK 0x17L
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -222,12 +222,12 @@ BEGIN
         BLOCK "040704b0"
         BEGIN
             VALUE "FileDescription", "RapidCRC Unicode"
-            VALUE "FileVersion", "0.3.39.0"
+            VALUE "FileVersion", "0.3.40.0"
             VALUE "InternalName", "RapidCRC"
             VALUE "LegalCopyright", "Copyright (C) 2004 Sebastian Ewert"
             VALUE "OriginalFilename", "RapidCRC.exe"
             VALUE "ProductName", "RapidCRC Unicode"
-            VALUE "ProductVersion", "0.3.39.0"
+            VALUE "ProductVersion", "0.3.40.0"
         END
     END
     BLOCK "VarFileInfo"
