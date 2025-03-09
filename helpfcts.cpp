@@ -1022,13 +1022,21 @@ void PROGRAM_OPTIONS_FILE::SetDefaults()
     bCalcBlake2spPerDefault = FALSE;
     bDisplayBlake2spInListView = FALSE;
 	bAlwaysUseNewWindow = FALSE;
+
 	uiCreateFileModeBlake3 = CREATE_ONE_FILE;
 	StringCchPrintf(szFilenameBlake3, MAX_PATH, TEXT("checksum.%s"), g_hash_ext[HASH_TYPE_BLAKE3]);
 	bSaveAbsolutePathsBlake3 = 0;
 	bCalcBlake3PerDefault = FALSE;
 	bDisplayBlake3InListView = FALSE;
+
 	bUseUnbufferedReads = FALSE;
 	bCloseAfterActionFromShellExt = FALSE;
+
+    uiCreateFileModeXxh128 = CREATE_ONE_FILE;
+    StringCchPrintf(szFilenameXxh128, MAX_PATH, TEXT("checksum.%s"), g_hash_ext[HASH_TYPE_XXH128]);
+    bSaveAbsolutePathsXxh128 = 0;
+    bCalcXxh128PerDefault = FALSE;
+    bDisplayXxh128InListView = FALSE;
 }
 
 /*****************************************************************************
@@ -1100,6 +1108,12 @@ PROGRAM_OPTIONS_FILE& PROGRAM_OPTIONS_FILE::operator=(const PROGRAM_OPTIONS& oth
 	StringCchCopy(szFilenameBlake3, MAX_PATH, other.szFilename[HASH_TYPE_BLAKE3]);
 	bSaveAbsolutePathsBlake3 = other.bSaveAbsolutePaths[HASH_TYPE_BLAKE3];
 
+    bDisplayXxh128InListView = other.bDisplayInListView[HASH_TYPE_XXH128];
+    bCalcXxh128PerDefault = other.bCalcPerDefault[HASH_TYPE_XXH128];
+    uiCreateFileModeXxh128 = other.uiCreateFileMode[HASH_TYPE_XXH128];
+    StringCchCopy(szFilenameXxh128, MAX_PATH, other.szFilename[HASH_TYPE_XXH128]);
+    bSaveAbsolutePathsXxh128 = other.bSaveAbsolutePaths[HASH_TYPE_XXH128];
+
     return *this;
 }
 
@@ -1166,6 +1180,12 @@ PROGRAM_OPTIONS& PROGRAM_OPTIONS::operator=(const PROGRAM_OPTIONS_FILE& other)
 	uiCreateFileMode[HASH_TYPE_BLAKE3] = other.uiCreateFileModeBlake3;
 	StringCchCopy(szFilename[HASH_TYPE_BLAKE3], MAX_PATH, other.szFilenameBlake3);
 	bSaveAbsolutePaths[HASH_TYPE_BLAKE3] = other.bSaveAbsolutePathsBlake3;
+
+    bDisplayInListView[HASH_TYPE_XXH128] = other.bDisplayXxh128InListView;
+    bCalcPerDefault[HASH_TYPE_XXH128] = other.bCalcXxh128PerDefault;
+    uiCreateFileMode[HASH_TYPE_XXH128] = other.uiCreateFileModeXxh128;
+    StringCchCopy(szFilename[HASH_TYPE_XXH128], MAX_PATH, other.szFilenameXxh128);
+    bSaveAbsolutePaths[HASH_TYPE_XXH128] = other.bSaveAbsolutePathsXxh128;
 
     return *this;
 }

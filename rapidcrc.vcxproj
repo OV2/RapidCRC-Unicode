@@ -253,6 +253,8 @@
     <ClCompile Include="sortfcts.cpp" />
     <ClCompile Include="threadprocs.cpp" />
     <ClCompile Include="winmain.cpp" />
+    <ClCompile Include="xxhash\xxhash.c" />
+    <ClCompile Include="xxhash\xxh_x86dispatch.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="blake2\blake2-config.h" />
@@ -289,6 +291,8 @@
     <ClInclude Include="sha3\SnP-Relaned.h" />
     <ClInclude Include="sha512_ossl.h" />
     <ClInclude Include="Utility.hpp" />
+    <ClInclude Include="xxhash\xxhash.h" />
+    <ClInclude Include="xxhash\xxh_x86dispatch.h" />
   </ItemGroup>
   <ItemGroup>
     <MASM Include="blake3\blake3_avx2_x86-64_windows_msvc.asm">

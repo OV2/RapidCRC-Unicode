@@ -37,6 +37,7 @@ extern "C" {
 #include "crc32.h"
 #include "blake2\blake2.h"
 #include "blake3\blake3.h"
+#include "xxhash\xxhash.h"
 #include "CSyncQueue.h"
 
 DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
@@ -51,6 +52,7 @@ DWORD WINAPI ThreadProc_Sha3_512Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Crc32cCalc(VOID * pParam);
 DWORD WINAPI ThreadProc_Blake2spCalc(VOID * pParam);
 DWORD WINAPI ThreadProc_Blake3Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_xxhashCalc(VOID * pParam);
 
 // used in UINT __stdcall ThreadProc_Calc(VOID * pParam)
 #define SWAPBUFFERS() \
@@ -76,6 +78,7 @@ threadfunc hash_function[] = {
     ThreadProc_Crc32cCalc,
     ThreadProc_Blake2spCalc,
 	ThreadProc_Blake3Calc,
+    ThreadProc_xxhashCalc,
 };
 
 /*****************************************************************************
@@ -877,4 +880,32 @@ DWORD WINAPI ThreadProc_Blake3Calc(VOID * pParam)
 
 	SetEvent(hEvtThreadReady);
 	return 0;
+}
+
+DWORD WINAPI ThreadProc_xxhashCalc(VOID * pParam)
+{
+    BYTE ** CONST buffer = ((THREAD_PARAMS_HASHCALC *)pParam)->buffer;
+    DWORD ** CONST dwBytesRead = ((THREAD_PARAMS_HASHCALC *)pParam)->dwBytesRead;
+    CONST HANDLE hEvtThreadReady = ((THREAD_PARAMS_HASHCALC *)pParam)->hHandleReady;
+    CONST HANDLE hEvtThreadGo = ((THREAD_PARAMS_HASHCALC *)pParam)->hHandleGo;
+    BYTE * CONST result = (BYTE *)((THREAD_PARAMS_HASHCALC *)pParam)->result;
+    BOOL * CONST bFileDone = ((THREAD_PARAMS_HASHCALC *)pParam)->bFileDone;
+
+    // Allocate a state struct. Do not just use malloc() or new.
+    XXH3_state_t* state = XXH3_createState();
+    // Reset the state to start a new hashing session.
+    XXH3_128bits_reset(state);
+
+    do {
+        SignalObjectAndWait(hEvtThreadReady, hEvtThreadGo, INFINITE, FALSE);
+        XXH3_128bits_update(state, *buffer, **dwBytesRead);
+    } while (!(*bFileDone));
+
+    XXH128_hash_t xresult = XXH3_128bits_digest(state);
+    XXH128_canonicalFromHash((XXH128_canonical_t*)result, xresult);
+
+    XXH3_freeState(state);
+
+    SetEvent(hEvtThreadReady);
+    return 0;
 }

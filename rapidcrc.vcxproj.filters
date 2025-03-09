@@ -22,6 +22,9 @@
     <Filter Include="Source Files\blake3">
       <UniqueIdentifier>{e79fa07b-1668-47b3-9a9d-c42fa5821892}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\xxhash">
+      <UniqueIdentifier>{5a6db05a-ca10-4a3b-8f0a-0f9fc49b271e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="actfcts.cpp">
@@ -132,6 +135,12 @@
     <ClCompile Include="crc32.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="xxhash\xxhash.c">
+      <Filter>Source Files\xxhash</Filter>
+    </ClCompile>
+    <ClCompile Include="xxhash\xxh_x86dispatch.c">
+      <Filter>Source Files\xxhash</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="crc32c.h">
@@ -235,6 +244,12 @@
     </ClInclude>
     <ClInclude Include="crc32.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="xxhash\xxh_x86dispatch.h">
+      <Filter>Source Files\xxhash</Filter>
+    </ClInclude>
+    <ClInclude Include="xxhash\xxhash.h">
+      <Filter>Source Files\xxhash</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

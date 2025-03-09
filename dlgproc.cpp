@@ -699,6 +699,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         case IDC_CHECK_CRCC_DEFAULT:
         case IDC_CHECK_BLAKE2SP_DEFAULT:
 		case IDC_CHECK_BLAKE3_DEFAULT:
+        case IDC_CHECK_XXH128_DEFAULT:
 			if(HIWORD(wParam) == BN_CLICKED){
                 unsigned int offset = LOWORD(wParam) - IDC_CHECK_CRC_DEFAULT;
 				program_options_temp.bCalcPerDefault[offset] = (IsDlgButtonChecked(hDlg, LOWORD(wParam)) == BST_CHECKED);
@@ -717,6 +718,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         case IDC_CHECK_DISPLAY_CRCC_IN_LIST:
         case IDC_CHECK_DISPLAY_BLAKE2SP_IN_LIST:
 		case IDC_CHECK_DISPLAY_BLAKE3_IN_LIST:
+        case IDC_CHECK_DISPLAY_XXH128_IN_LIST:
 			if(HIWORD(wParam) == BN_CLICKED){
                 unsigned int offset = LOWORD(wParam) - IDC_CHECK_DISPLAY_CRC_IN_LIST;
                 program_options_temp.bDisplayInListView[offset] = (IsDlgButtonChecked(hDlg, LOWORD(wParam)) == BST_CHECKED);

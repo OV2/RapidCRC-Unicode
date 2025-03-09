@@ -87,7 +87,8 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define HASH_TYPE_CRC32C 9
 #define HASH_TYPE_BLAKE2SP 10
 #define HASH_TYPE_BLAKE3 11
-#define NUM_HASH_TYPES 12
+#define HASH_TYPE_XXH128 12
+#define NUM_HASH_TYPES 13
 
 // RapidCRC modes; also used in the action functions
 // Have to equal hash types
@@ -103,6 +104,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MODE_CRC32C             9
 #define MODE_BLAKE2SP           10
 #define MODE_BLAKE3             11
+#define MODE_XXH128             12
 #define MODE_BSD                21
 
 //CMDLINE Options for the shell extension
@@ -118,6 +120,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_CRC32C          9
 #define CMD_BLAKE2SP        10
 #define CMD_BLAKE3          11
+#define CMD_XXH128          12
 #define CMD_NAME			100
 #define CMD_NTFS			200
 #define CMD_REPARENT		23
@@ -194,8 +197,9 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_STATIC_CRCC_VALUE        13
 #define ID_STATIC_BLAKE2SP_VALUE    14
 #define ID_STATIC_BLAKE3_VALUE      15
-#define ID_STATIC_INFO				16
-#define ID_MAX_STATIC               16
+#define ID_STATIC_XXH128_VALUE      16
+#define ID_STATIC_INFO				17
+#define ID_MAX_STATIC               17
 
 #define ID_STATIC_STATUS			21
 #define ID_STATIC_CREATE            22
@@ -230,19 +234,20 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_EDIT_CRCC_VALUE          48
 #define ID_EDIT_BLAKE2SP_VALUE      49
 #define ID_EDIT_BLAKE3_VALUE        50
+#define ID_EDIT_XXH128_VALUE        51
 
-#define ID_EDIT_INFO				51
-#define ID_EDIT_STATUS				52
-#define ID_BTN_ERROR_DESCR			53
+#define ID_EDIT_INFO				52
+#define ID_EDIT_STATUS				53
+#define ID_BTN_ERROR_DESCR			54
 
-#define ID_BTN_PLAY_PAUSE			54
-#define ID_BTN_STOP     			55
+#define ID_BTN_PLAY_PAUSE			55
+#define ID_BTN_STOP     			56
 
-#define ID_COMBO_PRIORITY			56
-#define ID_BTN_OPENFILES_PAUSE		57
-#define ID_LAST_TAB_CONTROL			57
+#define ID_COMBO_PRIORITY			57
+#define ID_BTN_OPENFILES_PAUSE		58
+#define ID_LAST_TAB_CONTROL			58
 
-#define ID_NUM_WINDOWS				58
+#define ID_NUM_WINDOWS				59
 
 #define IDM_COPY_CRC				1
 // needs space for all hash types
@@ -279,6 +284,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_CRCC_COLUMN             10
 #define IDM_BLAKE2SP_COLUMN         11
 #define IDM_BLAKE3_COLUMN           12
+#define IDM_XXHASH_COLUMN           13
 
 //****** file open dialog *******
 #define FDIALOG_OPENCHOICES 0
@@ -473,6 +479,11 @@ struct PROGRAM_OPTIONS_FILE {
 	BOOL            bSaveAbsolutePathsBlake3;
 	BOOL			bUseUnbufferedReads;
 	BOOL			bCloseAfterActionFromShellExt;
+    BOOL			bDisplayXxh128InListView;
+    BOOL            bCalcXxh128PerDefault;
+    UINT			uiCreateFileModeXxh128;
+    TCHAR			szFilenameXxh128[MAX_PATH];
+    BOOL            bSaveAbsolutePathsXxh128;
     void            SetDefaults();
     PROGRAM_OPTIONS_FILE& operator=(const PROGRAM_OPTIONS& other);
 };
