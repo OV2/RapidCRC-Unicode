@@ -4,7 +4,20 @@ HINSTANCE g_hInstance;
 PROGRAM_OPTIONS g_program_options;
 PROGRAM_STATUS g_pstatus;
 CRITICAL_SECTION thread_fileinfo_crit;
-UINT g_hash_lengths[] = { 4, 16, 16, 20, 32, 64, 28, 32, 64, 4, 32, 32, 16 };
-TCHAR *g_hash_names[] = { TEXT("CRC32"), TEXT("MD5"), TEXT("ED2K"), TEXT("SHA1"), TEXT("SHA256"), TEXT("SHA512"), TEXT("SHA3-224"), TEXT("SHA3-256"), TEXT("SHA3-512"), TEXT("CRC32C"), TEXT("BLAKE2SP"), TEXT("BLAKE3"), TEXT("XXHASH")};
-TCHAR *g_hash_ext[] = { TEXT("sfv"), TEXT("md5"), TEXT("NOHASHFILE"), TEXT("sha1"), TEXT("sha256"), TEXT("sha512"), TEXT("sha3-224"), TEXT("sha3-256"), TEXT("sha3-512"), TEXT("crc32c"), TEXT("blake2sp"), TEXT("blake3"), TEXT("xxhash")};
-UINT g_hash_column_widths[] = { 14, 42, 42, 50, 75, 137, 66, 75, 137, 14, 75, 75, 42 };
+
+hash_type_info g_hash_type_infos[] =
+{
+    { 4, TEXT("CRC32"), TEXT("sfv"), 14, ThreadProc_CrcCalc },
+    { 16, TEXT("MD5"), TEXT("md5"), 42, ThreadProc_Md5Calc },
+    { 16, TEXT("ED2K"), TEXT("NOHASHFILE"), 42, ThreadProc_Ed2kCalc },
+    { 20, TEXT("SHA1"), TEXT("sha1"), 50, ThreadProc_Sha1Calc },
+    { 32, TEXT("SHA256"), TEXT("sha256"), 75, ThreadProc_Sha256Calc },
+    { 64, TEXT("SHA512"), TEXT("sha512"), 137, ThreadProc_Sha512Calc },
+    { 28, TEXT("SHA3-224"), TEXT("sha3-224"), 66, ThreadProc_Sha3_224Calc },
+    { 32, TEXT("SHA3-256"), TEXT("sha3-256"), 75, ThreadProc_Sha3_256Calc },
+    { 64, TEXT("SHA3-512"), TEXT("sha3-512"), 137, ThreadProc_Sha3_512Calc },
+    { 4, TEXT("CRC32C"), TEXT("crc32c"), 14, ThreadProc_Crc32cCalc },
+    { 32, TEXT("BLAKE2SP"), TEXT("blake2sp"), 75, ThreadProc_Blake2spCalc },
+    { 32, TEXT("BLAKE3"), TEXT("blake3"), 75, ThreadProc_Blake3Calc },
+    { 16, TEXT("XXHASH"), TEXT("xxhash"), 42, ThreadProc_xxhashCalc },
+};

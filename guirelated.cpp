@@ -271,7 +271,7 @@ void CreateHashFilenameButtonPopupMenu(HMENU *menu) {
 
     for(int i = 0; i < HASH_TYPE_SHA3_224; i++) {
         if(i==2) continue;
-        StringCchPrintf(menuText,100,TEXT("Put %s into Filename"),g_hash_names[i]);
+        StringCchPrintf(menuText,100,TEXT("Put %s into Filename"),g_hash_type_infos[i].hash_name);
         InsertMenu(*menu,i, MF_BYPOSITION | MF_STRING, IDM_CRC_FILENAME + i,menuText);
     }
 }
@@ -286,7 +286,7 @@ void CreateHashStreamButtonPopupMenu(HMENU *menu) {
 
 	for (int i = 0; i < NUM_HASH_TYPES; i++) {
 		if (i == 2) continue;
-		StringCchPrintf(menuText, 100, TEXT("Put %s into Stream"), g_hash_names[i]);
+		StringCchPrintf(menuText, 100, TEXT("Put %s into Stream"), g_hash_type_infos[i].hash_name);
 		InsertMenu(*menu, i, MF_BYPOSITION | MF_STRING, IDM_CRC_STREAM + i, menuText);
 	}
 }
@@ -300,7 +300,7 @@ void CreateBlakeButtonPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
 
 	for (int i = 0; i < 2; i++) {
-		InsertMenu(*menu, i, MF_BYPOSITION | MF_STRING, IDM_BLAKE + i, g_hash_names[HASH_TYPE_BLAKE2SP + i]);
+		InsertMenu(*menu, i, MF_BYPOSITION | MF_STRING, IDM_BLAKE + i, g_hash_type_infos[HASH_TYPE_BLAKE2SP + i].hash_name);
 	}
 }
 
@@ -312,7 +312,7 @@ void CreateShaButtonPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
 
     for(int i = 0; i < 6; i++) {
-        InsertMenu(*menu,i, MF_BYPOSITION | MF_STRING, IDM_SHA1 + i, g_hash_names[HASH_TYPE_SHA1 + i]);
+        InsertMenu(*menu,i, MF_BYPOSITION | MF_STRING, IDM_SHA1 + i, g_hash_type_infos[HASH_TYPE_SHA1 + i].hash_name);
     }
 }
 
@@ -323,8 +323,8 @@ void CreateCrcButtonPopupMenu(HMENU *menu)
 void CreateCrcButtonPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
 
-    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING, IDM_CRC_SFV + HASH_TYPE_CRC32, g_hash_names[HASH_TYPE_CRC32]);
-    InsertMenu(*menu,1, MF_BYPOSITION | MF_STRING, IDM_CRC_SFV + HASH_TYPE_CRC32C, g_hash_names[HASH_TYPE_CRC32C]);
+    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING, IDM_CRC_SFV + HASH_TYPE_CRC32, g_hash_type_infos[HASH_TYPE_CRC32].hash_name);
+    InsertMenu(*menu,1, MF_BYPOSITION | MF_STRING, IDM_CRC_SFV + HASH_TYPE_CRC32C, g_hash_type_infos[HASH_TYPE_CRC32C].hash_name);
 }
 
 /*****************************************************************************
@@ -354,7 +354,7 @@ void CreateListViewPopupMenu(HMENU *menu) {
 	InsertMenuItem(*menu, -1, TRUE, &mii);
 
 	for (int i = 0; i < NUM_HASH_TYPES; i++) {
-		AppendMenu(hCalcSubMenu, MF_STRING, IDM_CALC_HASH + i, g_hash_names[i]);
+		AppendMenu(hCalcSubMenu, MF_STRING, IDM_CALC_HASH + i, g_hash_type_infos[i].hash_name);
 	}
 
 	// clipboard submenu
@@ -367,7 +367,7 @@ void CreateListViewPopupMenu(HMENU *menu) {
 	InsertMenuItem(*menu, -1, TRUE, &mii);
 
     for(int i=0;i<NUM_HASH_TYPES;i++) {
-		AppendMenu(hClipSubMenu, MF_STRING,IDM_COPY_CRC + i, g_hash_names[i]);
+		AppendMenu(hClipSubMenu, MF_STRING,IDM_COPY_CRC + i, g_hash_type_infos[i].hash_name);
     }
 	AppendMenu(hClipSubMenu, MF_SEPARATOR, NULL, NULL);
 	AppendMenu(hClipSubMenu, MF_STRING, IDM_COPY_ED2K_LINK, TEXT("ED2K"));
@@ -396,7 +396,7 @@ void HandleClipboard(CONST HWND hListView,int menuid,list<FILEINFO*> *finalList)
 	if(finalList->size() == 0) return;
 
     UINT hash_type = menuid - IDM_COPY_CRC;
-    UINT hash_string_length = g_hash_lengths[hash_type] * 2 + 1;
+    UINT hash_string_length = g_hash_type_infos[hash_type].hash_length * 2 + 1;
 
 	if(!OpenClipboard(hListView)) return;
     if(!EmptyClipboard()) {
@@ -647,7 +647,7 @@ void CreateListViewHeaderPopupMenu(HMENU *menu)
 void CreateListViewHeaderPopupMenu(HMENU *menu) {
 	*menu = CreatePopupMenu();
     for(int i=0;i<NUM_HASH_TYPES;i++) {
-        InsertMenu(*menu, i, MF_BYPOSITION | MF_STRING | MF_CHECKED, IDM_CRC_COLUMN + i, g_hash_names[i]);
+        InsertMenu(*menu, i, MF_BYPOSITION | MF_STRING | MF_CHECKED, IDM_CRC_COLUMN + i, g_hash_type_infos[i].hash_name);
     }
 }
 
@@ -939,7 +939,7 @@ BOOL SetSubItemColumns(CONST HWND hWndListView)
 		    lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 		    lvcolumn.fmt = LVCFMT_LEFT;
 		    lvcolumn.cx = 0; // is resized later in WM_SIZE
-            lvcolumn.pszText = g_hash_names[i];
+            lvcolumn.pszText = g_hash_type_infos[i].hash_name;
 		    lvcolumn.iSubItem = iCurrentSubItem;
 
 		    if(ListView_InsertColumn(hWndListView, lvcolumn.iSubItem, & lvcolumn) == -1)
@@ -988,7 +988,7 @@ BOOL ShowResult(CONST HWND arrHwnd[ID_NUM_WINDOWS], FILEINFO * pFileinfo, SHOWRE
         pshowresult_params->bHashIsWrong[i] = FALSE;
 		if (pFileinfo && pFileinfo->parentList->bCalculated[i] && pFileinfo->hashInfo[i].dwFound)
 		{
-			bool bOk = (memcmp(&pFileinfo->hashInfo[i].r, &pFileinfo->hashInfo[i].f, g_hash_lengths[i]) == 0);
+			bool bOk = (memcmp(&pFileinfo->hashInfo[i].r, &pFileinfo->hashInfo[i].f, g_hash_type_infos[i].hash_length) == 0);
 			if (!bOk)
 			{
 				pshowresult_params->bHashIsWrong[i] = TRUE;

@@ -540,16 +540,24 @@ typedef struct{
     BOOL            bSaveAbsolute;              // In/Out   : in: last user choice; out: new user choice
 }FILECREATION_OPTIONS;
 
+typedef DWORD(WINAPI *thread_hash_func)(VOID * pParam);
+
+struct hash_type_info
+{
+    UINT hash_length;
+    TCHAR* hash_name;
+    TCHAR* hash_ext;
+    UINT hash_column_width;
+    thread_hash_func func;
+};
+
 //****** global variables *******
 
 extern HINSTANCE g_hInstance;
 extern PROGRAM_OPTIONS g_program_options;
 extern PROGRAM_STATUS g_pstatus;
 extern CRITICAL_SECTION thread_fileinfo_crit;
-extern UINT g_hash_lengths[];
-extern TCHAR *g_hash_names[];
-extern TCHAR *g_hash_ext[];
-extern UINT g_hash_column_widths[];
+extern hash_type_info g_hash_type_infos[];
 
 //****** function prototypes *******
 
@@ -686,5 +694,18 @@ INT QuickCompFunction(const void * pFileinfo1, const void * pFileinfo2);
 UINT __stdcall ThreadProc_Calc(VOID * pParam);
 UINT StartFileInfoThread(CONST HWND *arrHwnd, SHOWRESULT_PARAMS *pshowresult_params, lFILEINFO * fileList);
 void StartAcceptPipeThread(CONST HWND *arrHwnd, lFILEINFO * fileList);
+DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha1Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha256Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha512Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam);
+DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha3_224Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha3_256Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Sha3_512Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_Crc32cCalc(VOID * pParam);
+DWORD WINAPI ThreadProc_Blake2spCalc(VOID * pParam);
+DWORD WINAPI ThreadProc_Blake3Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_xxhashCalc(VOID * pParam);
 
 #endif

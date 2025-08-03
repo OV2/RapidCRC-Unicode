@@ -117,7 +117,7 @@ VOID ActionHashIntoStream(CONST HWND arrHwnd[ID_NUM_WINDOWS],BOOL noPrompt,list<
             if(uiNumSelected || (pFileinfo->dwError == NO_ERROR) && pFileinfo->hashInfo[uiHashType].dwFound != HASH_FOUND_STREAM){
 					bAFileWasProcessed = TRUE;
 					if(SaveHashIntoStream(pFileinfo->szFilename, pFileinfo->hashInfo[uiHashType].szResult, uiHashType)){
-						memcpy((BYTE *)&pFileinfo->hashInfo[uiHashType].f, (BYTE *)&pFileinfo->hashInfo[uiHashType].r, g_hash_lengths[uiHashType]);
+						memcpy((BYTE *)&pFileinfo->hashInfo[uiHashType].f, (BYTE *)&pFileinfo->hashInfo[uiHashType].r, g_hash_type_infos[uiHashType].hash_length);
 						pFileinfo->hashInfo[uiHashType].dwFound = HASH_FOUND_STREAM;
                         UpdateFileInfoStatus(pFileinfo, arrHwnd[ID_LISTVIEW]);
 					}
@@ -165,7 +165,7 @@ static BOOL SaveHashIntoStream(TCHAR CONST *szFileName, const TCHAR * szResult, 
 
 	StringCchCopy(szFileOut, MAX_PATH_EX, szFileName);
 	StringCchCat(szFileOut, MAX_PATH_EX, TEXT(":"));
-	StringCchCat(szFileOut, MAX_PATH_EX, g_hash_names[uiHashType]);
+	StringCchCat(szFileOut, MAX_PATH_EX, g_hash_type_infos[uiHashType].hash_name);
 	hFile = CreateFile(szFileOut, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, NULL);
 	if (hFile == INVALID_HANDLE_VALUE) {
 		return FALSE;
@@ -255,7 +255,7 @@ VOID ActionHashIntoFilename(CONST HWND arrHwnd[ID_NUM_WINDOWS], BOOL noPrompt, l
                         pFileinfo->szFilename = szFilenameTemp;
                         pFileinfo->szFilenameShort = pFileinfo->szFilename.GetBuffer() + lstrlen(pFileinfo->parentList->g_szBasePath);
 						// this updates pFileinfo->szFilenameShort automatically
-                        memcpy((BYTE *)&pFileinfo->hashInfo[uiHashType].f, (BYTE *)&pFileinfo->hashInfo[uiHashType].r, g_hash_lengths[uiHashType]);
+                        memcpy((BYTE *)&pFileinfo->hashInfo[uiHashType].f, (BYTE *)&pFileinfo->hashInfo[uiHashType].r, g_hash_type_infos[uiHashType].hash_length);
 						pFileinfo->hashInfo[uiHashType].dwFound = HASH_FOUND_FILENAME;
                         UpdateFileInfoStatus(pFileinfo, arrHwnd[ID_LISTVIEW]);
 					}
@@ -594,7 +594,7 @@ static DWORD CreateChecksumFiles_OnePerFile(CONST UINT uiMode, list<FILEINFO*> *
 		pFileinfo = (*it);
 		if( pFileinfo->dwError == NO_ERROR ){
 
-            StringCchPrintf(szFileOut,MAX_PATH_EX,TEXT("%s.%s"), pFileinfo->szFilename, g_hash_ext[uiMode]);
+            StringCchPrintf(szFileOut,MAX_PATH_EX,TEXT("%s.%s"), pFileinfo->szFilename, g_hash_type_infos[uiMode].hash_ext);
 
             if(g_program_options.bNoHashFileOverride && FileExists(szFileOut)) {
                 continue;
@@ -749,7 +749,7 @@ static BOOL GenerateFilename_OneFile(CONST HWND owner, CONST TCHAR *szDefault, U
             szFileOut[4] = TEXT('\0');
     }
 
-    TCHAR *hashExt = g_hash_ext[uiMode];
+    TCHAR *hashExt = g_hash_type_infos[uiMode].hash_ext;
 
     // manually add file extension, windows dialog does not do this if the name already
     // ends in a known extension
@@ -986,7 +986,7 @@ bool CheckIfRehashNecessary(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST UINT uiMod
 		needRehash=true;
 	
 	if(needRehash && !doRehash){
-        TCHAR *hashName = g_hash_names[uiMode];
+        TCHAR *hashName = g_hash_type_infos[uiMode].hash_name;
 		TCHAR msgString[MAX_PATH_EX];
 		StringCchPrintf(msgString,MAX_PATH_EX,TEXT("You have to calculate the %s checksums first. Click OK to do that now."),hashName);
 		if( MessageBox(arrHwnd[ID_MAIN_WND],

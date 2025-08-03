@@ -313,7 +313,7 @@ BOOL InterpretSFVLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList, U
 
 BOOL InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEINFO *fileList)
 {
-    UINT    uiHashLengthChars = g_hash_lengths[uiMode] * 2;
+    UINT    uiHashLengthChars = g_hash_type_infos[uiMode].hash_length * 2;
     UINT	uiIndex;
     BOOL	bHashOK, bWasAbsolute = FALSE;
 
@@ -330,7 +330,7 @@ BOOL InterpretMDSHALine(TCHAR *szLine, UINT uiStringLength, UINT uiMode, lFILEIN
 			    bHashOK = FALSE;
 	    if(bHashOK){
 		    fileinfoTmp.hashInfo[uiMode].dwFound = HASH_FOUND_FILE;
-		    for(uiIndex=0; uiIndex < g_hash_lengths[uiMode]; ++uiIndex)
+		    for(uiIndex=0; uiIndex < g_hash_type_infos[uiMode].hash_length; ++uiIndex)
 			    *((BYTE *)&fileinfoTmp.hashInfo[uiMode].f + uiIndex) = (BYTE)HexToDword(szLine + uiIndex * 2, 2);
 		    fileinfoTmp.dwError = NOERROR;
 	    }
@@ -370,7 +370,7 @@ BOOL InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
         return FALSE;
 
     for(int i=0; i < NUM_HASH_TYPES; i++) {
-        if(!_tcsncmp(szLine, g_hash_names[i], lstrlen(g_hash_names[i]))) {
+        if(!_tcsncmp(szLine, g_hash_type_infos[i].hash_name, lstrlen(g_hash_type_infos[i].hash_name))) {
             iHashIndex = i;
             break;
         }
@@ -392,7 +392,7 @@ BOOL InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
     while(!IsLegalHexSymbol(*szLastBrace) && *szLastBrace != TEXT('\0') )
         szLastBrace++;
 
-    UINT    uiHashLengthChars = g_hash_lengths[iHashIndex] * 2;
+    UINT    uiHashLengthChars = g_hash_type_infos[iHashIndex].hash_length * 2;
 
     if(lstrlen(szLastBrace) < (int)uiHashLengthChars)
         return FALSE;
@@ -417,7 +417,7 @@ BOOL InterpretBSDLine(TCHAR *szLine, UINT uiStringLength, lFILEINFO *fileList)
             if(iHashIndex == HASH_TYPE_CRC32) {
                 fileInfo->hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found = HexToDword(szLastBrace, 8);
             } else {
-		        for(UINT uiIndex=0; uiIndex < g_hash_lengths[iHashIndex]; ++uiIndex)
+		        for(UINT uiIndex=0; uiIndex < g_hash_type_infos[iHashIndex].hash_length; ++uiIndex)
 			        *((BYTE *)&fileInfo->hashInfo[iHashIndex].f + uiIndex) = (BYTE)HexToDword(szLastBrace + uiIndex * 2, 2);
             }
 		    fileInfo->dwError = NOERROR;

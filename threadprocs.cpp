@@ -40,20 +40,6 @@ extern "C" {
 #include "xxhash\xxhash.h"
 #include "CSyncQueue.h"
 
-DWORD WINAPI ThreadProc_Md5Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Sha1Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Sha256Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Sha512Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Ed2kCalc(VOID * pParam);
-DWORD WINAPI ThreadProc_CrcCalc(VOID * pParam);
-DWORD WINAPI ThreadProc_Sha3_224Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Sha3_256Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Sha3_512Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_Crc32cCalc(VOID * pParam);
-DWORD WINAPI ThreadProc_Blake2spCalc(VOID * pParam);
-DWORD WINAPI ThreadProc_Blake3Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_xxhashCalc(VOID * pParam);
-
 // used in UINT __stdcall ThreadProc_Calc(VOID * pParam)
 #define SWAPBUFFERS() \
 	tempBuffer=readBuffer;\
@@ -62,24 +48,6 @@ DWORD WINAPI ThreadProc_xxhashCalc(VOID * pParam);
 	dwBytesReadRb=dwBytesReadCb;\
 	calcBuffer=tempBuffer;\
 	dwBytesReadCb=dwBytesReadTb
-
-typedef DWORD (WINAPI *threadfunc)(VOID * pParam);
-
-threadfunc hash_function[] = {
-    ThreadProc_CrcCalc,
-    ThreadProc_Md5Calc,
-    ThreadProc_Ed2kCalc,
-    ThreadProc_Sha1Calc,
-    ThreadProc_Sha256Calc,
-    ThreadProc_Sha512Calc,
-    ThreadProc_Sha3_224Calc,
-    ThreadProc_Sha3_256Calc,
-    ThreadProc_Sha3_512Calc,
-    ThreadProc_Crc32cCalc,
-    ThreadProc_Blake2spCalc,
-	ThreadProc_Blake3Calc,
-    ThreadProc_xxhashCalc,
-};
 
 /*****************************************************************************
 UINT __stdcall ThreadProc_Calc(VOID * pParam)
@@ -230,7 +198,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
                             ResetEvent(hEvtThreadGo[i]);
                             ResetEvent(hEvtThreadReady[i]);
                             calcParams[i].result = &curFileInfo.hashInfo[i].r;
-					        hThread[i] = CreateThread(NULL,0,hash_function[i],&calcParams[i],0,NULL);
+					        hThread[i] = CreateThread(NULL,0, g_hash_type_infos[i].func,&calcParams[i],0,NULL);
 					        if(hThread[i] == NULL) {
 						        ShowErrorMsg(arrHwnd[ID_MAIN_WND],GetLastError());
 						        ExitProcess(1);

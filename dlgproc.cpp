@@ -883,7 +883,7 @@ INT_PTR CALLBACK DlgProcFileCreation(HWND hDlg, UINT message, WPARAM wParam, LPA
 		pfco = (FILECREATION_OPTIONS *)lParam;
 		StringCchCopy(szFilenameChecksumTemp, MAX_PATH_EX, pfco->szFilename);
 	case WM_SET_CTRLS_STATE:
-        hashExt = g_hash_ext[pfco->uiMode];
+        hashExt = g_hash_type_infos[pfco->uiMode].hash_ext;
 
 		StringCchPrintf(szString, MAX_PATH_EX, TEXT("How to create the .%s file(s)?"), hashExt);
 		SetWindowText(hDlg, szString);
@@ -1427,8 +1427,8 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	iCurrentSubItem = 1;
     for(int i=0;i<NUM_HASH_TYPES;i++) {
         if(g_program_options.bDisplayInListView[i]){
-		    ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * g_hash_column_widths[i]);
-		    iCurrentWidthUsed += lACW * g_hash_column_widths[i];
+		    ListView_SetColumnWidth(arrHwnd[ID_LISTVIEW], iCurrentSubItem, lACW * g_hash_type_infos[i].hash_column_width);
+		    iCurrentWidthUsed += lACW * g_hash_type_infos[i].hash_column_width;
 		    iCurrentSubItem++;
 	    }
     }

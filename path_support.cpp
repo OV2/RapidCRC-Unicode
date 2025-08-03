@@ -303,11 +303,11 @@ BOOL GetHashFromStream(TCHAR CONST *szFileName, BYTE * abResult, UINT uiHashType
 {
 	HANDLE hFile;
 	DWORD NumberOfBytesRead;
-	UINT hashLength = g_hash_lengths[uiHashType];
+	UINT hashLength = g_hash_type_infos[uiHashType].hash_length;
 	UINT hashLengthChars = hashLength * 2;
 
 	CString szStream(szFileName);
-	szStream.AppendFormat(TEXT(":%s"), g_hash_names[uiHashType]);
+	szStream.AppendFormat(TEXT(":%s"), g_hash_type_infos[uiHashType].hash_name);
 	std::vector<CHAR> charsHashAnsi(hashLengthChars);
 	std::vector<TCHAR> charsHash(hashLengthChars);
 
@@ -359,7 +359,7 @@ BOOL GetHashFromStreams(FILEINFO *fileInfo)
 			for (int i = 0; i < NUM_HASH_TYPES; i++)
 			{
 				// check if the stream name corresponds to a hash type
-				if (streamname.Compare(g_hash_names[i]) == 0 && (streamData.StreamSize.QuadPart >= g_hash_lengths[i] * 2))
+				if (streamname.Compare(g_hash_type_infos[i].hash_name) == 0 && (streamData.StreamSize.QuadPart >= g_hash_type_infos[i].hash_length * 2))
 				{
 					uiHashType = i;
 					break;
@@ -467,7 +467,7 @@ BOOL GetHashFromFilename(FILEINFO *fileInfo)
         if(uiFoundHexSymbols) {
             for(int i = 0; i < HASH_TYPE_SHA3_224; i++) {
                 // md5/ed2k have same size, but md5 will hit first
-                if(uiFoundHexSymbols == g_hash_lengths[i] * 2) {
+                if(uiFoundHexSymbols == g_hash_type_infos[i].hash_length * 2) {
                     bFound = TRUE;
                     iHashIndex = i;
                     break;
@@ -486,7 +486,7 @@ BOOL GetHashFromFilename(FILEINFO *fileInfo)
     if(iHashIndex == HASH_TYPE_CRC32) {
         fileInfo->hashInfo[HASH_TYPE_CRC32].f.dwCrc32Found = HexToDword(szHashStart, 8);
     } else {
-        for(UINT uiIndex=0; uiIndex < g_hash_lengths[iHashIndex]; ++uiIndex)
+        for(UINT uiIndex=0; uiIndex < g_hash_type_infos[iHashIndex].hash_length; ++uiIndex)
             *((BYTE *)&fileInfo->hashInfo[iHashIndex].f + uiIndex) = (BYTE)HexToDword(szHashStart + uiIndex * 2, 2);
     }
 
@@ -868,7 +868,7 @@ UINT DetermineHashType(const CString &filename)
 	
 	szExtension = PathFindExtension(filename) + 1;
     for(int i=0;i<NUM_HASH_TYPES;i++) {
-        if(lstrcmpi(g_hash_ext[i], szExtension)==0)
+        if(lstrcmpi(g_hash_type_infos[i].hash_ext, szExtension)==0)
 			return MODE_SFV + i;
     }
 
@@ -888,17 +888,17 @@ UINT DetermineHashType(const CString &filename)
     }
 
     for(int i = 0; i < NUM_HASH_TYPES; i++) {
-        if(!filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("SUM")) ||
-           !filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("SUMS")) ||
-           !filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("CHECKSUM")) ||
-           !filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("CHECKSUMS")) ||
-           !filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("HASH")) ||
-           !filenameOnly.CompareNoCase(CString(g_hash_names[i]) + TEXT("HASHES")))
+        if(!filenameOnly.CompareNoCase(CString(g_hash_type_infos[i].hash_name) + TEXT("SUM")) ||
+           !filenameOnly.CompareNoCase(CString(g_hash_type_infos[i].hash_name) + TEXT("SUMS")) ||
+           !filenameOnly.CompareNoCase(CString(g_hash_type_infos[i].hash_name) + TEXT("CHECKSUM")) ||
+           !filenameOnly.CompareNoCase(CString(g_hash_type_infos[i].hash_name) + TEXT("CHECKSUMS")) ||
+           !filenameOnly.CompareNoCase(CString(g_hash_type_infos[i].hash_name) + TEXT("HASH")) ||
+           !filenameOnly.CompareNoCase(CString(g_hash_type_infos[i].hash_name) + TEXT("HASHES")))
         {
             if(ext.IsEmpty() || !ext.CompareNoCase(TEXT("txt")))
                 return i;
         }
-        if(!filenameOnly.CompareNoCase(g_hash_names[i])) {
+        if(!filenameOnly.CompareNoCase(g_hash_type_infos[i].hash_name)) {
             if(ext.IsEmpty() || !ext.CompareNoCase(TEXT("txt")))
                 return MODE_BSD;
         }

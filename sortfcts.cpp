@@ -95,7 +95,7 @@ int CALLBACK SortHash(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
         if(iResult == 0)
             iResult = -1;
     } else
-        iResult = memcmp( &((FILEINFO *)lParam1)->hashInfo[hash_num].r, &((FILEINFO *)lParam2)->hashInfo[hash_num].r, g_hash_lengths[hash_num]);
+        iResult = memcmp( &((FILEINFO *)lParam1)->hashInfo[hash_num].r, &((FILEINFO *)lParam2)->hashInfo[hash_num].r, g_hash_type_infos[hash_num].hash_length);
 	if( (*((DWORD *)lParamSort)) & SORT_FLAG_ASCENDING)
 		return iResult;
 	else
@@ -127,7 +127,7 @@ FILEINFO_STATUS InfoToIntValue(FILEINFO * pFileinfo)
                 if( (pFileinfo->parentList->bCalculated[i]) ){
                     bool bOk = (memcmp( &pFileinfo->hashInfo[i].r,
                                    &pFileinfo->hashInfo[i].f,
-                                   g_hash_lengths[i] ) == 0);
+                                   g_hash_type_infos[i].hash_length ) == 0);
                     if(bOk)
 				        uiOkCount++;
 			        else

@@ -285,14 +285,14 @@ BOOL CheckHashFileMatch(CONST TCHAR *szFilename)
 
 Return Value:
 	returns TRUE if szFilename has any of the extensions specified in
-	g_hash_ext, FALSE otherwise
+	g_hash_type_infos.hash_ext, FALSE otherwise
 *****************************************************************************/
 BOOL CheckHashFileMatch(CONST TCHAR *szFilename) {
 	TCHAR *szExtension;
 	
 	szExtension = PathFindExtension(szFilename)	+ 1;
     for(int i=0;i<NUM_HASH_TYPES;i++) {
-        if(lstrcmpi(g_hash_ext[i],szExtension)==0)
+        if(lstrcmpi(g_hash_type_infos[i].hash_ext,szExtension)==0)
 			return TRUE;
     }
     return FALSE;
@@ -694,7 +694,7 @@ VOID SetFileInfoStrings(FILEINFO *pFileinfo,lFILEINFO *fileList)
             else if(i == HASH_TYPE_CRC32C)
                 CRCCI(pFileinfo).szResult.Format(szCrcHex, CRCCI(pFileinfo).r.dwCrc32cResult);
             else
-                for(UINT j=0;j<g_hash_lengths[i];j++) {
+                for(UINT j=0;j<g_hash_type_infos[i].hash_length;j++) {
                     rPrint.AppendFormat(szHashHex,*((BYTE *)&pFileinfo->hashInfo[i].r + j));
                 }
         }
@@ -950,7 +950,7 @@ CString HashBytesToString(const BYTE *abBytes, UINT uiHashType)
 	}
 	else
 	{
-		for (UINT j = 0; j < g_hash_lengths[uiHashType]; j++) {
+		for (UINT j = 0; j < g_hash_type_infos[uiHashType].hash_length; j++) {
 			s.AppendFormat(TEXT("%02x"), *(abBytes + j));
 		}
 	}
@@ -987,9 +987,9 @@ void PROGRAM_OPTIONS_FILE::SetDefaults()
 	bCalcEd2kPerDefault = -1;
 	uiCreateFileModeMd5 = CREATE_ONE_PER_FILE;
 	uiCreateFileModeSfv = CREATE_ONE_FILE;
-    StringCchPrintf(szFilenameMd5,MAX_PATH,TEXT("checksum.%s"),g_hash_ext[HASH_TYPE_MD5]);
-    StringCchPrintf(szFilenameSfv,MAX_PATH,TEXT("checksum.%s"),g_hash_ext[HASH_TYPE_CRC32]);
-    StringCchPrintf(szFilenameBlake2sp,MAX_PATH,TEXT("checksum.%s"),g_hash_ext[HASH_TYPE_SHA1]);
+    StringCchPrintf(szFilenameMd5,MAX_PATH,TEXT("checksum.%s"),g_hash_type_infos[HASH_TYPE_MD5].hash_ext);
+    StringCchPrintf(szFilenameSfv,MAX_PATH,TEXT("checksum.%s"),g_hash_type_infos[HASH_TYPE_CRC32].hash_ext);
+    StringCchPrintf(szFilenameBlake2sp,MAX_PATH,TEXT("checksum.%s"),g_hash_type_infos[HASH_TYPE_SHA1].hash_ext);
 	bCreateUnixStyle = FALSE;
 	bCreateUnicodeFiles = TRUE;
 	iUnicodeSaveType = UTF_8;
@@ -1008,7 +1008,7 @@ void PROGRAM_OPTIONS_FILE::SetDefaults()
     bCalcPerDefault[HASH_TYPE_CRC32] = TRUE;
     for(int i=0;i<10;i++) {
         uiCreateFileMode[i] = CREATE_ONE_FILE;
-        StringCchPrintf(szFilename[i],MAX_PATH,TEXT("checksum.%s"),g_hash_ext[i]);
+        StringCchPrintf(szFilename[i],MAX_PATH,TEXT("checksum.%s"),g_hash_type_infos[i].hash_ext);
         bSaveAbsolutePaths[i] = 0;
     }
     bHashtypeFromFilename = true;
@@ -1017,14 +1017,14 @@ void PROGRAM_OPTIONS_FILE::SetDefaults()
     iHexFormat = DEFAULT;
     uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
     uiCreateFileModeBlake2sp = CREATE_ONE_FILE;
-    StringCchPrintf(szFilenameBlake2sp,MAX_PATH,TEXT("checksum.%s"),g_hash_ext[HASH_TYPE_BLAKE2SP]);
+    StringCchPrintf(szFilenameBlake2sp,MAX_PATH,TEXT("checksum.%s"),g_hash_type_infos[HASH_TYPE_BLAKE2SP].hash_ext);
     bSaveAbsolutePathsBlake2sp = 0;
     bCalcBlake2spPerDefault = FALSE;
     bDisplayBlake2spInListView = FALSE;
 	bAlwaysUseNewWindow = FALSE;
 
 	uiCreateFileModeBlake3 = CREATE_ONE_FILE;
-	StringCchPrintf(szFilenameBlake3, MAX_PATH, TEXT("checksum.%s"), g_hash_ext[HASH_TYPE_BLAKE3]);
+	StringCchPrintf(szFilenameBlake3, MAX_PATH, TEXT("checksum.%s"), g_hash_type_infos[HASH_TYPE_BLAKE3].hash_ext);
 	bSaveAbsolutePathsBlake3 = 0;
 	bCalcBlake3PerDefault = FALSE;
 	bDisplayBlake3InListView = FALSE;
@@ -1033,7 +1033,7 @@ void PROGRAM_OPTIONS_FILE::SetDefaults()
 	bCloseAfterActionFromShellExt = FALSE;
 
     uiCreateFileModeXxh128 = CREATE_ONE_FILE;
-    StringCchPrintf(szFilenameXxh128, MAX_PATH, TEXT("checksum.%s"), g_hash_ext[HASH_TYPE_XXH128]);
+    StringCchPrintf(szFilenameXxh128, MAX_PATH, TEXT("checksum.%s"), g_hash_type_infos[HASH_TYPE_XXH128].hash_ext);
     bSaveAbsolutePathsXxh128 = 0;
     bCalcXxh128PerDefault = FALSE;
     bDisplayXxh128InListView = FALSE;
