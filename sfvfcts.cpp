@@ -224,25 +224,21 @@ BOOL EnterHashMode(lFILEINFO *fileList, UINT uiMode)
 #endif
 
         BOOL bWasAbsolute = FALSE;
-        switch(uiMode) {
-            case MODE_SFV:
-            case MODE_CRC32C:
+        if (uiMode < NUM_HASH_TYPES)
+        {
+            auto fileMode = g_hash_type_infos[uiMode].hash_file_mode;
+            if (fileMode == sfvMode)
+            {
                 bWasAbsolute = InterpretSFVLine(szLine, uiStringLength, fileList, uiMode);
-                break;
-            case MODE_MD5:
-            case MODE_SHA1:
-            case MODE_SHA256:
-            case MODE_SHA512:
-            case MODE_SHA3_224:
-            case MODE_SHA3_256:
-            case MODE_SHA3_512:
-            case MODE_BLAKE2SP:
-			case MODE_BLAKE3:
+            }
+            else
+            {
                 bWasAbsolute = InterpretMDSHALine(szLine, uiStringLength, uiMode, fileList);
-                break;
-            case MODE_BSD:
-                bWasAbsolute = InterpretBSDLine(szLine, uiStringLength, fileList);
-                break;
+            }
+        }
+        else
+        {
+            bWasAbsolute = InterpretBSDLine(szLine, uiStringLength, fileList);
         }
 
         if(bWasAbsolute)

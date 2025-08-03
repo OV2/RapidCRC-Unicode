@@ -542,6 +542,14 @@ typedef struct{
 
 typedef DWORD(WINAPI *thread_hash_func)(VOID * pParam);
 
+enum hashFileMode
+{
+    modeNone,
+    sfvMode,
+    mdshaMode,
+    bsdMode
+};
+
 struct hash_type_info
 {
     UINT hash_length;
@@ -549,6 +557,7 @@ struct hash_type_info
     TCHAR* hash_ext;
     UINT hash_column_width;
     thread_hash_func func;
+    hashFileMode hash_file_mode;
 };
 
 //****** global variables *******
