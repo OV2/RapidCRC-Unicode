@@ -208,46 +208,47 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_PROGRESS_FILE			24
 #define ID_PROGRESS_GLOBAL			25
 
+#define NUM_CUSTOMIZABLE_BUTTONS    2
+
 //the ids here are used to initialize the window order, which equals the tab order
 #define ID_FIRST_TAB_CONTROL		30
 #define ID_BTN_EXIT					2		// 2==IDCANCEL
 #define ID_LISTVIEW					30
 
-#define ID_BTN_CRC_IN_SFV			31
-#define ID_BTN_MD5_IN_MD5			32
-#define ID_BTN_SHA_IN_SHA			33
-#define ID_BTN_BLAKE_IN_BLAKE		34
-#define ID_BTN_CRC_IN_FILENAME		35
-#define ID_BTN_CRC_IN_STREAM		36
-#define ID_BTN_OPTIONS				37
+#define ID_BTN_HASH1_IN_FILE        31
+#define ID_BTN_HASH2_IN_FILE		32
+#define ID_BTN_HASH_IN_FILE			33
+#define ID_BTN_CRC_IN_FILENAME		34
+#define ID_BTN_CRC_IN_STREAM		35
+#define ID_BTN_OPTIONS				36
 
-#define ID_EDIT_FILENAME			38
-#define ID_EDIT_CRC_VALUE			39
-#define ID_EDIT_MD5_VALUE			40
-#define ID_EDIT_ED2K_VALUE			41
-#define ID_EDIT_SHA1_VALUE			42
-#define ID_EDIT_SHA256_VALUE		43
-#define ID_EDIT_SHA512_VALUE		44
-#define ID_EDIT_SHA3_224_VALUE		45
-#define ID_EDIT_SHA3_256_VALUE		46
-#define ID_EDIT_SHA3_512_VALUE		47
-#define ID_EDIT_CRCC_VALUE          48
-#define ID_EDIT_BLAKE2SP_VALUE      49
-#define ID_EDIT_BLAKE3_VALUE        50
-#define ID_EDIT_XXH128_VALUE        51
+#define ID_EDIT_FILENAME			37
+#define ID_EDIT_CRC_VALUE			38
+#define ID_EDIT_MD5_VALUE			39
+#define ID_EDIT_ED2K_VALUE			40
+#define ID_EDIT_SHA1_VALUE			41
+#define ID_EDIT_SHA256_VALUE		42
+#define ID_EDIT_SHA512_VALUE		43
+#define ID_EDIT_SHA3_224_VALUE		44
+#define ID_EDIT_SHA3_256_VALUE		45
+#define ID_EDIT_SHA3_512_VALUE		46
+#define ID_EDIT_CRCC_VALUE          47
+#define ID_EDIT_BLAKE2SP_VALUE      48
+#define ID_EDIT_BLAKE3_VALUE        49
+#define ID_EDIT_XXH128_VALUE        50
 
-#define ID_EDIT_INFO				52
-#define ID_EDIT_STATUS				53
-#define ID_BTN_ERROR_DESCR			54
+#define ID_EDIT_INFO				51
+#define ID_EDIT_STATUS				52
+#define ID_BTN_ERROR_DESCR			53
 
-#define ID_BTN_PLAY_PAUSE			55
-#define ID_BTN_STOP     			56
+#define ID_BTN_PLAY_PAUSE			54
+#define ID_BTN_STOP     			55
 
-#define ID_COMBO_PRIORITY			57
-#define ID_BTN_OPENFILES_PAUSE		58
-#define ID_LAST_TAB_CONTROL			58
+#define ID_COMBO_PRIORITY			56
+#define ID_BTN_OPENFILES_PAUSE		57
+#define ID_LAST_TAB_CONTROL			57
 
-#define ID_NUM_WINDOWS				59
+#define ID_NUM_WINDOWS				58
 
 #define IDM_COPY_CRC				1
 // needs space for all hash types
@@ -269,8 +270,7 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define IDM_CRC_STREAM				1
 
 #define IDM_CRC_SFV                 1
-#define IDM_SHA1                    1
-#define IDM_BLAKE					1
+#define IDM_HASH                    1
 
 #define IDM_CRC_COLUMN              1
 #define IDM_MD5_COLUMN              2
@@ -484,6 +484,7 @@ struct PROGRAM_OPTIONS_FILE {
     UINT			uiCreateFileModeXxh128;
     TCHAR			szFilenameXxh128[MAX_PATH];
     BOOL            bSaveAbsolutePathsXxh128;
+    UINT            uiHashButtons[NUM_CUSTOMIZABLE_BUTTONS];
     void            SetDefaults();
     PROGRAM_OPTIONS_FILE& operator=(const PROGRAM_OPTIONS& other);
 };
@@ -523,6 +524,7 @@ struct PROGRAM_OPTIONS {
 	BOOL			bAlwaysUseNewWindow;
 	BOOL			bUseUnbufferedReads;
 	BOOL			bCloseAfterActionFromShellExt;
+    UINT            uiHashButtons[NUM_CUSTOMIZABLE_BUTTONS];
     PROGRAM_OPTIONS& operator=(const PROGRAM_OPTIONS_FILE& other);
 };
 
@@ -612,8 +614,7 @@ VOID EnableWindowsForThread(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST BOOL bStat
 void CreateListViewPopupMenu(HMENU *menu);
 void CreateHashFilenameButtonPopupMenu(HMENU *menu);
 void CreateHashStreamButtonPopupMenu(HMENU *menu);
-void CreateBlakeButtonPopupMenu(HMENU *menu);
-void CreateShaButtonPopupMenu(HMENU *menu);
+void CreateHashButtonPopupMenu(HMENU *menu);
 void CreateCrcButtonPopupMenu(HMENU *menu);
 void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU pupup,int x,int y, SHOWRESULT_PARAMS * pshowresult_params);
 void CreateListViewHeaderPopupMenu(HMENU *menu);

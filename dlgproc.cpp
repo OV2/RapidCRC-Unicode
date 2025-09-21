@@ -61,7 +61,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 	static UINT uiThreadID;
 	static DWORD dwSortStatus;
 	static SHOWRESULT_PARAMS showresult_params = {NULL, FALSE, FALSE};
-	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, hashInStreamPopup, shaPopup, crcPopup, blakePopup;
+	static HMENU popupMenu, headerPopupMenu, hashInNamePopup, hashInStreamPopup, hashPopup, crcPopup;
     static std::list<UINT> fileThreadIds;
     static int iTimerCount; 
 	lFILEINFO *fileList;
@@ -84,9 +84,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         CreateListViewHeaderPopupMenu(&headerPopupMenu);
         CreateHashFilenameButtonPopupMenu(&hashInNamePopup);
 		CreateHashStreamButtonPopupMenu(&hashInStreamPopup);
-		CreateBlakeButtonPopupMenu(&blakePopup);
-        CreateShaButtonPopupMenu(&shaPopup);
-        CreateCrcButtonPopupMenu(&crcPopup);
+        CreateHashButtonPopupMenu(&hashPopup);
 		RegisterDropWindow(arrHwnd, & pDropTarget);
         uiTaskbarButtonCreatedMessage = RegisterWindowMessage(L"TaskbarButtonCreated");
 
@@ -121,18 +119,6 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
             int ret = TrackPopupMenu(hashInNamePopup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_CRC_IN_FILENAME], NULL);
             if(ret)
                 ActionHashIntoFilename(arrHwnd, ret - IDM_CRC_FILENAME);
-            return 0;
-        } else if((HWND)wParam == arrHwnd[ID_BTN_CRC_IN_SFV]) {
-            int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
-            if(x == -1 && y == -1) {
-                POINT pt = {0, 0};
-                ClientToScreen(arrHwnd[ID_BTN_CRC_IN_SFV], &pt);
-                x = pt.x;
-                y = pt.y;
-            }
-            int ret = TrackPopupMenu(crcPopup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_CRC_IN_SFV], NULL);
-            if(ret)
-                CreateChecksumFiles(arrHwnd, ret - IDM_CRC_SFV);
             return 0;
         } else if ((HWND)wParam == arrHwnd[ID_BTN_CRC_IN_STREAM]) {
 			int x = GET_X_LPARAM(lParam), y = GET_Y_LPARAM(lParam);
@@ -210,7 +196,7 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
         }
 		break;
 	case WM_GETMINMAXINFO:
-		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 125;
+		((MINMAXINFO *)lParam)->ptMinTrackSize.x = lAveCharWidth * 120;
 		((MINMAXINFO *)lParam)->ptMinTrackSize.y = lAveCharHeight * 25;
 		return 0;
 	case WM_SIZE:
@@ -357,39 +343,28 @@ LRESULT CALLBACK WndProcMain(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 				    return 0;
 			    }
 			    break;
-		    case ID_BTN_CRC_IN_SFV:
+		    case ID_BTN_HASH1_IN_FILE:
 			    if(HIWORD(wParam) == BN_CLICKED){
-				    CreateChecksumFiles(arrHwnd, MODE_SFV);
+				    CreateChecksumFiles(arrHwnd, g_program_options.uiHashButtons[0]);
 				    return 0;
 			    }
 			    break;
-		    case ID_BTN_MD5_IN_MD5:
+		    case ID_BTN_HASH2_IN_FILE:
 			    if(HIWORD(wParam) == BN_CLICKED){
-				    CreateChecksumFiles(arrHwnd, MODE_MD5);
+				    CreateChecksumFiles(arrHwnd, g_program_options.uiHashButtons[1]);
 				    return 0;
 			    }
 			    break;
-            case ID_BTN_SHA_IN_SHA:
+            case ID_BTN_HASH_IN_FILE:
 			    if(HIWORD(wParam) == BN_CLICKED){
                     RECT rect;
-                    GetWindowRect(arrHwnd[ID_BTN_SHA_IN_SHA], &rect);
+                    GetWindowRect(arrHwnd[ID_BTN_HASH_IN_FILE], &rect);
                     int x = rect.left, y = rect.bottom;
-                    int ret = TrackPopupMenu(shaPopup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_SHA_IN_SHA], NULL);
+                    int ret = TrackPopupMenu(hashPopup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_HASH_IN_FILE], NULL);
                     if(ret)
-                        CreateChecksumFiles(arrHwnd, MODE_SHA1 + ret - IDM_SHA1);
+                        CreateChecksumFiles(arrHwnd, MODE_SFV + ret - IDM_HASH);
                     return 0;
 			    }
-			    break;
-            case ID_BTN_BLAKE_IN_BLAKE:
-				if (HIWORD(wParam) == BN_CLICKED) {
-					RECT rect;
-					GetWindowRect(arrHwnd[ID_BTN_BLAKE_IN_BLAKE], &rect);
-					int x = rect.left, y = rect.bottom;
-					int ret = TrackPopupMenu(blakePopup, TPM_RETURNCMD | TPM_NONOTIFY, x, y, 0, arrHwnd[ID_BTN_BLAKE_IN_BLAKE], NULL);
-					if (ret)
-						CreateChecksumFiles(arrHwnd, MODE_BLAKE2SP + ret - IDM_BLAKE);
-					return 0;
-				}
 			    break;
 		    case ID_BTN_ERROR_DESCR:
 			    if(HIWORD(wParam) == BN_CLICKED){
@@ -501,7 +476,7 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 	static PROGRAM_OPTIONS program_options_temp;
 	TCHAR szTemp[MAX_PATH_EX];
 	size_t szLen;
-    HWND dlgItem;
+    HWND dlgItem, dlgItem2;
 
 	switch (message)
 	{
@@ -514,6 +489,18 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
         dlgItem = GetDlgItem(hDlg,IDC_DEFAULT_CP);
         ComboBox_SetItemData(dlgItem,ComboBox_AddString(dlgItem,TEXT("System Codepage")),CP_ACP);
         ComboBox_SetItemData(dlgItem,ComboBox_AddString(dlgItem,TEXT("UTF-8")),CP_UTF8);
+
+        dlgItem = GetDlgItem(hDlg, IDC_BUTTON_1_HASH);
+        dlgItem2 = GetDlgItem(hDlg, IDC_BUTTON_2_HASH);
+        for (int i = 0; i < NUM_HASH_TYPES; i++)
+        {
+            const auto &hash_info = g_hash_type_infos[i];
+            if (hash_info.hash_ext)
+            {
+                ComboBox_SetItemData(dlgItem, ComboBox_AddString(dlgItem, hash_info.hash_name), i);
+                ComboBox_SetItemData(dlgItem2, ComboBox_AddString(dlgItem2, hash_info.hash_name), i);
+            }
+        }
 
         // copy current options to local copy
 		CopyJustProgramOptions(& g_program_options, & program_options_temp);
@@ -748,6 +735,20 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             if(HIWORD(wParam) == CBN_SELCHANGE){
                 dlgItem = GetDlgItem(hDlg, IDC_DEFAULT_CP);
                 program_options_temp.uiDefaultCP = (UINT)ComboBox_GetItemData(dlgItem, ComboBox_GetCurSel(dlgItem));
+                return TRUE;
+            }
+            break;
+        case IDC_BUTTON_1_HASH:
+            if (HIWORD(wParam) == CBN_SELCHANGE) {
+                dlgItem = GetDlgItem(hDlg, IDC_BUTTON_1_HASH);
+                program_options_temp.uiHashButtons[0] = (UNICODE_TYPE)ComboBox_GetItemData(dlgItem, ComboBox_GetCurSel(dlgItem));
+                return TRUE;
+            }
+            break;
+        case IDC_BUTTON_2_HASH:
+            if (HIWORD(wParam) == CBN_SELCHANGE) {
+                dlgItem = GetDlgItem(hDlg, IDC_BUTTON_2_HASH);
+                program_options_temp.uiHashButtons[1] = (UNICODE_TYPE)ComboBox_GetItemData(dlgItem, ComboBox_GetCurSel(dlgItem));
                 return TRUE;
             }
             break;
@@ -1399,12 +1400,13 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_BTN_ERROR_DESCR], wWidth - lACW * 105/10.0, wHeight - lACH * (685/100.0), lACW * 75/10.0, lACH * 15/10.0, FALSE);
 
     MoveWindow(arrHwnd[ID_STATIC_CREATE], lACW * leftMargin, wHeight - lACH * actButtonY + 5, lACW * 7, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_SFV], lACW * (leftMargin + 7 + 1), wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_MD5_IN_MD5], lACW * (leftMargin + 17 + 2) + 16, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_SHA_IN_SHA], lACW * (leftMargin + 27 + 3) + 32, wHeight - lACH * actButtonY, lACW * 7 + 16, lACH * 19/10.0, FALSE);
-    MoveWindow(arrHwnd[ID_BTN_BLAKE_IN_BLAKE], lACW * (leftMargin + 34 + 4) + 48, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 44 + 5) + 64, wHeight - lACH * actButtonY, lACW * 21, lACH * 19/10.0, FALSE);
-	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 65 + 6) + 64, wHeight - lACH * actButtonY, lACW * 25, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_HASH1_IN_FILE], lACW * (leftMargin + 7 + 1), wHeight - lACH * actButtonY, lACW * 12 + 16, lACH * 19/10.0, FALSE);
+    SetWindowText(arrHwnd[ID_BTN_HASH1_IN_FILE], g_hash_type_infos[g_program_options.uiHashButtons[0]].hash_name);
+	MoveWindow(arrHwnd[ID_BTN_HASH2_IN_FILE], lACW * (leftMargin + 19 + 2) + 16, wHeight - lACH * actButtonY, lACW * 12 + 16, lACH * 19/10.0, FALSE);
+    SetWindowText(arrHwnd[ID_BTN_HASH2_IN_FILE], g_hash_type_infos[g_program_options.uiHashButtons[1]].hash_name);
+	MoveWindow(arrHwnd[ID_BTN_HASH_IN_FILE], lACW * (leftMargin + 31 + 3) + 32, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 38 + 5) + 64, wHeight - lACH * actButtonY, lACW * 21, lACH * 19/10.0, FALSE);
+	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 59 + 6) + 64, wHeight - lACH * actButtonY, lACW * 25, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_OPTIONS], wWidth - lACW * 125/10.0, wHeight - lACH * actButtonY, lACW * 11, lACH * 19/10.0, FALSE);
 	
 	MoveWindow(arrHwnd[ID_BTN_PLAY_PAUSE], wWidth - (lACW * 37 + 36 + 36), wHeight - lACH * 46/10.0, 32, lACH * 19/10.0, FALSE);

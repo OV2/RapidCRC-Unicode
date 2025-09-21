@@ -58,7 +58,9 @@
 #define IDC_BTN_CONTEXT_MENU            1054
 #define IDC_CHECK_CONTEXT1              1054
 #define IDC_CHECK_CONTEXT2              1055
+#define IDC_BUTTON_1_HASH               1055
 #define IDC_CHECK_CONTEXT3              1056
+#define IDC_BUTTON_2_HASH               1056
 #define IDC_CHECK_CONTEXT4              1057
 #define IDC_CHECK_CONTEXT5              1058
 #define IDC_CHECK_CONTEXT6              1059

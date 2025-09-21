@@ -1037,6 +1037,9 @@ void PROGRAM_OPTIONS_FILE::SetDefaults()
     bSaveAbsolutePathsXxh128 = 0;
     bCalcXxh128PerDefault = FALSE;
     bDisplayXxh128InListView = FALSE;
+
+    uiHashButtons[0] = HASH_TYPE_CRC32;
+    uiHashButtons[1] = HASH_TYPE_MD5;
 }
 
 /*****************************************************************************
@@ -1114,6 +1117,8 @@ PROGRAM_OPTIONS_FILE& PROGRAM_OPTIONS_FILE::operator=(const PROGRAM_OPTIONS& oth
     StringCchCopy(szFilenameXxh128, MAX_PATH, other.szFilename[HASH_TYPE_XXH128]);
     bSaveAbsolutePathsXxh128 = other.bSaveAbsolutePaths[HASH_TYPE_XXH128];
 
+    memcpy(uiHashButtons, other.uiHashButtons, sizeof(uiHashButtons));
+
     return *this;
 }
 
@@ -1186,6 +1191,8 @@ PROGRAM_OPTIONS& PROGRAM_OPTIONS::operator=(const PROGRAM_OPTIONS_FILE& other)
     uiCreateFileMode[HASH_TYPE_XXH128] = other.uiCreateFileModeXxh128;
     StringCchCopy(szFilename[HASH_TYPE_XXH128], MAX_PATH, other.szFilenameXxh128);
     bSaveAbsolutePaths[HASH_TYPE_XXH128] = other.bSaveAbsolutePathsXxh128;
+
+    memcpy(uiHashButtons, other.uiHashButtons, sizeof(uiHashButtons));
 
     return *this;
 }
