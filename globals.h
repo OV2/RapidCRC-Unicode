@@ -604,7 +604,6 @@ void CreateListViewPopupMenu(HMENU *menu);
 void CreateHashFilenameButtonPopupMenu(HMENU *menu);
 void CreateHashStreamButtonPopupMenu(HMENU *menu);
 void CreateHashButtonPopupMenu(HMENU *menu);
-void CreateCrcButtonPopupMenu(HMENU *menu);
 void ListViewPopup(CONST HWND arrHwnd[ID_NUM_WINDOWS],HMENU pupup,int x,int y, SHOWRESULT_PARAMS * pshowresult_params);
 void CreateListViewHeaderPopupMenu(HMENU *menu);
 BOOL ListViewHeaderPopup(HWND pHwnd,HMENU pupup,int x,int y);

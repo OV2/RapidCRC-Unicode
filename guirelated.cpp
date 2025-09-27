@@ -287,17 +287,6 @@ void CreateHashButtonPopupMenu(HMENU *menu) {
 }
 
 /*****************************************************************************
-void CreateCrcButtonPopupMenu(HMENU *menu)
-
-*****************************************************************************/
-void CreateCrcButtonPopupMenu(HMENU *menu) {
-	*menu = CreatePopupMenu();
-
-    InsertMenu(*menu,0, MF_BYPOSITION | MF_STRING, IDM_CRC_SFV + HASH_TYPE_CRC32, g_hash_type_infos[HASH_TYPE_CRC32].hash_name);
-    InsertMenu(*menu,1, MF_BYPOSITION | MF_STRING, IDM_CRC_SFV + HASH_TYPE_CRC32C, g_hash_type_infos[HASH_TYPE_CRC32C].hash_name);
-}
-
-/*****************************************************************************
 void CreateListViewPopupMenu(HMENU *menu)
 
 *****************************************************************************/
