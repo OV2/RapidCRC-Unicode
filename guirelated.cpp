@@ -364,7 +364,7 @@ void CreateListViewPopupMenu(HMENU *menu) {
 		AppendMenu(hClipSubMenu, MF_STRING,IDM_COPY_CRC + i, g_hash_type_infos[i].hash_name);
     }
 	AppendMenu(hClipSubMenu, MF_SEPARATOR, NULL, NULL);
-	AppendMenu(hClipSubMenu, MF_STRING, IDM_COPY_ED2K_LINK, TEXT("ED2K"));
+	AppendMenu(hClipSubMenu, MF_STRING, IDM_COPY_ED2K_LINK, TEXT("ED2K Link"));
 }
 
 /*****************************************************************************
