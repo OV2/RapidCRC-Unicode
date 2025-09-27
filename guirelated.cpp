@@ -279,7 +279,9 @@ void CreateHashButtonPopupMenu(HMENU *menu) {
     for(int i = 0; i < NUM_HASH_TYPES; i++) {
         if (g_hash_type_infos[i].hash_ext)
         {
-            InsertMenu(*menu, i, MF_BYPOSITION | MF_STRING, IDM_HASH + i, g_hash_type_infos[HASH_TYPE_CRC32 + i].hash_name);
+            CString upper_ext(g_hash_type_infos[i].hash_ext);
+            upper_ext.MakeUpper();
+            InsertMenu(*menu, i, MF_BYPOSITION | MF_STRING, IDM_HASH + i, upper_ext);
         }
     }
 }

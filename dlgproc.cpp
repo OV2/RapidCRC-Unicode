@@ -497,8 +497,10 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             const auto &hash_info = g_hash_type_infos[i];
             if (hash_info.hash_ext)
             {
-                ComboBox_SetItemData(dlgItem, ComboBox_AddString(dlgItem, hash_info.hash_name), i);
-                ComboBox_SetItemData(dlgItem2, ComboBox_AddString(dlgItem2, hash_info.hash_name), i);
+                CString ext_upper(hash_info.hash_ext);
+                ext_upper.MakeUpper();
+                ComboBox_SetItemData(dlgItem, ComboBox_AddString(dlgItem, ext_upper), i);
+                ComboBox_SetItemData(dlgItem2, ComboBox_AddString(dlgItem2, ext_upper), i);
             }
         }
 
@@ -1402,10 +1404,16 @@ __inline VOID MoveAndSizeWindows(CONST HWND arrHwnd[ID_NUM_WINDOWS], CONST WORD 
 	MoveWindow(arrHwnd[ID_BTN_ERROR_DESCR], wWidth - lACW * 105/10.0, wHeight - lACH * (685/100.0), lACW * 75/10.0, lACH * 15/10.0, FALSE);
 
     MoveWindow(arrHwnd[ID_STATIC_CREATE], lACW * leftMargin, wHeight - lACH * actButtonY + 5, lACW * 7, lACH * 19/10.0, FALSE);
+    auto title_upper = [](TCHAR *ext)
+        {
+            CString upper(ext);
+            upper.MakeUpper();
+            return upper;
+        };
 	MoveWindow(arrHwnd[ID_BTN_HASH1_IN_FILE], lACW * (leftMargin + 7 + 1), wHeight - lACH * actButtonY, lACW * 12 + 16, lACH * 19/10.0, FALSE);
-    SetWindowText(arrHwnd[ID_BTN_HASH1_IN_FILE], g_hash_type_infos[g_program_options.uiHashButtons[0]].hash_name);
+    SetWindowText(arrHwnd[ID_BTN_HASH1_IN_FILE], title_upper(g_hash_type_infos[g_program_options.uiHashButtons[0]].hash_ext));
 	MoveWindow(arrHwnd[ID_BTN_HASH2_IN_FILE], lACW * (leftMargin + 19 + 2) + 16, wHeight - lACH * actButtonY, lACW * 12 + 16, lACH * 19/10.0, FALSE);
-    SetWindowText(arrHwnd[ID_BTN_HASH2_IN_FILE], g_hash_type_infos[g_program_options.uiHashButtons[1]].hash_name);
+    SetWindowText(arrHwnd[ID_BTN_HASH2_IN_FILE], title_upper(g_hash_type_infos[g_program_options.uiHashButtons[1]].hash_ext));
 	MoveWindow(arrHwnd[ID_BTN_HASH_IN_FILE], lACW * (leftMargin + 31 + 3) + 32, wHeight - lACH * actButtonY, lACW * 10 + 16, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_FILENAME], lACW * (leftMargin + 38 + 5) + 64, wHeight - lACH * actButtonY, lACW * 21, lACH * 19/10.0, FALSE);
 	MoveWindow(arrHwnd[ID_BTN_CRC_IN_STREAM], lACW * (leftMargin + 59 + 6) + 64, wHeight - lACH * actButtonY, lACW * 25, lACH * 19/10.0, FALSE);
