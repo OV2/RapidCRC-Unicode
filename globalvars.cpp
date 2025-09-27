@@ -19,5 +19,6 @@ hash_type_info g_hash_type_infos[] =
     { 4, TEXT("CRC32C"), TEXT("crc32c"), 14, ThreadProc_Crc32cCalc, sfvMode },
     { 32, TEXT("BLAKE2SP"), TEXT("blake2sp"), 75, ThreadProc_Blake2spCalc, mdshaMode },
     { 32, TEXT("BLAKE3"), TEXT("blake3"), 75, ThreadProc_Blake3Calc, mdshaMode },
-    { 16, TEXT("XXH128"), TEXT("xxh128"), 42, ThreadProc_xxhashCalc, mdshaMode },
+    { 8, TEXT("XXH3"), TEXT("xxh3"), 21, ThreadProc_xxh3Calc, mdshaMode },
+    { 16, TEXT("XXH128"), TEXT("xxh128"), 42, ThreadProc_xxh128Calc, mdshaMode },
 };

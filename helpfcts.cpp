@@ -1038,6 +1038,12 @@ void PROGRAM_OPTIONS_FILE::SetDefaults()
     bCalcXxh128PerDefault = FALSE;
     bDisplayXxh128InListView = FALSE;
 
+    uiCreateFileModeXxh3 = CREATE_ONE_FILE;
+    StringCchPrintf(szFilenameXxh3, MAX_PATH, TEXT("checksum.%s"), g_hash_type_infos[HASH_TYPE_XXH3].hash_ext);
+    bSaveAbsolutePathsXxh3 = 0;
+    bCalcXxh3PerDefault = FALSE;
+    bDisplayXxh3InListView = FALSE;
+
     uiHashButtons[0] = HASH_TYPE_CRC32;
     uiHashButtons[1] = HASH_TYPE_MD5;
 }
@@ -1119,6 +1125,12 @@ PROGRAM_OPTIONS_FILE& PROGRAM_OPTIONS_FILE::operator=(const PROGRAM_OPTIONS& oth
 
     memcpy(uiHashButtons, other.uiHashButtons, sizeof(uiHashButtons));
 
+    bDisplayXxh3InListView = other.bDisplayInListView[HASH_TYPE_XXH3];
+    bCalcXxh3PerDefault = other.bCalcPerDefault[HASH_TYPE_XXH3];
+    uiCreateFileModeXxh3 = other.uiCreateFileMode[HASH_TYPE_XXH3];
+    StringCchCopy(szFilenameXxh3, MAX_PATH, other.szFilename[HASH_TYPE_XXH3]);
+    bSaveAbsolutePathsXxh3 = other.bSaveAbsolutePaths[HASH_TYPE_XXH3];
+
     return *this;
 }
 
@@ -1193,6 +1205,12 @@ PROGRAM_OPTIONS& PROGRAM_OPTIONS::operator=(const PROGRAM_OPTIONS_FILE& other)
     bSaveAbsolutePaths[HASH_TYPE_XXH128] = other.bSaveAbsolutePathsXxh128;
 
     memcpy(uiHashButtons, other.uiHashButtons, sizeof(uiHashButtons));
+
+    bDisplayInListView[HASH_TYPE_XXH3] = other.bDisplayXxh3InListView;
+    bCalcPerDefault[HASH_TYPE_XXH3] = other.bCalcXxh3PerDefault;
+    uiCreateFileMode[HASH_TYPE_XXH3] = other.uiCreateFileModeXxh3;
+    StringCchCopy(szFilename[HASH_TYPE_XXH3], MAX_PATH, other.szFilenameXxh3);
+    bSaveAbsolutePaths[HASH_TYPE_XXH3] = other.bSaveAbsolutePathsXxh3;
 
     return *this;
 }

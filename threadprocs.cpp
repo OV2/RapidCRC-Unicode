@@ -850,7 +850,36 @@ DWORD WINAPI ThreadProc_Blake3Calc(VOID * pParam)
 	return 0;
 }
 
-DWORD WINAPI ThreadProc_xxhashCalc(VOID * pParam)
+DWORD WINAPI ThreadProc_xxh3Calc(VOID * pParam)
+{
+    BYTE ** CONST buffer = ((THREAD_PARAMS_HASHCALC *)pParam)->buffer;
+    DWORD ** CONST dwBytesRead = ((THREAD_PARAMS_HASHCALC *)pParam)->dwBytesRead;
+    CONST HANDLE hEvtThreadReady = ((THREAD_PARAMS_HASHCALC *)pParam)->hHandleReady;
+    CONST HANDLE hEvtThreadGo = ((THREAD_PARAMS_HASHCALC *)pParam)->hHandleGo;
+    BYTE * CONST result = (BYTE *)((THREAD_PARAMS_HASHCALC *)pParam)->result;
+    BOOL * CONST bFileDone = ((THREAD_PARAMS_HASHCALC *)pParam)->bFileDone;
+
+    // Allocate a state struct. Do not just use malloc() or new.
+    XXH3_state_t* state = XXH3_createState();
+    // Reset the state to start a new hashing session.
+    XXH3_64bits_reset(state);
+
+    do {
+        SignalObjectAndWait(hEvtThreadReady, hEvtThreadGo, INFINITE, FALSE);
+        XXH3_64bits_update(state, *buffer, **dwBytesRead);
+    } while (!(*bFileDone));
+
+    XXH64_hash_t xresult = XXH3_64bits_digest(state);
+    XXH64_canonicalFromHash((XXH64_canonical_t*)result, xresult);
+
+    XXH3_freeState(state);
+
+    SetEvent(hEvtThreadReady);
+    return 0;
+}
+
+
+DWORD WINAPI ThreadProc_xxh128Calc(VOID * pParam)
 {
     BYTE ** CONST buffer = ((THREAD_PARAMS_HASHCALC *)pParam)->buffer;
     DWORD ** CONST dwBytesRead = ((THREAD_PARAMS_HASHCALC *)pParam)->dwBytesRead;

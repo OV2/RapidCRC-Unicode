@@ -87,8 +87,9 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define HASH_TYPE_CRC32C 9
 #define HASH_TYPE_BLAKE2SP 10
 #define HASH_TYPE_BLAKE3 11
-#define HASH_TYPE_XXH128 12
-#define NUM_HASH_TYPES 13
+#define HASH_TYPE_XXH3 12
+#define HASH_TYPE_XXH128 13
+#define NUM_HASH_TYPES 14
 
 // RapidCRC modes; also used in the action functions
 // Have to equal hash types
@@ -104,7 +105,8 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define MODE_CRC32C             9
 #define MODE_BLAKE2SP           10
 #define MODE_BLAKE3             11
-#define MODE_XXH128             12
+#define MODE_XXH3               12
+#define MODE_XXH128             13
 #define MODE_BSD                21
 
 //CMDLINE Options for the shell extension
@@ -120,7 +122,8 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define CMD_CRC32C          9
 #define CMD_BLAKE2SP        10
 #define CMD_BLAKE3          11
-#define CMD_XXH128          12
+#define CMD_XXH3            12
+#define CMD_XXH128          13
 #define CMD_NAME			100
 #define CMD_NTFS			200
 #define CMD_REPARENT		23
@@ -188,18 +191,9 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_STATIC_CRC_VALUE			4
 #define ID_STATIC_MD5_VALUE			5
 #define ID_STATIC_ED2K_VALUE		6
-#define ID_STATIC_SHA1_VALUE		7
-#define ID_STATIC_SHA256_VALUE		8
-#define ID_STATIC_SHA512_VALUE		9
-#define ID_STATIC_SHA3_224_VALUE    10
-#define ID_STATIC_SHA3_256_VALUE    11
-#define ID_STATIC_SHA3_512_VALUE    12
-#define ID_STATIC_CRCC_VALUE        13
-#define ID_STATIC_BLAKE2SP_VALUE    14
-#define ID_STATIC_BLAKE3_VALUE      15
-#define ID_STATIC_XXH128_VALUE      16
-#define ID_STATIC_INFO				17
-#define ID_MAX_STATIC               17
+
+#define ID_STATIC_INFO				(ID_STATIC_CRC_VALUE + NUM_HASH_TYPES)
+#define ID_MAX_STATIC               ID_STATIC_INFO
 
 #define ID_STATIC_STATUS			21
 #define ID_STATIC_CREATE            22
@@ -226,29 +220,19 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define ID_EDIT_CRC_VALUE			38
 #define ID_EDIT_MD5_VALUE			39
 #define ID_EDIT_ED2K_VALUE			40
-#define ID_EDIT_SHA1_VALUE			41
-#define ID_EDIT_SHA256_VALUE		42
-#define ID_EDIT_SHA512_VALUE		43
-#define ID_EDIT_SHA3_224_VALUE		44
-#define ID_EDIT_SHA3_256_VALUE		45
-#define ID_EDIT_SHA3_512_VALUE		46
-#define ID_EDIT_CRCC_VALUE          47
-#define ID_EDIT_BLAKE2SP_VALUE      48
-#define ID_EDIT_BLAKE3_VALUE        49
-#define ID_EDIT_XXH128_VALUE        50
 
-#define ID_EDIT_INFO				51
-#define ID_EDIT_STATUS				52
-#define ID_BTN_ERROR_DESCR			53
+#define ID_EDIT_INFO				(ID_EDIT_CRC_VALUE + NUM_HASH_TYPES)
+#define ID_EDIT_STATUS				(ID_EDIT_INFO + 1)
+#define ID_BTN_ERROR_DESCR			(ID_EDIT_STATUS + 1)
 
-#define ID_BTN_PLAY_PAUSE			54
-#define ID_BTN_STOP     			55
+#define ID_BTN_PLAY_PAUSE			(ID_BTN_ERROR_DESCR + 1)
+#define ID_BTN_STOP     			(ID_BTN_PLAY_PAUSE + 1)
 
-#define ID_COMBO_PRIORITY			56
-#define ID_BTN_OPENFILES_PAUSE		57
-#define ID_LAST_TAB_CONTROL			57
+#define ID_COMBO_PRIORITY			(ID_BTN_STOP + 1)
+#define ID_BTN_OPENFILES_PAUSE		(ID_COMBO_PRIORITY + 1)
+#define ID_LAST_TAB_CONTROL			ID_BTN_OPENFILES_PAUSE
 
-#define ID_NUM_WINDOWS				58
+#define ID_NUM_WINDOWS				(ID_LAST_TAB_CONTROL + 1)
 
 #define IDM_COPY_CRC				1
 // needs space for all hash types
@@ -485,6 +469,11 @@ struct PROGRAM_OPTIONS_FILE {
     TCHAR			szFilenameXxh128[MAX_PATH];
     BOOL            bSaveAbsolutePathsXxh128;
     UINT            uiHashButtons[NUM_CUSTOMIZABLE_BUTTONS];
+    BOOL			bDisplayXxh3InListView;
+    BOOL            bCalcXxh3PerDefault;
+    UINT			uiCreateFileModeXxh3;
+    TCHAR			szFilenameXxh3[MAX_PATH];
+    BOOL            bSaveAbsolutePathsXxh3;
     void            SetDefaults();
     PROGRAM_OPTIONS_FILE& operator=(const PROGRAM_OPTIONS& other);
 };
@@ -716,6 +705,7 @@ DWORD WINAPI ThreadProc_Sha3_512Calc(VOID * pParam);
 DWORD WINAPI ThreadProc_Crc32cCalc(VOID * pParam);
 DWORD WINAPI ThreadProc_Blake2spCalc(VOID * pParam);
 DWORD WINAPI ThreadProc_Blake3Calc(VOID * pParam);
-DWORD WINAPI ThreadProc_xxhashCalc(VOID * pParam);
+DWORD WINAPI ThreadProc_xxh3Calc(VOID * pParam);
+DWORD WINAPI ThreadProc_xxh128Calc(VOID * pParam);
 
 #endif
