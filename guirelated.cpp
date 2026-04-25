@@ -1198,6 +1198,9 @@ VOID UpdateOptionsDialogControls(CONST HWND hDlg, CONST BOOL bUpdateAll, CONST P
     CheckDlgButton(hDlg, IDC_RADIO_HEX_UPPERCASE, pprogram_options->iHexFormat == UPPERCASE ? BST_CHECKED : BST_UNCHECKED);
     CheckDlgButton(hDlg, IDC_RADIO_HEX_LOWERCASE, pprogram_options->iHexFormat == LOWERCASE ? BST_CHECKED : BST_UNCHECKED);
 
+	// make "New window from explorer" read‑only when Job Queueing is disabled
+	EnableWindow(GetDlgItem(hDlg, IDC_ALWAYS_USE_NEW_WINDOW), pprogram_options->bEnableQueue);
+
     dlgItem = GetDlgItem(hDlg,IDC_UNICODE_TYPE);
     for(int i=0;i<ComboBox_GetCount(dlgItem);i++) {
         if(ComboBox_GetItemData(dlgItem,i)==pprogram_options->iUnicodeSaveType)
