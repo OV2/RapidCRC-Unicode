@@ -510,7 +510,6 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 		UpdateOptionsDialogControls(hDlg, TRUE, & program_options_temp);
 
 		EnableWindow(GetDlgItem(hDlg,IDC_ENABLE_QUEUE),g_pstatus.bHaveComCtrlv6);
-		EnableWindow(GetDlgItem(hDlg, IDC_ALWAYS_USE_NEW_WINDOW), program_options_temp.bEnableQueue);
 
 		return TRUE;
 
