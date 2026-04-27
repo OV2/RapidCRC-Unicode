@@ -570,8 +570,9 @@ INT_PTR CALLBACK DlgProcOptions(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 			if(HIWORD(wParam) == EN_CHANGE){
 				GetWindowText(GetDlgItem(hDlg, IDC_EDIT_READ_BUFFER_SIZE), szTemp, MAX_PATH_EX);
                 program_options_temp.uiReadBufferSizeKb =_ttoi(szTemp);
-                if(program_options_temp.uiReadBufferSizeKb < 1 || program_options_temp.uiReadBufferSizeKb > 20 * 1024)
-                    program_options_temp.uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
+                if(program_options_temp.uiReadBufferSizeKb < MIN_BUFFER_SIZE_CALC ||
+                   program_options_temp.uiReadBufferSizeKb > MAX_BUFFER_SIZE_CALC)
+                        program_options_temp.uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
 				return TRUE;
 			}
 			break;

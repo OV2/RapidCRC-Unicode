@@ -64,7 +64,9 @@ PCHAR* CommandLineToArgvA(PCHAR CmdLine, int* _argc);
 #define WM_THREAD_FILEINFO_START	(WM_USER + 9)
 
 // some sizes for variables
-#define DEFAULT_BUFFER_SIZE_CALC	(8 * 1024)
+#define DEFAULT_BUFFER_SIZE_CALC	512			// 512 KB - Optimal for L2 cache locality
+#define MIN_BUFFER_SIZE_CALC		1			// 1 KB
+#define MAX_BUFFER_SIZE_CALC		20480		// 20 MB safety limit
 #define MAX_BUFFER_SIZE_OFN 0xFFFFF // Win9x has a problem with values where just the first bit is set like 0x20000 for OFN buffer:
 #define MAX_PATH_EX 32767
 #define MAX_LINE_LENGTH MAX_PATH_EX + 100

@@ -471,8 +471,9 @@ VOID ReadOptions()
 	   !IsLegalFilename(program_options_file.szFilenameSfv))
             program_options_file.SetDefaults();
 
-    if(program_options_file.uiReadBufferSizeKb < 1 || program_options_file.uiReadBufferSizeKb > 20 * 1024) // limit between 1kb and 20mb
-        program_options_file.uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
+    if(program_options_file.uiReadBufferSizeKb < MIN_BUFFER_SIZE_CALC ||
+       program_options_file.uiReadBufferSizeKb > MAX_BUFFER_SIZE_CALC)
+            program_options_file.uiReadBufferSizeKb = DEFAULT_BUFFER_SIZE_CALC;
 
     g_program_options = program_options_file;
 
