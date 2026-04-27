@@ -157,7 +157,7 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
 
 		QueryPerformanceFrequency((LARGE_INTEGER*)&wqFreq);
 
-		if(g_program_options.bEnableQueue && g_pstatus.bHaveComCtrlv6) {
+		if(g_program_options.bEnableQueue) {
 			if(fileList->iGroupId==0)
 				InsertGroupIntoListView(arrHwnd[ID_LISTVIEW],fileList);
 			else

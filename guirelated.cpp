@@ -470,7 +470,7 @@ void RemoveItems(CONST HWND arrHwnd[ID_NUM_WINDOWS],list<FILEINFO*> *finalList)
 		pList->fInfos.remove_if(ComparePtr(pFileinfo));
 		if(pList->fInfos.empty()) {
 			doneList->remove(pList);
-			if(g_program_options.bEnableQueue && g_pstatus.bHaveComCtrlv6)
+			if(g_program_options.bEnableQueue)
 				ListView_RemoveGroup(arrHwnd[ID_LISTVIEW],pList->iGroupId);
 			delete pList;
 		}
@@ -667,20 +667,17 @@ BOOL InitListView(CONST HWND hWndListView, CONST LONG lACW)
 	//full row select
 	ListView_SetExtendedListViewStyle(hWndListView, LVS_EX_FULLROWSELECT | LVS_EX_DOUBLEBUFFER);
 
-    //explorer-style listview and group view work only with common controls v6
-	if(g_pstatus.bHaveComCtrlv6) {
-		uxTheme = LoadLibrary(TEXT("uxtheme.dll"));
-		if(uxTheme) {
-			SetWindowTheme = (SWT) GetProcAddress(uxTheme,"SetWindowTheme");
-			if(SetWindowTheme != NULL) {
-				(SetWindowTheme)(hWndListView, L"Explorer", NULL);
-				(SetWindowTheme)(ListView_GetHeader(hWndListView), L"Explorer", NULL);
-			}
-			FreeLibrary(uxTheme);
+	uxTheme = LoadLibrary(TEXT("uxtheme.dll"));
+	if(uxTheme) {
+		SetWindowTheme = (SWT) GetProcAddress(uxTheme,"SetWindowTheme");
+		if(SetWindowTheme != NULL) {
+			(SetWindowTheme)(hWndListView, L"Explorer", NULL);
+			(SetWindowTheme)(ListView_GetHeader(hWndListView), L"Explorer", NULL);
 		}
-		if(g_program_options.bEnableQueue)
-			ListView_EnableGroupView(hWndListView,TRUE);
+		FreeLibrary(uxTheme);
 	}
+	if(g_program_options.bEnableQueue)
+		ListView_EnableGroupView(hWndListView,TRUE);
 
 	lvcolumn.mask = LVCF_FMT | LVCF_WIDTH | LVCF_TEXT | LVCF_SUBITEM;
 	lvcolumn.fmt = LVCFMT_LEFT;
@@ -800,7 +797,7 @@ BOOL InsertItemIntoList(CONST HWND hListView, FILEINFO * pFileinfo,lFILEINFO *fi
 	lvI.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM | LVIF_STATE;
 	lvI.state = 0;
 	lvI.stateMask = 0;
-	if(g_program_options.bEnableQueue && g_pstatus.bHaveComCtrlv6) {
+	if(g_program_options.bEnableQueue) {
 		lvI.mask |= LVIF_GROUPID;
 		lvI.iGroupId = fileList->iGroupId;
 	}
@@ -1279,8 +1276,7 @@ VOID ClearAllItems(CONST HWND arrHwnd[ID_NUM_WINDOWS], SHOWRESULT_PARAMS * pshow
 	SyncQueue.clearQueue();
 	SyncQueue.clearList();
 	ListView_DeleteAllItems(arrHwnd[ID_LISTVIEW]);
-	if(g_pstatus.bHaveComCtrlv6)
-		ListView_RemoveAllGroups(arrHwnd[ID_LISTVIEW]);
+	ListView_RemoveAllGroups(arrHwnd[ID_LISTVIEW]);
 	ShowResult(arrHwnd,NULL,pshowresult_params);
 	DisplayStatusOverview(arrHwnd[ID_EDIT_STATUS]);
 }

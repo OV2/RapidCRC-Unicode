@@ -518,7 +518,6 @@ struct PROGRAM_OPTIONS {
 };
 
 typedef struct{
-	BOOL bHaveComCtrlv6;							//are the common controls v6 available? (os>=winxp)
     BOOL bIsVista;
 	BOOL bStartedWithClosableShellExtAction;
 }PROGRAM_STATUS;
