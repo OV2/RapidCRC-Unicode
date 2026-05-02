@@ -428,9 +428,6 @@ VOID ReadOptions()
 		CloseHandle(hFile);
 	}
 
-	if(!g_pstatus.bHaveComCtrlv6)
-		program_options_file.bEnableQueue = FALSE;
-
     // import old program options
     if(program_options_file.bCalcCrcPerDefault!=-1) {
         program_options_file.bCalcPerDefault[HASH_TYPE_CRC32] = program_options_file.bCalcCrcPerDefault;
