@@ -295,6 +295,11 @@ UINT __stdcall ThreadProc_Calc(VOID * pParam)
                 break;
 		}
 
+        if (hEvtReadDone)
+        {
+            CloseHandle(hEvtReadDone);
+        }
+
         for(int i=0;i<NUM_HASH_TYPES;i++) {
             if(bDoCalculate[i]) {
 		        CloseHandle(hEvtThreadGo[i]);

@@ -257,6 +257,7 @@ int blake2sp_final( blake2sp_state *S, void *out, size_t outlen )
         WaitForSingleObject(thread_data[i].thread_handle, INFINITE);
         CloseHandle(thread_data[i].start_event);
         CloseHandle(thread_data[i].sync_event);
+        CloseHandle(thread_data[i].thread_handle);
         thread_data[i].start_event = 0;
         thread_data[i].sync_event = 0;
         thread_data[i].thread_handle = 0;
